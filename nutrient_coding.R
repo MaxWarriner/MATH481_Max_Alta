@@ -97,6 +97,21 @@ for (i in 1:57){
   
 }
 
+#normalize for total calorie intake
+for (i in 1:57){
+  
+  cal_mplr <- sam$calories[i] / 1000
+  
+  sam$protein_normal[i] <- sam$protein[i] / cal_mplr
+  sam$fat_normal[i] <- sam$fat[i] / cal_mplr
+  sam$carbs_normal[i] <- sam$carbs[i] / cal_mplr
+  sam$fiber_normal[i] <- sam$fiber[i] / cal_mplr
+  sam$sodium_normal[i] <- sam$sodium[i] / cal_mplr
+  
+}
+
+
+
 write.csv(sam, 'sample_data.csv')
 
 
