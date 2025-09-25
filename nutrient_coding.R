@@ -1,5 +1,5 @@
-sam <- read.csv(file = "sample_data.csv")
-nutrients <- read.csv(file = "nutrient_data.csv")
+sam <- data.frame(read_csv('sample_data.csv'))[,-1]
+nutrients <- data.frame(read.csv(file = "nutrient_data.csv"))
 
 
 #rename columns
@@ -97,19 +97,136 @@ for (i in 1:57){
   
 }
 
-#normalize for total calorie intake
+#micronutrient intake
+
+sam$PUFA <- rep(0, 57)
+sam$cholesterol <- rep(0,57)
+sam$vitaminA <- rep(0,57)
+sam$carotene <- rep(0,57)
+sam$vitaminE <- rep(0,57)
+sam$vitaminB1 <- rep(0,57)
+sam$vitaminB2 <- rep(0,57)
+sam$vitaminB6 <- rep(0,57)
+sam$folicacid <- rep(0,57)
+sam$vitaminC <- rep(0,57)
+sam$potassium <- rep(0,57)
+sam$calcium <- rep(0,57)
+sam$magnesium <- rep(0,57)
+sam$phosphorus <-rep(0,57)
+sam$iron <- rep(0,57)
+sam$zinc <- rep(0,57)
+
+nutrients[is.na(nutrients)] <- 0
+
 for (i in 1:57){
   
-  cal_mplr <- sam$calories[i] / 1000
+  for(j in 34:83){
+    sam$PUFA[i] <- sam$PUFA[i] + sam[i,j]*nutrients[j-33,10]
+  }
   
-  sam$protein_normal[i] <- sam$protein[i] / cal_mplr
-  sam$fat_normal[i] <- sam$fat[i] / cal_mplr
-  sam$carbs_normal[i] <- sam$carbs[i] / cal_mplr
-  sam$fiber_normal[i] <- sam$fiber[i] / cal_mplr
-  sam$sodium_normal[i] <- sam$sodium[i] / cal_mplr
+  for(j in 34:83){
+    sam$cholesterol[i] <- sam$cholesterol[i] + sam[i,j]*nutrients[j-33,11]
+  }
+  
+  for(j in 34:83){
+    sam$vitaminA[i] <- sam$vitaminA[i] + sam[i,j]*nutrients[j-33,12]
+  }
+  
+  for(j in 34:83){
+    sam$carotene[i] <- sam$carotene[i] + sam[i,j]*nutrients[j-33,13]
+  }
+  
+  for(j in 34:83){
+    sam$vitaminE[i] <- sam$vitaminE[i] + sam[i,j]*nutrients[j-33,14]
+  }
+  
+  for(j in 34:83){
+    sam$vitaminB1[i] <- sam$vitaminB1[i] + sam[i,j]*nutrients[j-33,15]
+  }
+  
+  for(j in 34:83){
+    sam$vitaminB2[i] <- sam$vitaminB2[i] + sam[i,j]*nutrients[j-33,16]
+  }
+  
+  for(j in 34:83){
+    sam$vitaminB6[i] <- sam$vitaminB6[i] + sam[i,j]*nutrients[j-33,17]
+  }
+  
+  for(j in 34:83){
+    sam$folicacid[i] <- sam$folicacid[i] + sam[i,j]*nutrients[j-33,18]
+  }
+  
+  for(j in 34:83){
+    sam$vitaminC[i] <- sam$vitaminC[i] + sam[i,j]*nutrients[j-33,19]
+  }
+  
+  for(j in 34:83){
+    sam$potassium[i] <- sam$potassium[i] + sam[i,j]*nutrients[j-33,21]
+  }
+  
+  for(j in 34:83){
+    sam$calcium[i] <- sam$calcium[i] + sam[i,j]*nutrients[j-33,22]
+  }
+  
+  for(j in 34:83){
+    sam$magnesium[i] <- sam$magnesium[i] + sam[i,j]*nutrients[j-33,23]
+  }
+  
+  for(j in 34:83){
+    sam$phosphorus[i] <- sam$phosphorus[i] + sam[i,j]*nutrients[j-33,24]
+  }
+  
+  for(j in 34:83){
+    sam$iron[i] <- sam$iron[i] + sam[i,j]*nutrients[j-33,25]
+  }
+  
+  for(j in 34:83){
+    sam$zinc[i] <- sam$zinc[i] + sam[i,j]*nutrients[j-33,26]
+  }
   
 }
 
+#normalize nutrients per kg of body weight
+sam <- sam[,-129:-133]
+
+nutrilist <- colnames(sam)[123:151]
+
+sam$calories_norm <- rep(0, 57)
+sam$protein_norm <- rep(0, 57)
+sam$fat_norm <- rep(0, 57)
+sam$carbs_norm <- rep(0, 57)
+sam$fiber_norm <- rep(0, 57)
+sam$sodium_norm <- rep(0, 57)
+sam$vegetable_portions_norm <- rep(0, 57)
+sam$legume_portions_norm <- rep(0, 57)
+sam$grain_portions_norm <- rep(0, 57)
+sam$fruit_portions_norm <- rep(0, 57)
+sam$meat_portions_norm <- rep(0, 57)
+sam$eggs_dairy_portions_norm <- rep(0, 57)
+sam$processed_food_portions_norm <- rep(0, 57)
+sam$PUFA_norm <- rep(0, 57)
+sam$cholesterol_norm <- rep(0, 57)
+sam$vitaminA_norm <- rep(0, 57)
+sam$carotene_norm <- rep(0, 57)
+sam$vitaminE_norm <- rep(0, 57)
+sam$vitaminB1_norm <- rep(0, 57)
+sam$vitaminB2_norm <- rep(0, 57)
+sam$vitaminB6_norm <- rep(0, 57)
+sam$folicacid_norm <- rep(0, 57)
+sam$vitaminC_norm <- rep(0, 57)
+sam$potassium_norm <- rep(0, 57)
+sam$calcium_norm <- rep(0, 57)
+sam$magnesium_norm <- rep(0, 57)
+sam$phosphorus_norm <- rep(0, 57)
+sam$iron_norm <- rep(0, 57)
+sam$zinc_norm <- rep(0, 57)
+
+
+for (i in 123:151){
+  for (j in 1:57){
+    sam[j,i+29] <- sam[j,i]/sam$Weightkg[j] 
+  }
+}
 
 
 write.csv(sam, 'sample_data.csv')

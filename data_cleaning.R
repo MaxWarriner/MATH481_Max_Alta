@@ -1,5 +1,7 @@
 
-sam <- read.csv(file = "sample_data.csv")
+ps <- read_rds('microbiome.RDS')
+
+sam <- data.frame(ps@sam_data)
 
 library(dplyr)
 
@@ -41,24 +43,52 @@ sam <- sam |>
 
 # coding for portions of food / week
 
-for (i in 33:82){
-  for (j in 1:57){
+for (i in 1:57){
+  for (j in 33:82){
     
-    sam[j,i] <- case_when(sam[j,i] == 1 ~ 0, 
-                          sam[j,i] == 2 ~ 0.25, 
-                          sam[j,i] == 3 ~ 2.5/4, 
+    sam[i,j] <- case_when(sam[i,j] == 1 ~ 0, 
+                          sam[i,j] == 2 ~ 0.25, 
+                          sam[i,j] == 3 ~ 2.5/4, 
                           sam[i,j] == 4 ~ 1, 
-                          sam[j,i] == 5 ~ 2.5, 
-                          sam[j,i] == 6 ~ 5, 
-                          sam[j,i] == 7 ~ 7, 
-                          sam[j,i] == 8 ~ 10)
+                          sam[i,j] == 5 ~ 2.5, 
+                          sam[i,j] == 6 ~ 5, 
+                          sam[i,j] == 7 ~ 7, 
+                          sam[i,j] == 8 ~ 10)
     
-    if(is.na(sam[j,i])){
-      sam[j,i] <- 0
+    if(is.na(sam[i,j])){
+      sam[i,j] <- 0
     }
     
   }
 }
 
+library(missForest)
+diet <- sam[,35:84]
+
+diet <- missForest(diet)
+diet <- diet[["ximp"]]
+
+sam[,35:84] <- diet
+
+
+sam <- sam[-83:-125]
+
+sam <- sam[-125:-155]
+
+sam <- sam[-123:-124]
+
+sam <- sam |>
+  rename(illness = Health.R1, 
+         diarrhea = Health.R2, 
+         cough = Health.R3, 
+         bloating = Health.R4, 
+         abdominalpain = Health.R5, 
+         lower_appetite = Health.R6, 
+         nausea = Health.R7, 
+         deworming_pill = Health.R8)
+
+
+
 write.csv(sam, file = 'sample_data.csv')
+
 
