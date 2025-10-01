@@ -184,10 +184,10 @@ proc_foods <- ggplot(data = sam, aes(x = processed_food_portions_norm, y = Shann
   ggtitle(paste('Processed Food Portions vs. Alpha Diversity: r = ', round(cor(sam$Shannon, sam$processed_food_portions_norm), 3), sep = ''))
 
 
-kocho <- ggplot(data = sam, aes(x = kocho, y = Shannon)) + 
+fermented_foods <- ggplot(data = sam, aes(x = fermented_portions_norm, y = Shannon)) + 
   geom_point() + 
   theme_bw() +
-  xlab('Kocho Portions/week') +
+  xlab('Fermented Foods Portions/week/kg bodyweight') +
   ylab('Alpha Diversity (Shannon)') +
   geom_smooth(method = c("lm"), se = F) + 
-  ggtitle(paste('Kocho Portions vs. Alpha Diversity: r = ', round(cor(sam$Shannon, sam$kocho), 3), sep = ''))
+  ggtitle(paste('Fermented Foods Portions vs. Alpha Diversity: r = ', round(cor(sam$Shannon, sam$fermented_portions_norm), 3), sep = ''))
