@@ -60,10 +60,10 @@ create_pcoa_plot <- function(variable, pcoares, physeq_dist) {
   
   print(pcoaplot)
   
-  # ggsave(pcoaplot, 
-  #        filename = paste(variable, "_pcoa_bray.pdf", sep = ""),
-  #        device = "pdf",
-  #        height = 6, width = 8, units = "in")
+  ggsave(pcoaplot,
+         filename = paste(variable, "_pcoa_bray.png", sep = ""),
+         device = "png",
+         height = 6, width = 8, units = "in")
   
   return(pcoaplot)
 }

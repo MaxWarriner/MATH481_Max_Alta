@@ -5,15 +5,13 @@ library(RColorBrewer)
 library(compositions)
 library(phyloseq)
 
-sam <- read_csv('sample_data.csv')[,-1]
-
 ps <- read_rds('microbiome.RDS')
+
+sam <- ps@sam_data
 
 tax <- data.frame(ps@tax_table@.Data)
 
 abundance <- data.frame(ps@otu_table@.Data)
-
-sam <- column_to_rownames(sam, "SampleID")
 
 colnames(abundance) <- gsub("X", "", colnames(abundance))
 
@@ -50,7 +48,7 @@ genus_abundance_transposed <- genus_abundance %>%
 
 genus_abundance_transposed <- genus_abundance_transposed[-58,]
 
-food <- sam[,c(151:179, 181)]
+food <- sam[,153:182]
 
 cor_matrix <- cor(genus_abundance_transposed, food, use = "pairwise.complete.obs", method = "spearman") |>
   as.data.frame() |>
@@ -62,5 +60,7 @@ genus_phylum <- top20[,c(2,1)]
 genus_phylum <- column_to_rownames(genus_phylum, var = "Genus")
 
 
-pheatmap(cor_matrix, annotation_row = genus_phylum, )
+heatmap <- pheatmap(cor_matrix, annotation_row = genus_phylum, )
+
+ggsave(heatmap, filename = 'heatmap.png', dpi = 800, width = 10, height = 8)
 

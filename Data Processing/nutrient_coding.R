@@ -1,4 +1,6 @@
-sam <- data.frame(read_csv('sample_data.csv'))[,-1]
+
+ps <- read_rds('microbiome.RDS')
+sam <- ps@sam_data
 nutrients <- data.frame(read.csv(file = "nutrient_data.csv"))
 
 
@@ -235,6 +237,18 @@ sam <- sam |>
 
 sam <- sam |>
   mutate(fermented_portions_norm = fermented_portions/Weightkg)
+
+
+sam$plant_protein <- rep(0, 57)
+sam$plant_protein_norm <- rep(0,57)
+sam$plant_protein_group <- rep(0,57)
+
+
+for (i in 1:57){
+  
+  
+  
+}
 
 
 write.csv(sam, 'sample_data.csv')

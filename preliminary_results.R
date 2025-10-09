@@ -1,9 +1,9 @@
 library(tidyverse)
 library(phyloseq)
 
-sam <- read_csv('sample_data.csv')[,-1]
-
 ps <- readRDS('microbiome.RDS')
+
+sam <- ps@sam_data
 
 
 diversity <- estimate_richness(ps, measures = c('Shannon', 'Chao1'))
