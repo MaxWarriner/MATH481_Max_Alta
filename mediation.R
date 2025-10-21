@@ -34,6 +34,13 @@ significant_health <- fiber_health_regression |>
 
 # Regression on Fiber vs. Metabolites -------------------------------------
 
+
+#Transform metabolite concentrations
+
+metabolites <- metabolites %>%
+  mutate(across(where(is.numeric), ~ log(.x + 1)))
+
+
 fiber_metabolites_regression <- tibble(metabolite = colnames(metabolites), 
                                        p = rep(NA, 463))
 
@@ -88,6 +95,9 @@ genus_abundance <- abundance %>%
   arrange(as.numeric(Sample)) |>
   column_to_rownames(var = "Sample")
 
+# Center Log Transform Genus Abundance
+genus_abundance <- as.data.frame(clr(genus_abundance + 1))
+
 sam <- data.frame(ps@sam_data)
 
 fiber_genus_regression <- tibble(genus = colnames(genus_abundance), 
@@ -130,16 +140,68 @@ significant_genera <- gsub('\\[', "", significant_genera)
 significant_genera <- gsub("]", "", significant_genera)
 significant_genera <- gsub("-", "", significant_genera)
 
-combined <- metabolites |>
+
+# Combine datasets
+
+sam$fiber_group <- as.factor(sam$fiber_group)
+sam$diarrhea <- as.factor(sam$diarrhea)
+
+combined_d <- metabolites |>
   bind_cols(genus_abundance, sam) |>
   as_tibble()
 
-mediation <- mediation_data(x = combined, treatments = c("fiber_norm") , mediators = c(significant_genera, significant_metabolites), outcomes = significant_health)
+#mediation for diarrhea
 
-model <- multimedia(mediation, glmnet_model(lambda = 0.1))
+exper_d <- mediation_data(x = combined_d, treatments = c("diarrhea") , mediators = significant_genera, outcomes = significant_metabolites)
 
-results <- estimate(model, exper = mediation)
+model_d <- multimedia(exper_d, glmnet_model(lambda = 0.1)) |>
+  estimate(exper_d)
 
-direct_effects <- direct_effect(results, exper = mediation)
 
-indirect_effects <- indirect_overall(results, exper = mediation)
+# Direct Effects
+direct_d <- direct_effect(model = model_d, exper = exper_d) |>
+  map_dfr(effect_summary, .id = "treatment")
+
+vis_direct_d <- direct_d |>
+  slice_max(abs(direct_effect), n = 20) |>
+  pull(outcome)
+
+combined_d |>
+  select(any_of(vis_direct_d), fiber_group) |>
+  pivot_longer(-fiber_group, names_to = "feature") |>
+  ggplot() +
+  geom_boxplot(
+    aes(value, reorder(feature, value, median),
+        fill = fiber_group
+    )
+  ) +
+  labs(
+    x = "log(1 + intensity)",
+    y = "Metabolite",
+    fill = "Group"
+  ) + 
+  ggtitle('Direct Effects on Metabolite by Fiber Group') + 
+  theme_bw()
+
+
+#Indirect Effects
+
+indirect_effect <- indirect_overall(model_d, exper_d)
+
+top_direct_d <- dplyr::rename(direct_d, effect = direct_effect)
+top_indirect_d <- dplyr::rename(bind_rows(indirect_effect),
+                              effect = indirect_effect
+)
+top_effects_d <- list(direct = top_direct_d, indirect = top_indirect_d) |>
+  bind_rows(.id = "type")
+
+vis_outcomes <- c(
+  "m0181_hydrocinnamic_acid", "m1303_lithocholate",
+  "m0036_creatinine", "m0253_sphingosine", "m1478_C182_CE",
+  "m0295_arginine"
+)
+top_effects <- bind_rows(
+  filter(top_effects, outcome %in% vis_outcomes[1:3], type == "indirect"),
+  filter(top_effects, outcome %in% vis_outcomes[4:6], type == "direct"),
+)
+
