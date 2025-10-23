@@ -10,8 +10,8 @@ set.seed(20231222)
 
 ps <- read_rds('microbiome.RDS')
 
-metabolites <- read_csv('metabolites.csv') |>
-  column_to_rownames("sampleID")
+metabolites <- read_csv('metabolites_transposed.csv') |>
+  column_to_rownames(var = "...1")
 
 sam <- data.frame(ps@sam_data)
 
@@ -146,13 +146,36 @@ significant_genera <- gsub("-", "", significant_genera)
 sam$fiber_group <- as.factor(sam$fiber_group)
 sam$diarrhea <- as.factor(sam$diarrhea)
 
+metabolites <- metabolites[,colnames(metabolites) %in% significant_metabolites]
+genus_abundance <- genus_abundance[, colnames(genus_abundance) %in% significant_genera]
+
 combined_d <- metabolites |>
   bind_cols(genus_abundance, sam) |>
   as_tibble()
 
-#mediation for diarrhea
+#mediation for diarrhea (fiber -> microbiome -> diarrhea)
 
-exper_d <- mediation_data(x = combined_d, treatments = c("diarrhea") , mediators = significant_genera, outcomes = significant_metabolites)
+#Simple
+
+combined_d$diarrhea <- as.numeric(combined_d$diarrhea)
+subset <- combined_d[, c(153, 36:69, 227)]
+
+summary(glm(diarrhea ~ fiber_norm , data = combined_d))
+
+filtered_microbes <- as.data.frame(summary(glm(fiber_norm ~ ., data = subset[,-1]))$coefficients) |>
+  arrange(`Pr(>|t|)`) |>
+  filter(`Pr(>|t|)` <= 0.1)
+
+filtered_microbes <- rownames(filtered_microbes)
+
+
+
+
+
+
+# multimedia package
+
+exper_d <- mediation_data(x = combined_d, treatments = "fiber_norm", mediators = significant_genera, outcomes = "diarrhea")
 
 model_d <- multimedia(exper_d, glmnet_model(lambda = 0.1)) |>
   estimate(exper_d)
