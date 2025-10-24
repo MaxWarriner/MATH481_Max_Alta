@@ -8,6 +8,7 @@ library(vroom)
 library(multimedia)
 set.seed(20231222)
 
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta")
 ps <- read_rds('microbiome.RDS')
 
 metabolites <- read_csv('metabolites_transposed.csv') |>
@@ -59,10 +60,9 @@ for (i in 1:463){
 }
 
 
-(significant_metabolites <- fiber_metabolites_regression |>
+(significant_metabolites_fiber <- fiber_metabolites_regression |>
   filter(p <= 0.05) |>
   pull(metabolite))
-
 
 
 # Regression on Fiber vs. Genera ------------------------------------------
@@ -107,90 +107,108 @@ for (i in 1:624){
   fiber_genus_regression$p[i] <- cor.test(sam$fiber_norm, unlist(genus_abundance[,i]))$p.value
 }
 
-fiber_genus_regression <- fiber_genus_regression |>
-  arrange(as.numeric(p))
 
-(significant_genera <- fiber_genus_regression |>
+(significant_genera_fiber <- fiber_genus_regression |>
   filter(p <= 0.05) |>
   pull(genus))
 
 
 
-# Mediation Analysis ------------------------------------------------------
 
-common_samples <- intersect(rownames(sam), rownames(metabolites)) |> intersect(rownames(genus_abundance))
+# Regression on Genera vs. Health Outcomes --------------------------------
 
-sam <- sam |>
-  filter(rownames(sam) %in% common_samples)
+genus_health_dat <- cbind(sam$diarrhea, genus_abundance[,c(-1, -2)]) |>
+  rename(diarrhea = sam$diarrhea) |>
+  rename(diarrhea = diarrhea57)
 
-genus_abundance <- genus_abundance |>
-  filter(rownames(genus_abundance) %in% common_samples)
+colnames(genus_health_dat) <- gsub(pattern = "-", replacement = "_", colnames(genus_health_dat))
+colnames(genus_health_dat) <- gsub(pattern = " ", replacement = "", colnames(genus_health_dat))
+colnames(genus_health_dat) <- gsub(pattern = "\\[", replacement = "", colnames(genus_health_dat))
+colnames(genus_health_dat) <- gsub(pattern = "]", replacement = "", colnames(genus_health_dat))
 
-metabolites <- metabolites |>
-  filter(rownames(metabolites) %in% common_samples)
+genus_health_regression <- tibble(genus = colnames(genus_abundance)[c(-1,-2)], 
+                                  p = rep(NA, 622))
 
-colnames(genus_abundance) <- gsub(" ", "_", colnames(genus_abundance))
-colnames(genus_abundance) <- gsub('\\[', "", colnames(genus_abundance))
-colnames(genus_abundance) <- gsub("]", "", colnames(genus_abundance))
-colnames(genus_abundance) <- gsub("-", "", colnames(genus_abundance))
+for (i in 2:623){
+  genus <- colnames(genus_health_dat)[i]
+  formula <- as.formula(paste("diarrhea ~ ", genus, sep = ""))
+  genus_health_regression$p[i-1] <- as.data.frame(summary(glm(formula, data = genus_health_dat))$coefficients)$`Pr(>|t|)`[2]
+}
 
+significant_genera_health <- genus_health_regression |>
+  filter(p <= 0.05) |>
+  pull("genus")
+
+
+
+
+
+# Mediation Analysis: Fiber -> Microbes -> Diarrhea ------------------------------------------------------
+
+significant_genera <- intersect(significant_genera_fiber, significant_genera_health)[-9] #remove none
 
 significant_genera <- gsub(" ", "_", significant_genera)
-significant_genera <- gsub('\\[', "", significant_genera)
-significant_genera <- gsub("]", "", significant_genera)
-significant_genera <- gsub("-", "", significant_genera)
-
+significant_genera <- gsub("-", "_", significant_genera)
 
 # Combine datasets
 
-sam$fiber_group <- as.factor(sam$fiber_group)
-sam$diarrhea <- as.factor(sam$diarrhea)
+colnames(genus_abundance) <- gsub(pattern = " ", replacement = "_", colnames(genus_abundance))
+colnames(genus_abundance) <- gsub(pattern = "-", replacement = "_", colnames(genus_abundance))
+colnames(genus_abundance) <- gsub(pattern = "\\[", replacement = "", colnames(genus_abundance))
+colnames(genus_abundance) <- gsub(pattern = "]", replacement = "", colnames(genus_abundance))
 
-metabolites <- metabolites[,colnames(metabolites) %in% significant_metabolites]
-genus_abundance <- genus_abundance[, colnames(genus_abundance) %in% significant_genera]
+genus_abundance_filtered <- genus_abundance[, colnames(genus_abundance) %in% significant_genera]
 
-combined_d <- metabolites |>
-  bind_cols(genus_abundance, sam) |>
+combined_d <- bind_cols(genus_abundance_filtered, sam[,c(83,157)]) |>
   as_tibble()
 
-#mediation for diarrhea (fiber -> microbiome -> diarrhea)
-
-#Simple
-
 combined_d$diarrhea <- as.numeric(combined_d$diarrhea)
-subset <- combined_d[, c(153, 36:69, 227)]
 
 summary(glm(diarrhea ~ fiber_norm , data = combined_d))
+summary(glm(diarrhea ~ Hespellia + Lachnospiraceae_NK3A20_group + Lachnospiraceae_UCG_007 + Lachnospiraceae_UCG_008
+            + Methanosphaera + Oribacterium + Parvimonas + Subdoligranulum , data = combined_d))
 
-filtered_microbes <- as.data.frame(summary(glm(fiber_norm ~ ., data = subset[,-1]))$coefficients) |>
-  arrange(`Pr(>|t|)`) |>
-  filter(`Pr(>|t|)` <= 0.1)
-
-filtered_microbes <- rownames(filtered_microbes)
-
-
+summary(glm(diarrhea ~ fiber_norm , data = combined_d))
+summary(glm(diarrhea ~ Lachnospiraceae_UCG_007, data = combined_d))
+summary(glm(diarrhea ~ fiber_norm + Lachnospiraceae_UCG_007, data = combined_d))
 
 
+summary(glm(diarrhea ~ Hespellia + Lachnospiraceae_NK3A20_group + Lachnospiraceae_UCG_007 + Lachnospiraceae_UCG_008
+            + Methanosphaera + Oribacterium + Parvimonas + Subdoligranulum + fiber_norm, data = combined_d))
 
 
-# multimedia package
 
-exper_d <- mediation_data(x = combined_d, treatments = "fiber_norm", mediators = significant_genera, outcomes = "diarrhea")
 
-model_d <- multimedia(exper_d, glmnet_model(lambda = 0.1)) |>
-  estimate(exper_d)
+# multimedia mediation: Fiber -> microbes -> metabolites ------------------
+
+#which of the significant genera affect metabolites?
+
+common_samples <- intersect(rownames(genus_abundance), rownames(metabolites))
+
+genus_abundance <- genus_abundance[rownames(genus_abundance) %in% common_samples,]
+metabolites <- metabolites[rownames(metabolites) %in% common_samples,]
+sam <- sam[rownames(sam) %in% common_samples,]
+
+combined <- cbind(sam, genus_abundance) |>
+  cbind(metabolites)
+
+combined$fiber_group <- as.factor(combined$fiber_group)
+
+exper <- mediation_data(x = combined, treatments = "fiber_group", mediators = names(genus_abundance)[c(-1,-2)], outcomes = colnames(metabolites))
+
+model <- multimedia(exper, glmnet_model(lambda = 0.1)) |>
+  estimate(exper)
 
 
 # Direct Effects
-direct_d <- direct_effect(model = model_d, exper = exper_d) |>
-  map_dfr(effect_summary, .id = "treatment")
+direct <- direct_effect(model = model, exper = exper)
 
-vis_direct_d <- direct_d |>
-  slice_max(abs(direct_effect), n = 20) |>
+vis_direct <- direct |>
+  slice_max(abs(direct_effect), n = 12) |>
   pull(outcome)
 
-combined_d |>
-  select(any_of(vis_direct_d), fiber_group) |>
+direct_plot <- combined |>
+  select(any_of(vis_direct), fiber_group) |>
   pivot_longer(-fiber_group, names_to = "feature") |>
   ggplot() +
   geom_boxplot(
@@ -204,27 +222,64 @@ combined_d |>
     fill = "Group"
   ) + 
   ggtitle('Direct Effects on Metabolite by Fiber Group') + 
-  theme_bw()
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  scale_fill_brewer(palette = "Pastel1") + 
+  theme_pubclean()
 
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Mediation")
+ggsave(direct_plot, filename = "fiber_direct_effect_metabolites.png", width = 10, height = 6)
 
 #Indirect Effects
 
-indirect_effect <- indirect_overall(model_d, exper_d)
+indirect_effect <- indirect_overall(model, exper)
 
-top_direct_d <- dplyr::rename(direct_d, effect = direct_effect)
-top_indirect_d <- dplyr::rename(bind_rows(indirect_effect),
+top_direct <- dplyr::rename(direct, effect = direct_effect)
+top_indirect <- dplyr::rename(bind_rows(indirect_effect),
                               effect = indirect_effect
 )
-top_effects_d <- list(direct = top_direct_d, indirect = top_indirect_d) |>
+top_effects <- list(direct = top_direct, indirect = top_indirect) |>
   bind_rows(.id = "type")
 
-vis_outcomes <- c(
-  "m0181_hydrocinnamic_acid", "m1303_lithocholate",
-  "m0036_creatinine", "m0253_sphingosine", "m1478_C182_CE",
-  "m0295_arginine"
-)
+vis_outcomes <- c("Adenine", "n.Octadecylamine", ".alpha..D.Xylopyranose", 
+                  "X1.3.Dimethylurate", "Chelidonic.acid", "X1.Stearoyl.2.arachidonoyl.sn.glycero.3.phospho..1..myo.inositol.")
+
 top_effects <- bind_rows(
   filter(top_effects, outcome %in% vis_outcomes[1:3], type == "indirect"),
   filter(top_effects, outcome %in% vis_outcomes[4:6], type == "direct"),
 )
+
+
+eig <- \(x, k) 100 * round(x[k] / sum(x), 4)
+
+mds <- cmdscale(dist(mediators(exper)), eig = TRUE, k = 2)
+
+coords <- data.frame(mds$points) |>
+  bind_cols(treatments(exper)) |>
+  bind_cols(outcomes(exper)[, vis_outcomes]) |>
+  pivot_longer(top_effects$outcome,
+               names_to = "outcome",
+               values_to = "abundance"
+  ) |>
+  left_join(top_effects) |>
+  group_by(outcome) |>
+  mutate(abundance_quantile = as.integer(as.factor(cut(abundance, 10))) / 10)
+
+library(paletteer)
+direct_indirect_plot <- ggplot(coords) +
+  geom_point(aes(X1, X2, col = fiber_group, size = abundance_quantile)) +
+  scale_size_area(max_size = 1.5, breaks = c(0.25, 0.5, 0.75)) +
+  labs(
+    x = glue("MDS1 [{eig(mds$eig, 1)}%]"),
+    y = glue("MDS2 [{eig(mds$eig, 2)}%]"),
+    size = "Metabolite Abundance Quantile",
+    col = "Fiber Group"
+  ) +
+  facet_wrap(~ type + reorder(outcome, -abundance)) + 
+  ggtitle('Microbiome Composition: Highlighting Top Metabolites by Direct & Indirect Effects of Fiber') + 
+  ylim(-15, 11) + 
+  theme_classic() + 
+  scale_color_paletteer_d("fishualize::Etheostoma_barrenense") + 
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+ggsave(filename = "direct_indirect_plot.png", plot = direct_indirect_plot, width = 10, height = 6)
 
