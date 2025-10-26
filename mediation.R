@@ -168,9 +168,9 @@ summary(glm(diarrhea ~ fiber_norm , data = combined_d))
 summary(glm(diarrhea ~ Hespellia + Lachnospiraceae_NK3A20_group + Lachnospiraceae_UCG_007 + Lachnospiraceae_UCG_008
             + Methanosphaera + Oribacterium + Parvimonas + Subdoligranulum , data = combined_d))
 
-summary(glm(diarrhea ~ fiber_norm , data = combined_d))
 summary(glm(diarrhea ~ Lachnospiraceae_UCG_007, data = combined_d))
 summary(glm(diarrhea ~ fiber_norm + Lachnospiraceae_UCG_007, data = combined_d))
+asummary(glm(diarrhea ~ fiber_norm + Oribacterium, data = combined_d))
 
 
 summary(glm(diarrhea ~ Hespellia + Lachnospiraceae_NK3A20_group + Lachnospiraceae_UCG_007 + Lachnospiraceae_UCG_008
