@@ -275,5 +275,8 @@ for (i in 1:57){
 sam <- sam |>
   mutate(plant_protein_group = ifelse(plant_protein_norm <= unlist(median(sam$plant_protein_norm)), "low", "high"))
 
+sam <- sam[,c(1:152,211, 153:181,212,182:210,213)]
 
+sample_data(ps) <- sam
 
+write_rds(ps, 'microbiome.RDS')
