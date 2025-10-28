@@ -14,6 +14,10 @@ ps <- read_rds('microbiome.RDS')
 metabolites <- read_csv('metabolites_transposed.csv') |>
   column_to_rownames(var = "...1")
 
+original <- readxl::read_xlsx('metabolomics_original.xlsx')
+
+
+
 sam <- data.frame(ps@sam_data)
 
 
@@ -181,7 +185,6 @@ summary(glm(diarrhea ~ Hespellia + Lachnospiraceae_NK3A20_group + Lachnospiracea
 
 # multimedia mediation: Fiber -> microbes -> metabolites ------------------
 
-#which of the significant genera affect metabolites?
 
 common_samples <- intersect(rownames(genus_abundance), rownames(metabolites))
 
@@ -189,12 +192,17 @@ genus_abundance <- genus_abundance[rownames(genus_abundance) %in% common_samples
 metabolites <- metabolites[rownames(metabolites) %in% common_samples,]
 sam <- sam[rownames(sam) %in% common_samples,]
 
+colnames(genus_abundance) <- gsub(pattern = "-", replacement = "_", colnames(genus_abundance))
+colnames(genus_abundance) <- gsub(pattern = " ", replacement = "", colnames(genus_abundance))
+colnames(genus_abundance) <- gsub(pattern = "\\[", replacement = "", colnames(genus_abundance))
+colnames(genus_abundance) <- gsub(pattern = "]", replacement = "", colnames(genus_abundance))
+
 combined <- cbind(sam, genus_abundance) |>
   cbind(metabolites)
 
 combined$fiber_group <- as.factor(combined$fiber_group)
 
-exper <- mediation_data(x = combined, treatments = "fiber_group", mediators = names(genus_abundance)[c(-1,-2)], outcomes = colnames(metabolites))
+exper <- mediation_data(x = combined, treatments = "fiber_group", mediators = colnames(genus_abundance)[c(-1,-2)], outcomes = colnames(metabolites))
 
 model <- multimedia(exper, glmnet_model(lambda = 0.1)) |>
   estimate(exper)
@@ -206,6 +214,8 @@ direct <- direct_effect(model = model, exper = exper)
 vis_direct <- direct |>
   slice_max(abs(direct_effect), n = 12) |>
   pull(outcome)
+
+library(ggpubr)
 
 direct_plot <- combined |>
   select(any_of(vis_direct), fiber_group) |>
@@ -282,4 +292,16 @@ direct_indirect_plot <- ggplot(coords) +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
 ggsave(filename = "direct_indirect_plot.png", plot = direct_indirect_plot, width = 10, height = 6)
+
+
+# Tests of Assumptions
+
+confound_ix <- data.frame(
+  outcome = vis_outcomes,
+  mediator = "gEnterocloster"
+)
+rho_seq <- seq(-0.5, 0.5, length.out = 10)
+sensitivity_overall <- sensitivity(
+    model, exper, confound_ix, n_boot = 100, rho_seq = rho_seq, t1 = 1, t2 = 2
+)
 

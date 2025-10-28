@@ -6,8 +6,6 @@ library(compositions)
 library(phyloseq)
 library(webchem)
 
-# To do: Cluster with only one variable for each plot twice
-
 
 # Data Processing ---------------------------------------------------------
 
@@ -19,16 +17,7 @@ sam <- ps@sam_data
 
 tax <- data.frame(ps@tax_table@.Data)
 
-metab <- read_csv('metabolites_transposed.csv') |>
-  column_to_rownames(var = "...1")
-
-full_metab <- readxl::read_xlsx('metabolomics.xlsx')
-
-metab_info <- pc_prop(as.character(full_metab$PubChem_CID))
-
-filtered_keys <- metab_info[!is.na(metab_info)]
-
-write.table(filtered_keys, file = "keys.txt", row.names = F, col.names = F, quote = F)
+metab <- read_csv('metab_and_info.csv')
 
 abundance <- data.frame(ps@otu_table@.Data)
 
