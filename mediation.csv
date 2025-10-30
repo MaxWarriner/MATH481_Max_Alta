@@ -1,0 +1,9 @@
+nutrient,microbe,health_outcome,total_effect,total_p,direct_effect,direct_p,indirect_effect,indirect_p,proportion_estimate,proportion_p
+cholesterol_norm,LachnospiraceaeNK3A20group,diarrhea,-0.003653074,0,-5.98E-04,0.101,-0.003055525,0.004,0.163574196,0.101
+vitaminB1_norm,LachnospiraceaeNK3A20group,diarrhea,-0.006822818,0,-0.001874851,0.048,-0.004947967,0.04,0.274791326,0.048
+fruit_portions_norm,Subdoligranulum,bloating,0.203571898,0.039,0.101392372,0.033,0.102179526,0.295,0.498066645,0.068
+iron_norm,Facklamia,bloating,-3.79E-05,0.011,-1.87E-05,0.002,-1.92E-05,0.196,0.493652609,0.013
+iron_norm,Intestinimonas,bloating,-4.34E-05,0.015,-1.69E-05,0.009,-2.65E-05,0.14,0.388738299,0.024
+fruit_portions_norm,Hespellia,abdominalpain,0.270385316,0,0.102732979,0.015,0.167652337,0.135,0.37995029,0.015
+fruit_portions_norm,Lachnoclostridium,abdominalpain,0.255146105,0.001,0.069288674,0.046,0.185857431,0.037,0.271564695,0.047
+fruit_portions_norm,Victivallis,abdominalpain,0.260012788,0.006,0.070272446,0.051,0.189740342,0.047,0.270265347,0.057
