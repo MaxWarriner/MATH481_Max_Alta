@@ -5,6 +5,7 @@ library(glue)
 library(patchwork)
 library(tidyverse)
 library(vroom)
+library(philr)
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta")
 ps <- read_rds('microbiome.RDS')
@@ -69,6 +70,9 @@ food <- food[common_samples,]
 health <- health[common_samples,]
 
 combined <- cbind(food, health, genus_abundance, metabolites)
+sam <- sam[common_samples, ]
+combined$sex <- sam$sex
+combined$age <- sam$Age
 
 nutrients <- colnames(food)
 microbes <- colnames(genus_abundance)
@@ -100,7 +104,7 @@ for(health_outcome in health_outcomes){
   
   for(nutrient in nutrients){
     
-    nh_formula <- as.formula(paste(health_outcome, " ~ ", nutrient, sep = ""))
+    nh_formula <- as.formula(paste(health_outcome, " ~ ", nutrient, " + sex + age", sep = ""))
     nh_regression_p <- data.frame(summary(glm(nh_formula, data = combined))$coefficients)$Pr...t..[2]
     
     if(nh_regression_p < 0.05){
@@ -108,16 +112,16 @@ for(health_outcome in health_outcomes){
       
       for(microbe in microbes){
         
-        nm_formula <- as.formula(paste(microbe, " ~ ", nutrient, sep = ""))
+        nm_formula <- as.formula(paste(microbe, " ~ ", nutrient, " + sex + age", sep = ""))
         nm_regression_p <- data.frame(summary(lm(nm_formula, data = combined))$coefficients)$Pr...t..[2]
         
-        mh_formula <- as.formula(paste(health_outcome, " ~ ", microbe, sep = ""))
+        mh_formula <- as.formula(paste(health_outcome, " ~ ", microbe, " + sex + age", sep = ""))
         mh_regression_p <- data.frame(summary(glm(mh_formula, data = combined))$coefficients)$Pr...t..[2]
-        
-        if(nm_regression_p < 0.01 & mh_regression_p < 0.01){
+  
+        if(nm_regression_p < 0.05 & mh_regression_p < 0.05){
           
-          med.fit_formula <- as.formula(paste(microbe, " ~ ", nutrient, sep = ""))
-          out.fit_formula <- as.formula(paste(health_outcome, " ~ ", nutrient, " + ", microbe, sep = ""))
+          med.fit_formula <- as.formula(paste(microbe, " ~ ", nutrient, " + sex + age", sep = ""))
+          out.fit_formula <- as.formula(paste(health_outcome, " ~ ", nutrient, " + ", microbe, " + sex + age", sep = ""))
           
           
           med.fit <- lm(med.fit_formula, data = combined)
@@ -129,20 +133,19 @@ for(health_outcome in health_outcomes){
                              treat = nutrient, mediator =  microbe,
                              boot = TRUE, sims = 2000)
           
-          sum <- summary(med.out)
             
             mediation_dat <- rbind(mediation_dat, data.frame(
               nutrient = nutrient,
               microbe = microbe, 
               health_outcome = health_outcome, 
-              total_effect = sum$tau.coef,
-              total_p = sum$tau.p,
-              direct_effect = sum$d.avg,
-              direct_p = sum$d.avg.p,
-              indirect_effect = sum$z.avg, 
-              indirect_p = sum$z.avg.p, 
-              proportion_estimate = sum$n.avg, 
-              proportion_p = sum$n.avg.p
+              total_effect = med.out$tau.coef,
+              total_p = med.out$tau.p,
+              direct_effect = med.out$z.avg,
+              direct_p = med.out$z.avg.p,
+              indirect_effect = med.out$d.avg, 
+              indirect_p = med.out$d.avg.p, 
+              proportion_estimate = med.out$n.avg, 
+              proportion_p = med.out$n.avg.p
             ))
             
         }
@@ -155,16 +158,86 @@ for(health_outcome in health_outcomes){
 
 # Save initial mediation
 write_csv(mediation_dat, 'mediation.csv')
-
+# 
 write_csv(combined, 'combined_mediation_data.csv')
 
+mediation_dat <- read_csv('mediation.csv')
 
-#fruit vs. Hespellia vs. abdominalpain
-
-
-
+sam <- sam[common_samples,]
 
 
+#cholesterol vs. LachnospiraceaeNK3A20group vs. diarrhea (bad assumptions for regression)
+
+#cholesterol_norm vs. Streptococcus vs. diarrhea (Done)
+
+
+ggplot(data = combined, aes(x = cholesterol_norm, y = Streptococcus)) + 
+  geom_point() + 
+  geom_smooth(method = "lm")
+
+
+summary(lm(Streptococcus ~ cholesterol_norm + sex + age, data = combined))
+summary(glm(diarrhea ~ Streptococcus + sex + age, data = combined))
+summary(glm(diarrhea ~ Streptococcus + cholesterol_norm + sex + age, data = combined))
+
+
+med.fit <- lm(Streptococcus ~ cholesterol_norm, data = combined)
+
+out.fit <- glm(diarrhea ~ Streptococcus + cholesterol_norm ,data = combined, family = binomial(link = "logit"))
+
+
+med.out <- mediate(med.fit, out.fit,
+                   treat = "cholesterol_norm", mediator =  "Streptococcus",
+                   boot = TRUE, sims = 2000)
+
+sum <- summary(med.out)
+
+
+df_mediation <- data.frame(
+  Effect = c("ACME", "ADE", "Total Effect", "Prop. Mediated"),
+  Estimate = c(sum$d.avg, sum$z.avg, sum$tau.coef, sum$n.avg),
+  CI_lower = c(sum$d.avg.ci[1], sum$z.avg.ci[1], sum$tau.ci[1], sum$n.avg.ci[1]),
+  CI_upper = c(sum$d.avg.ci[2], sum$z.avg.ci[2], sum$tau.ci[2], sum$n.avg.ci[2]),
+  p_value = c(sum$d.avg.p, sum$z.avg.p, sum$tau.p, sum$n.avg.p)
+)
+
+
+
+
+
+#vitaminB1_norm vs. LachnospiraceaeNK3A20group vs. diarrhea (bad assumptions for plot)
+
+#vitaminB1_norm vs. Streptococcus vs. diarrhea
+
+ggplot(data = combined, aes(x = cholesterol_norm, y = Streptococcus)) + 
+  geom_point() + 
+  geom_smooth(method = "lm")
+
+
+summary(lm(Streptococcus ~ cholesterol_norm + sex + age, data = combined))
+summary(glm(diarrhea ~ Streptococcus + sex + age, data = combined))
+summary(glm(diarrhea ~ Streptococcus + cholesterol_norm + sex + age, data = combined))
+
+
+med.fit <- lm(Streptococcus ~ cholesterol_norm, data = combined)
+
+out.fit <- glm(diarrhea ~ Streptococcus + cholesterol_norm ,data = combined, family = binomial(link = "logit"))
+
+
+med.out <- mediate(med.fit, out.fit,
+                   treat = "cholesterol_norm", mediator =  "Streptococcus",
+                   boot = TRUE, sims = 2000)
+
+sum <- summary(med.out)
+
+
+df_mediation <- data.frame(
+  Effect = c("ACME", "ADE", "Total Effect", "Prop. Mediated"),
+  Estimate = c(sum$d.avg, sum$z.avg, sum$tau.coef, sum$n.avg),
+  CI_lower = c(sum$d.avg.ci[1], sum$z.avg.ci[1], sum$tau.ci[1], sum$n.avg.ci[1]),
+  CI_upper = c(sum$d.avg.ci[2], sum$z.avg.ci[2], sum$tau.ci[2], sum$n.avg.ci[2]),
+  p_value = c(sum$d.avg.p, sum$z.avg.p, sum$tau.p, sum$n.avg.p)
+)
 
 
 

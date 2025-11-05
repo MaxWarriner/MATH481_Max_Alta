@@ -1,0 +1,18 @@
+\documentclass[tikz,border=4]{standalone}\usepackage{siunitx}
+\usetikzlibrary{positioning}
+\tikzset{mynode/.style={draw,text width=1in,align=center}
+}
+\begin{document}
+  \begin{tikzpicture}
+    \node[mynode] (m){Streptococcus};
+    \node[mynode,below left=of m](a) {Cholesterol};
+    \node[mynode,below right=of m](b) {Diarrhea};
+    \draw[-latex] (a.north) -- node[auto,font=\footnotesize] {$b=-0.36$, $p=0.002$} (m.west);
+    \draw[-latex] (m.east) -- node[auto,font=\footnotesize] {$b=0.09$, $p=0.002$} (b.north);
+    \draw[-latex] (a.east) --
+            node[below=3mm,font=\footnotesize,align=center] {Direct effect, $b=-0.003$,
+                 $p<0.001$ \\ Indirect effect, $b=-0.0003
+$, $p=0.241$}
+                 (b.west);
+  \end{tikzpicture}
+\end{document}

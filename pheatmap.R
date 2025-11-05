@@ -13,11 +13,27 @@ setwd("C:/Users/12697/Documents/MATH481_Max_Alta")
 
 ps <- read_rds('microbiome.RDS')
 
-sam <- ps@sam_data
-
 tax <- data.frame(ps@tax_table@.Data)
 
+sam <- ps@sam_data
+
 metab <- read_csv('metab_and_info.csv')
+
+metab_info <- metab[,c(2,63:72)]
+
+metab <- data.frame(t(metab[,c(2,5:61)]))
+colnames(metab) <- metab[1,]
+metab <- metab[-1,]
+
+metab[] <- lapply(metab, function(x) {
+  if (is.character(x)) {
+    as.numeric(x)
+  } else {
+    x
+  }
+})
+
+metab <- log(metab)
 
 abundance <- data.frame(ps@otu_table@.Data)
 
@@ -57,6 +73,12 @@ genus_abundance_transposed <- genus_abundance %>%
 genus_abundance_transposed <- genus_abundance_transposed[-58,]
 
 food <- sam[,153:182]
+
+common_samples <- intersect(rownames(genus_abundance_transposed), rownames(metab))
+
+genus_abundance_transposed <- genus_abundance_transposed[common_samples,]
+metab <- metab[common_samples, ]
+food <- food[common_samples,]
 
 
 # Food vs. Microbes -------------------------------------------------------
