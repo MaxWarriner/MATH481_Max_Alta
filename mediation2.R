@@ -207,25 +207,22 @@ df_mediation <- data.frame(
 
 #vitaminB1_norm vs. LachnospiraceaeNK3A20group vs. diarrhea (bad assumptions for plot)
 
-#vitaminB1_norm vs. Streptococcus vs. diarrhea
-
-ggplot(data = combined, aes(x = cholesterol_norm, y = Streptococcus)) + 
-  geom_point() + 
-  geom_smooth(method = "lm")
 
 
-summary(lm(Streptococcus ~ cholesterol_norm + sex + age, data = combined))
-summary(glm(diarrhea ~ Streptococcus + sex + age, data = combined))
-summary(glm(diarrhea ~ Streptococcus + cholesterol_norm + sex + age, data = combined))
+#fruit_portions_norm vs. Colidextribacter vs. abdominalpain
+
+summary(lm(Colidextribacter ~ fruit_portions_norm + sex + age, data = combined))
+summary(glm(abdominalpain ~ Colidextribacter + sex + age, data = combined))
+summary(glm(abdominalpain ~ Colidextribacter + fruit_portions_norm + sex + age, data = combined))
 
 
-med.fit <- lm(Streptococcus ~ cholesterol_norm, data = combined)
+med.fit <- lm(Colidextribacter ~ fruit_portions_norm, data = combined)
 
-out.fit <- glm(diarrhea ~ Streptococcus + cholesterol_norm ,data = combined, family = binomial(link = "logit"))
+out.fit <- glm(abdominalpain ~ Colidextribacter + fruit_portions_norm ,data = combined, family = binomial(link = "logit"))
 
 
 med.out <- mediate(med.fit, out.fit,
-                   treat = "cholesterol_norm", mediator =  "Streptococcus",
+                   treat = "fruit_portions_norm", mediator =  "Colidextribacter",
                    boot = TRUE, sims = 2000)
 
 sum <- summary(med.out)
@@ -240,4 +237,32 @@ df_mediation <- data.frame(
 )
 
 
+#vitaminB1_norm vs. Enterobacter vs. abdominalpain: assumptions are bad
+
+#potassium_norm vs. LachnospiraceaeUCG_001 vs. lower_appetite
+
+summary(lm(LachnospiraceaeUCG_001 ~ potassium_norm + sex + age, data = combined))
+summary(glm(lower_appetite ~ LachnospiraceaeUCG_001 + sex + age, data = combined))
+summary(glm(lower_appetite ~ LachnospiraceaeUCG_001 + potassium_norm + sex + age, data = combined))
+
+
+med.fit <- lm(LachnospiraceaeUCG_001 ~ potassium_norm, data = combined)
+
+out.fit <- glm(lower_appetite ~ LachnospiraceaeUCG_001 + potassium_norm ,data = combined, family = binomial(link = "logit"))
+
+
+med.out <- mediate(med.fit, out.fit,
+                   treat = "potassium_norm", mediator =  "LachnospiraceaeUCG_001",
+                   boot = TRUE, sims = 2000)
+
+sum <- summary(med.out)
+
+
+df_mediation <- data.frame(
+  Effect = c("ACME", "ADE", "Total Effect", "Prop. Mediated"),
+  Estimate = c(sum$d.avg, sum$z.avg, sum$tau.coef, sum$n.avg),
+  CI_lower = c(sum$d.avg.ci[1], sum$z.avg.ci[1], sum$tau.ci[1], sum$n.avg.ci[1]),
+  CI_upper = c(sum$d.avg.ci[2], sum$z.avg.ci[2], sum$tau.ci[2], sum$n.avg.ci[2]),
+  p_value = c(sum$d.avg.p, sum$z.avg.p, sum$tau.p, sum$n.avg.p)
+)
 

@@ -1,0 +1,18 @@
+\documentclass[tikz,border=4]{standalone}\usepackage{siunitx}
+\usetikzlibrary{positioning}
+\tikzset{mynode/.style={draw,text width=1.5in,align=center}
+}
+\begin{document}
+  \begin{tikzpicture}
+    \node[mynode] (m){LachnospiraceaeUCG001};
+    \node[mynode,below left=of m](a) {Potassium};
+    \node[mynode,below right=of m](b) {Low Appetite};
+    \draw[-latex] (a.north) -- node[auto,font=\footnotesize] {$b=-0.021$, $p=0.024$} (m.west);
+    \draw[-latex] (m.east) -- node[auto,font=\footnotesize] {$b=-0.08$, $p=0.003$} (b.north);
+    \draw[-latex] (a.east) --
+            node[below=3mm,font=\footnotesize,align=center] {Direct effect, $b=0.001$,
+                 $p=0.165$ \\ Indirect effect, $b=0.0009
+$, $p=0.022$}
+                 (b.west);
+  \end{tikzpicture}
+\end{document}
