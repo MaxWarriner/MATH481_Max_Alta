@@ -1,25 +1,50 @@
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning")
+library(BiocManager)
+library(phyloseq)
 library(tidyverse)
+library(dplyr)
+library(ggrepel)
+library(patchwork)
+library(RColorBrewer)
+library(rlang)
+library(MicrobiotaProcess)
+library(vegan)
+library(dplyr)
+library(ALDEx2)
+library(microbiomeMarker)
+library(ggsci)
+library(ggpubr)
+library(patchwork)
+library(tidyverse)
+library(parallel)
+library(doParallel)
+library(pROC)
+
 ps <- read_rds('microbiome.RDS')
-metab <- read_csv('metabolites.csv')
+metab <- read_csv('metabolites_transposed.csv')
+tax <- tax_table(ps)
+
+colnames(tax) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+
+tax_table(ps) <- tax
 
 #log transform and scale metabolites
 metab <- metab |>
   mutate(across(where(is.numeric), ~ scale(log1p(.))[,1]))
 
 metab <- metab |>
-  column_to_rownames(var = "sampleID")
+  column_to_rownames(var = "...1")
 
 
 #scale nutrients
-nutr <- ps@sam_data[,153:182]
+nutr <- ps@sam_data[,154:183]
 nutr <- as.data.frame(scale(nutr))
 
-health<- ps@sam_data
+health<- as.data.frame(ps@sam_data)
 
-health <- data.frame(health) |>
-  mutate(infection = ifelse(Ascaris == 1 | Trichuris == 1 | Hookworm == 1 | Schistosoma == 1 | Hym.nana == 1, 1, 0))
+health <- health[,82:88]
 
-health <- health[,83:90]
+sam <- data.frame(ps@sam_data)
 
 
 #keep metabolite and microbiome overlapping samples
@@ -30,13 +55,38 @@ common_rows <- intersect(common_rows, rownames(health))
 health <- health[common_rows, , drop = FALSE]
 nutr <- nutr[common_rows, , drop = FALSE]
 metab <- metab[common_rows, , drop = FALSE]
+sam <- sam[common_rows, , drop = FALSE]
 
 ps <- prune_samples(sample_names(ps) %in% common_rows, ps)
 
+ps@sam_data$sex = ifelse(ps@sam_data$sex == "male", 1, 0)
+
 #merge metabolites into ps sample data 
-sample_data(ps) <- cbind(health, metab, nutr)
+sample_data(ps) <- cbind(health, metab, nutr, sam[,1:2]) # all together
+sample_data(ps) <- cbind(health, nutr, sam[,1:2]) # just nutrients
 
 # Machine Learning Functions
+
+get_tax_matrix <- function(ps, taxlevel, prefix, min_prevalence) {
+  ps_tax <- tax_glom(ps, taxlevel)
+  otumat <- as.data.frame(otu_table(ps_tax))
+  if (!taxa_are_rows(ps_tax)) otumat <- t(otumat)
+  taxmat <- as.data.frame(tax_table(ps_tax))
+  tax_names <- taxmat[[taxlevel]]
+  tax_names[is.na(tax_names) | tax_names == ""] <- "Unassigned"
+  rownames(otumat) <- paste0(prefix, make.unique(tax_names))
+  present_counts <- rowSums(otumat > 0)
+  keep <- present_counts >= (min_prevalence * ncol(otumat))
+  otumat <- otumat[keep, , drop = FALSE]
+  return(otumat)
+}
+
+fam_tab <- get_tax_matrix(ps, "Family", "F__", min_prevalence = 0.05)
+gen_tab <- get_tax_matrix(ps, "Genus", "G__",  min_prevalence = 0.05)
+all_feat_tab <- rbind(fam_tab, gen_tab)
+all_feat_tab[all_feat_tab == 0] <- 1e-6
+clr_mat <- compositions::clr(all_feat_tab)
+clr_mat <- t(clr_mat)
 
 cv_predict_clr_xgb <- function(
     ps_obj,
@@ -45,34 +95,15 @@ cv_predict_clr_xgb <- function(
     min_prevalence = 0.05,
     nfolds = 10,
     seed = 100,
-    n_cores = 4
+    n_cores = 4, 
+    clr_mat
 ) {
   set.seed(1313)
   cl <- makeCluster(n_cores)
   registerDoParallel(cl)
   
-  get_tax_matrix <- function(ps, taxlevel, prefix) {
-    ps_tax <- tax_glom(ps, taxlevel)
-    otumat <- as.data.frame(otu_table(ps_tax))
-    if (!taxa_are_rows(ps_tax)) otumat <- t(otumat)
-    taxmat <- as.data.frame(tax_table(ps_tax))
-    tax_names <- taxmat[[taxlevel]]
-    tax_names[is.na(tax_names) | tax_names == ""] <- "Unassigned"
-    rownames(otumat) <- paste0(prefix, make.unique(tax_names))
-    present_counts <- rowSums(otumat > 0)
-    keep <- present_counts >= (min_prevalence * ncol(otumat))
-    otumat <- otumat[keep, , drop = FALSE]
-    return(otumat)
-  }
   
-  fam_tab <- get_tax_matrix(ps_obj, "Family", "F__")
-  gen_tab <- get_tax_matrix(ps_obj, "Genus", "G__")
-  all_feat_tab <- rbind(fam_tab, gen_tab)
-  all_feat_tab[all_feat_tab == 0] <- 1e-6
-  clr_mat <- compositions::clr(all_feat_tab)
-  clr_mat <- t(clr_mat)
-  
-  meta <- as.data.frame(sample_data(ps_obj))
+  meta <- data.frame(sample_data(ps_obj))
   clr_samples <- rownames(clr_mat)
   meta <- meta[clr_samples, , drop = FALSE]
   y <- as.factor(meta[[outcome_var]])
@@ -84,22 +115,19 @@ cv_predict_clr_xgb <- function(
   
   meta_cols <- intersect(meta_cols, colnames(meta))
   meta_features <- meta[, meta_cols, drop = FALSE]
-  meta_features[] <- lapply(meta_features, function(x) as.numeric(as.character(x)))
-  meta_features <- meta_features[, sapply(meta_features, function(x) all(x %in% c(0, 1, NA))), drop = FALSE]
   
   X_full <- cbind(clr_mat, meta_features)
   nzv <- caret::nearZeroVar(X_full)
   if (length(nzv) > 0) X_full <- X_full[, -nzv, drop = FALSE]
   
-  # b SIMPLIFIED hyperparameter grid
   xgb_grid <- expand.grid(
-    nrounds = c(100, 200),
-    max_depth = c(3, 5, 7),
-    eta = c(0.05, 0.1),
-    gamma = 0,
-    colsample_bytree = 0.8,
-    min_child_weight = 1,
-    subsample = 0.8
+    nrounds = c(200, 400, 800),
+    max_depth = c(3, 5, 7, 9),
+    eta = c(0.01, 0.05, 0.1, 0.3),
+    gamma = c(0, 0.1, 0.5, 1),
+    colsample_bytree = c(0.6, 0.8, 1.0),
+    min_child_weight = c(1, 3, 5),
+    subsample = c(0.6, 0.8, 1.0)
   )
   
   fitControl <- caret::trainControl(
@@ -107,7 +135,8 @@ cv_predict_clr_xgb <- function(
     number = nfolds,
     classProbs = TRUE,
     savePredictions = "final",
-    allowParallel = TRUE
+    allowParallel = TRUE, 
+    verboseIter = T
   )
   
   xgb_fit <- caret::train(
@@ -149,6 +178,8 @@ cv_predict_clr_xgb <- function(
     xgb_fit = xgb_fit
   ))
 }
+
+## ROC, Variable Importance, and Heatmap plots
 
 plot_roc_curve_gg <- function(model_results, positive_class = NULL, factor) {
   
@@ -297,13 +328,38 @@ plot_top_feature_heatmap_clr <- function(
 }
 
 
-# Hygiene
-hygiene_results <- cv_predict_clr_xgb(ps, "diarrhea", meta_cols = colnames(ps@sam_data))
-hygiene_results$confusion_matrix
-head(hygiene_results$feature_importance, 50)
+# Illness w/ microbiome
+illness_results <- cv_predict_clr_xgb(ps, "illness", meta_cols = c("Age", "sex"), clr_mat = clr_mat)
+illness_results$confusion_matrix
+head(illness_results$feature_importance, 50)
 
-plot_top_feature_heatmap_clr(ps_obj = ps, model_results = hygiene_results,
-                             n_top = 10, metadata_vars = c("Sex", "Age"), 
-                             outcome_var = "hygiene_group", min_prevalence = 0.05)
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Heatmaps")
+plot_top_feature_heatmap_clr(ps_obj = ps, model_results = illness_results,
+                             n_top = 10, metadata_vars = c("sex", "Age"), 
+                             outcome_var = "illness", min_prevalence = 0.05)
 
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
+plot_roc_curve_gg(illness_results, factor = "illness")
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Top 10 Importance")
+plot_top_importance(illness_results, n_top = 10, factor = "illness")
+
+
+# Illness w/ microbiome + metabolome
+illness_results_plus <- cv_predict_clr_xgb(ps, "illness", meta_cols = c("Age", "sex", colnames(metab)), clr_mat = clr_mat)
+illness_results$confusion_matrix
+head(illness_results$feature_importance, 50)
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Heatmaps")
+plot_top_feature_heatmap_clr(ps_obj = ps, model_results = illness_results,
+                             n_top = 10, metadata_vars = c("sex", "Age"), 
+                             outcome_var = "illness", min_prevalence = 0.05)
+
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
+plot_roc_curve_gg(illness_results, factor = "illness")
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Top 10 Importance")
+plot_top_importance(illness_results, n_top = 10, factor = "illness")
 
