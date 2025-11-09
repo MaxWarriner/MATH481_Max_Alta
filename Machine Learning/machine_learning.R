@@ -348,18 +348,23 @@ plot_top_importance(illness_results, n_top = 10, factor = "illness")
 
 # Illness w/ microbiome + metabolome
 illness_results_plus <- cv_predict_clr_xgb(ps, "illness", meta_cols = c("Age", "sex", colnames(metab)), clr_mat = clr_mat)
-illness_results$confusion_matrix
-head(illness_results$feature_importance, 50)
+illness_results_plus$confusion_matrix
+head(illness_results_plus$feature_importance, 50)
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Heatmaps")
-plot_top_feature_heatmap_clr(ps_obj = ps, model_results = illness_results,
-                             n_top = 10, metadata_vars = c("sex", "Age"), 
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome + Metabolome/Heatmaps")
+plot_top_feature_heatmap_clr(ps_obj = ps, model_results = illness_results_plus,
+                             n_top = 10, metadata_vars = c("Age", "sex", colnames(metab)), 
                              outcome_var = "illness", min_prevalence = 0.05)
 
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
-plot_roc_curve_gg(illness_results, factor = "illness")
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Top 10 Importance")
-plot_top_importance(illness_results, n_top = 10, factor = "illness")
+
+
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome + Metabolome/ROC Curves")
+plot_roc_curve_gg(illness_results_plus, factor = "illness")
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome + Metabolome/Top 10 Importance")
+plot_top_importance(illness_results_plus, n_top = 10, factor = "illness")
+
 
