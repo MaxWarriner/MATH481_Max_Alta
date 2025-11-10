@@ -65,8 +65,8 @@ ps@sam_data$sex = ifelse(ps@sam_data$sex == "male", 1, 0)
 sample_data(ps) <- cbind(health, metab, nutr, sam[,1:2]) # all together
 sample_data(ps) <- cbind(health, nutr, sam[,1:2]) # just nutrients
 
-# Machine Learning Functions
 
+#Function to get workable matrix for microbiome data
 get_tax_matrix <- function(ps, taxlevel, prefix, min_prevalence) {
   ps_tax <- tax_glom(ps, taxlevel)
   otumat <- as.data.frame(otu_table(ps_tax))
@@ -88,46 +88,89 @@ all_feat_tab[all_feat_tab == 0] <- 1e-6
 clr_mat <- compositions::clr(all_feat_tab)
 clr_mat <- t(clr_mat)
 
+# save(clr_mat, file = "clr_mat.RData")
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning")
+
+clr_mat <- load("clr_mat.RData")
+
+# Machine Learning Functions
+
+
+#Overall XGBoost function that can include metabolomics
+
 cv_predict_clr_xgb <- function(
     ps_obj,
     outcome_var,
-    meta_cols,
+    meta_cols = NULL,         
     min_prevalence = 0.05,
     nfolds = 10,
     seed = 100,
     n_cores = 4, 
     clr_mat
 ) {
-  set.seed(1313)
-  cl <- makeCluster(n_cores)
-  registerDoParallel(cl)
+  set.seed(seed)
+  cl <- parallel::makeCluster(n_cores)
+  doParallel::registerDoParallel(cl)
   
-  
-  meta <- data.frame(sample_data(ps_obj))
+  # --- Metadata and outcome ---
+  meta <- as.data.frame(sample_data(ps_obj))
   clr_samples <- rownames(clr_mat)
   meta <- meta[clr_samples, , drop = FALSE]
   y <- as.factor(meta[[outcome_var]])
+  
+  # Remove missing outcome
   keep <- !is.na(y)
   clr_mat <- clr_mat[keep, , drop = FALSE]
   meta <- meta[keep, , drop = FALSE]
-  y <- y[keep]
-  levels(y) <- make.names(levels(y))
+  y <- droplevels(y[keep])
+  levels(y) <- make.names(levels(y))  # caret-safe factor names
   
-  meta_cols <- intersect(meta_cols, colnames(meta))
-  meta_features <- meta[, meta_cols, drop = FALSE]
+  # --- Prepare microbiome features ---
+  X_micro <- as.data.frame(clr_mat)
+  X_micro[] <- lapply(X_micro, function(x) as.numeric(as.character(x)))
+  X_micro <- X_micro[, colSums(is.na(X_micro)) == 0, drop = FALSE]
   
-  X_full <- cbind(clr_mat, meta_features)
+  # --- Prepare metadata features if provided ---
+  X_meta <- NULL
+  if (!is.null(meta_cols)) {
+    meta_cols <- intersect(meta_cols, colnames(meta))
+    if (length(meta_cols) > 0) {
+      X_meta <- meta[, meta_cols, drop = FALSE]
+      
+      # Convert character/factor metadata to numeric dummy variables
+      X_meta <- data.frame(model.matrix(~ . - 1, data = data.frame(X_meta)))
+      
+      # Ensure numeric and handle NAs
+      X_meta[] <- lapply(X_meta, function(x) as.numeric(as.character(x)))
+      X_meta <- X_meta[, colSums(is.na(X_meta)) == 0, drop = FALSE]
+    }
+  }
+  
+  # --- Combine microbiome and metadata features ---
+  if (!is.null(X_meta)) {
+    X_full <- cbind(X_micro, X_meta)
+  } else {
+    X_full <- X_micro
+  }
+  
+  # --- Remove zero or near-zero variance columns ---
   nzv <- caret::nearZeroVar(X_full)
   if (length(nzv) > 0) X_full <- X_full[, -nzv, drop = FALSE]
   
+  # --- Check if there are enough samples per class ---
+  if (any(table(y) < 2)) {
+    stop("Some outcome levels have fewer than 2 samples; CV cannot proceed.")
+  }
+  
   xgb_grid <- expand.grid(
-    nrounds = c(200, 400, 800),
-    max_depth = c(3, 5, 7, 9),
-    eta = c(0.01, 0.05, 0.1, 0.3),
-    gamma = c(0, 0.1, 0.5, 1),
-    colsample_bytree = c(0.6, 0.8, 1.0),
-    min_child_weight = c(1, 3, 5),
-    subsample = c(0.6, 0.8, 1.0)
+    nrounds = c(200, 400, 800, 1200),         # more boosting rounds for convergence
+    max_depth = c(3, 6, 9, 12, 15),           # allow deeper trees for complex patterns
+    eta = c(0.005, 0.01, 0.05, 0.1, 0.2),     # very fine learning rate control
+    gamma = c(0, 0.1, 0.5, 1),                # regularization strength
+    colsample_bytree = c(0.6, 0.8, 1.0),      # feature sampling
+    min_child_weight = c(1, 3, 5, 7),         # leaf node complexity
+    subsample = c(0.6, 0.8, 1.0)              # row sampling
   )
   
   fitControl <- caret::trainControl(
@@ -136,9 +179,128 @@ cv_predict_clr_xgb <- function(
     classProbs = TRUE,
     savePredictions = "final",
     allowParallel = TRUE, 
-    verboseIter = T
+    verboseIter = TRUE
   )
   
+  # --- Train model ---
+  xgb_fit <- tryCatch({
+    caret::train(
+      x = X_full,
+      y = y,
+      method = "xgbTree",
+      tuneGrid = xgb_grid,
+      trControl = fitControl,
+      verbose = FALSE
+    )
+  }, error = function(e) e)
+  
+  # --- Error handling ---
+  if (inherits(xgb_fit, "error")) {
+    stop("caret::train() failed. Check that X_full has no NAs and all numeric columns.")
+  }
+  if (all(is.na(xgb_fit$results$Accuracy))) {
+    stop("All Accuracy values are NA. This usually means the model failed during cross-validation.")
+  }
+  
+  # --- Results ---
+  overall_acc <- max(xgb_fit$results$Accuracy, na.rm = TRUE)
+  best_params <- xgb_fit$bestTune
+  
+  varimp <- caret::varImp(xgb_fit, scale = FALSE)$importance
+  varimp_df <- tibble::tibble(Feature = rownames(varimp), Importance = varimp[,1]) %>%
+    dplyr::arrange(desc(Importance)) %>%
+    dplyr::mutate(Level = dplyr::case_when(
+      grepl("^F__", Feature) ~ "Family",
+      grepl("^G__", Feature) ~ "Genus",
+      Feature %in% colnames(X_meta) ~ "Metadata",
+      TRUE ~ "Other"
+    ))
+  
+  preds <- xgb_fit$pred$pred[order(xgb_fit$pred$rowIndex)]
+  y_true <- xgb_fit$pred$obs[order(xgb_fit$pred$rowIndex)]
+  overall_cm <- caret::confusionMatrix(preds, y_true)
+  
+  # --- Stop and unregister cluster ---
+  parallel::stopCluster(cl)
+  foreach::registerDoSEQ()
+  
+  # --- Return results ---
+  return(list(
+    overall_accuracy = overall_acc,
+    best_params = best_params,
+    confusion_matrix = overall_cm,
+    feature_importance = varimp_df,
+    predictions = preds,
+    y_true = y_true,
+    xgb_fit = xgb_fit
+  ))
+}
+
+#Metabolomics Only XGBoost Function
+
+cv_predict_xgb_meta <- function(
+    ps_obj,
+    outcome_var,
+    meta_cols,
+    nfolds = 10,
+    seed = 100,
+    n_cores = 4
+) {
+  set.seed(seed)
+  cl <- parallel::makeCluster(n_cores)
+  doParallel::registerDoParallel(cl)
+  
+  # --- Prepare metadata and outcome ---
+  meta <- as.data.frame(sample_data(ps_obj))
+  y <- as.factor(meta[[outcome_var]])
+  keep <- !is.na(y)
+  meta <- meta[keep, , drop = FALSE]
+  y <- droplevels(y[keep])
+  levels(y) <- make.names(levels(y))  # caret safe
+  
+  # --- Select only metadata columns ---
+  meta_cols <- intersect(meta_cols, colnames(meta))
+  X_meta <- meta[, meta_cols, drop = FALSE]
+  
+  # --- Clean factor contrasts (this fixes your error) ---
+  for (nm in names(X_meta)) {
+    if (is.factor(X_meta[[nm]])) {
+      contrasts(X_meta[[nm]]) <- NULL
+    }
+  }
+  
+  # --- Convert categorical variables to dummy variables safely ---
+  dummy_model <- caret::dummyVars("~ .", data = data.frame(X_meta), fullRank = TRUE)
+  X_full <- predict(dummy_model, newdata = X_meta) %>% as.data.frame()
+  
+  # --- Ensure numeric and remove any NA columns ---
+  X_full[] <- lapply(X_full, function(x) as.numeric(as.character(x)))
+  X_full <- X_full[, colSums(is.na(X_full)) == 0, drop = FALSE]
+  
+  # --- Remove near-zero variance predictors ---
+  nzv <- caret::nearZeroVar(X_full)
+  if (length(nzv) > 0) X_full <- X_full[, -nzv, drop = FALSE]
+  
+  xgb_grid <- expand.grid(
+    nrounds = c(200, 400, 800, 1200),         # more boosting rounds for convergence
+    max_depth = c(3, 6, 9, 12, 15),           # allow deeper trees for complex patterns
+    eta = c(0.005, 0.01, 0.05, 0.1, 0.2),     # very fine learning rate control
+    gamma = c(0, 0.1, 0.5, 1),                # regularization strength
+    colsample_bytree = c(0.6, 0.8, 1.0),      # feature sampling
+    min_child_weight = c(1, 3, 5, 7),         # leaf node complexity
+    subsample = c(0.6, 0.8, 1.0)              # row sampling
+  )
+  
+  fitControl <- caret::trainControl(
+    method = "cv",
+    number = nfolds,
+    classProbs = TRUE,
+    savePredictions = "final",
+    allowParallel = TRUE,
+    verboseIter = TRUE
+  )
+  
+  # --- Train the XGBoost model ---
   xgb_fit <- caret::train(
     x = X_full,
     y = y,
@@ -148,25 +310,23 @@ cv_predict_clr_xgb <- function(
     verbose = FALSE
   )
   
+  # --- Results ---
   overall_acc <- max(xgb_fit$results$Accuracy)
   best_params <- xgb_fit$bestTune
   
   varimp <- caret::varImp(xgb_fit, scale = FALSE)$importance
-  varimp_df <- tibble(Feature = rownames(varimp), Importance = varimp[,1]) %>%
-    arrange(desc(Importance)) %>%
-    mutate(Level = dplyr::case_when(
-      grepl("^F__", Feature) ~ "Family",
-      grepl("^G__", Feature) ~ "Genus",
-      Feature %in% meta_cols ~ "Metadata",
-      TRUE ~ "Other"
-    ))
+  varimp_df <- tibble::tibble(
+    Feature = rownames(varimp),
+    Importance = varimp[, 1]
+  ) %>%
+    dplyr::arrange(desc(Importance))
   
   preds <- xgb_fit$pred$pred[order(xgb_fit$pred$rowIndex)]
   y_true <- xgb_fit$pred$obs[order(xgb_fit$pred$rowIndex)]
   overall_cm <- caret::confusionMatrix(preds, y_true)
   
-  stopCluster(cl)
-  registerDoSEQ()
+  parallel::stopCluster(cl)
+  foreach::registerDoSEQ()
   
   return(list(
     overall_accuracy = overall_acc,
@@ -178,6 +338,9 @@ cv_predict_clr_xgb <- function(
     xgb_fit = xgb_fit
   ))
 }
+
+
+
 
 ## ROC, Variable Importance, and Heatmap plots
 
@@ -235,7 +398,8 @@ plot_top_feature_heatmap_clr <- function(
     n_top = 10,
     metadata_vars,
     outcome_var,
-    min_prevalence = 0.05
+    min_prevalence = 0.05, 
+    filename
 ) {
   
   # 1. Top N features
@@ -321,22 +485,27 @@ plot_top_feature_heatmap_clr <- function(
     color = colorRampPalette(c("navy", "white", "firebrick3"))(100)
   )
   
-  ggsave(filename = paste(outcome_var, "_heatmap.png", sep = ""), plot = heatmap, height = 6, width = 18)
+  ggsave(filename = filename, plot = heatmap, height = 6, width = 18)
   
   return(heatmap)
   
 }
 
+for (health_outcome in colnames(health)){
 
-# Illness w/ microbiome
-illness_results <- cv_predict_clr_xgb(ps, "illness", meta_cols = c("Age", "sex"), clr_mat = clr_mat)
-illness_results$confusion_matrix
-head(illness_results$feature_importance, 50)
+# microbiome only
+microbiome_results <- cv_predict_clr_xgb(ps, health_outcome, meta_cols = c("Age", "sex"), clr_mat = clr_mat)
+microbiome_results$confusion_matrix
+head(microbiome_results$feature_importance, 50)
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models")
+save(microbiome_results, file = paste(health_outcome, "_microbiome_results.RData", sep = ""))
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Heatmaps")
-plot_top_feature_heatmap_clr(ps_obj = ps, model_results = illness_results,
+plot_top_feature_heatmap_clr(ps_obj = ps, model_results = microbiome_results,
                              n_top = 10, metadata_vars = c("sex", "Age"), 
-                             outcome_var = "illness", min_prevalence = 0.05)
+                             outcome_var = health_outcome, min_prevalence = 0.05, 
+                             filename = paste(health_outcome, "_microbiome_heatmap.png"))
 
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
@@ -367,4 +536,28 @@ plot_roc_curve_gg(illness_results_plus, factor = "illness")
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome + Metabolome/Top 10 Importance")
 plot_top_importance(illness_results_plus, n_top = 10, factor = "illness")
 
+
+
+# Illness w/ metabolome
+illness_results_metab <- cv_predict_xgb_meta(ps, "illness", meta_cols = c("Age", "sex", colnames(metab)))
+illness_results_metab$confusion_matrix
+head(illness_results_metab$feature_importance, 50)
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome + Metabolome/Heatmaps")
+plot_top_feature_heatmap_clr(ps_obj = ps, model_results = illness_results_plus,
+                             n_top = 10, metadata_vars = c("Age", "sex", colnames(metab)), 
+                             outcome_var = "illness", min_prevalence = 0.05)
+
+
+
+
+
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome + Metabolome/ROC Curves")
+plot_roc_curve_gg(illness_results_plus, factor = "illness")
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome + Metabolome/Top 10 Importance")
+plot_top_importance(illness_results_plus, n_top = 10, factor = "illness")
+
+}
 
