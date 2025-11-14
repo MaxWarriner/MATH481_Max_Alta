@@ -54,9 +54,9 @@ sum <- abundance |>
   summarize(mean_abundance = mean(across_samples)) |>
   arrange(-mean_abundance)
 
-top40 <- sum[1:40,]
+top30 <- sum[1:30,]
 
-top_genera <- top40$Genus
+top_genera <- top30$Genus
 
 filtered_abundance <- abundance |>
   filter(Genus %in% top_genera)
@@ -80,6 +80,82 @@ genus_abundance_transposed <- genus_abundance_transposed[common_samples,]
 metab <- metab[common_samples, ]
 food <- food[common_samples,]
 
+metab_class <- metab_info[,c(1,3:5)] |>
+  column_to_rownames(var = "Name")
+
+library(Silhouette)
+
+compute_silhouette <- function(hc, dist_mat, k) {
+  cluster_assignments <- cutree(hc, k = k)
+  sil <- cluster::silhouette(cluster_assignments, dist_mat)
+  mean(sil[, "sil_width"])
+}
+
+calc_clusters_rows <- function(cor_matrix){
+  
+  dist_mat_euclid <- dist(cor_matrix, method = "euclidean")
+  
+  hc_euclid <- hclust(dist_mat_euclid, method = "complete")
+  
+  dist_mat_manhattan <- dist(cor_matrix, method = "manhattan")
+  
+  hc_manhattan <- hclust(dist_mat_manhattan, method = "complete")
+  
+  dist_mat_canberra <- dist(cor_matrix, method = "canberra")
+  
+  hc_canberra <- hclust(dist_mat_canberra, method = "complete")
+  
+  
+  k_range <- 2:10
+  
+  sil_scores_euclid <- sapply(k_range, function(k) compute_silhouette(hc_euclid, dist_mat_euclid, k))
+  sil_scores_manhattan <- sapply(k_range, function(k) compute_silhouette(hc_manhattan, dist_mat_manhattan, k))
+  sil_scores_canberra <- sapply(k_range, function(k) compute_silhouette(hc_canberra, dist_mat_canberra, k))
+  
+  ggplot(data = tibble(k = rep(2:10, times = 3), 
+                       score = c(sil_scores_euclid, sil_scores_manhattan, sil_scores_canberra), 
+                       method = rep(c("Euclidean", "Manhattan", "Canberra"), each = 9))) + 
+    geom_line(aes(x = k, y = score, color = method)) + 
+    theme_bw() + 
+    xlab('# of Clusters') + 
+    ylab('Silhouette Score') + 
+    scale_x_continuous(breaks = c(2:10))
+  
+  
+}
+
+calc_clusters_cols <- function(cor_matrix){
+  
+  dist_mat_euclid <- dist(t(cor_matrix), method = "euclidean")
+  
+  hc_euclid <- hclust(dist_mat_euclid, method = "complete")
+  
+  dist_mat_manhattan <- dist(t(cor_matrix), method = "manhattan")
+  
+  hc_manhattan <- hclust(dist_mat_manhattan, method = "complete")
+  
+  dist_mat_canberra <- dist(t(cor_matrix), method = "canberra")
+  
+  hc_canberra <- hclust(dist_mat_canberra, method = "complete")
+  
+  
+  k_range <- 2:10
+  
+  sil_scores_euclid <- sapply(k_range, function(k) compute_silhouette(hc_euclid, dist_mat_euclid, k))
+  sil_scores_manhattan <- sapply(k_range, function(k) compute_silhouette(hc_manhattan, dist_mat_manhattan, k))
+  sil_scores_canberra <- sapply(k_range, function(k) compute_silhouette(hc_canberra, dist_mat_canberra, k))
+  
+  ggplot(data = tibble(k = rep(2:10, times = 3), 
+                       score = c(sil_scores_euclid, sil_scores_manhattan, sil_scores_canberra), 
+                       method = rep(c("Euclidean", "Manhattan", "Canberra"), each = 9))) + 
+    geom_line(aes(x = k, y = score, color = method)) + 
+    theme_bw() + 
+    xlab('# of Clusters') + 
+    ylab('Silhouette Score') + 
+    scale_x_continuous(breaks = c(2:10))
+  
+  
+}
 
 # Food vs. Microbes -------------------------------------------------------
 
@@ -88,23 +164,69 @@ cor_matrix <- cor(genus_abundance_transposed, food, use = "pairwise.complete.obs
   as.data.frame() |>
   as.matrix()
 
-cor_matrix[abs(cor_matrix) < 0.26] <- 0
+colnames(cor_matrix) <- gsub(pattern = "_norm", replacement = "",colnames(cor_matrix))
+colnames(cor_matrix) <- gsub(pattern = "_", replacement = " ",colnames(cor_matrix))
+
+sig_cutoff <- 0.26
+sig <- abs(cor_matrix) >= sig_cutoff  # TRUE = significant, FALSE = insignificant
+
 
 cor_matrix <- cor_matrix[rowSums(cor_matrix) != 0,
                     colSums(cor_matrix) != 0]
 
+mat_colors <- cor_matrix
+mat_colors[!sig] <- 0
 
-genus_phylum <- top40[,c(2,1)]
+
+genus_phylum <- top30[,c(2,1)]
 
 genus_phylum <- column_to_rownames(genus_phylum, var = "Genus")
 
 
-microbes_clustered_food <- pheatmap(cor_matrix, annotation_row = genus_phylum, na_col = "white", cluster_cols = F)
-microbes_food_clustered <- pheatmap(cor_matrix, annotation_row = genus_phylum, na_col = "white", cluster_rows = F)
+# microbes clustered ------------------------------------------------------
+
+#calculate silhouette scores for different clusters and distance metrics
+
+calc_clusters_rows(cor_matrix)
+
+#optimal clusters is 7 with euclidean
+
+dist <- dist(cor_matrix, method = "euclidean")
+
+hc <- hclust(dist, method = "complete")
+
+
+microbes_clustered_food <- pheatmap(mat_colors, 
+                                    annotation_row = genus_phylum,
+                                    na_col = "white", 
+                                    cluster_cols = F,
+                                    cluster_rows = hc, 
+                                    cutree_rows = 7)
+
+
+# food clustered ----------------------------------------------------------
+
+calc_clusters_cols(cor_matrix)
+
+#optimal clusters is 6 with manhattan
+
+dist <- dist(t(cor_matrix), method = "manhattan")
+
+hc <- hclust(dist, method = "complete")
+
+
+microbes_food_clustered <- pheatmap(mat_colors, 
+                                    annotation_row = genus_phylum,
+                                    na_col = "white", 
+                                    cluster_rows = F,
+                                    cluster_cols = hc, 
+                                    cutree_cols = 6)
+
+
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Heatmaps")
-ggsave(microbes_clustered_food, filename = 'microbes_clusted_food_heatmap.png', dpi = 800, width = 12, height = 6)
-ggsave(microbes_food_clustered, filename = 'microbes_food_clustered_heatmap.png', dpi = 800, width = 12, height = 6)
+ggsave(microbes_clustered_food, filename = 'microbes_clustered_food_heatmap.png', dpi = 800, width = 14, height = 6)
+ggsave(microbes_food_clustered, filename = 'microbes_food_clustered_heatmap.png', dpi = 800, width = 14, height = 6)
 
 # Food vs. Metabolites ----------------------------------------------------
 
@@ -112,7 +234,12 @@ common_rows <- intersect(rownames(food), rownames(metab))
 
 # Subset both data frames
 metab <- metab[common_rows, , drop = FALSE]
-metab <- as.data.frame(lapply(metab, as.numeric))
+
+complete_info <- metab_info |>
+  filter(!is.na(Superclass)) |>
+  pull(Name)
+
+metab <- metab[,which(colnames(metab) %in% complete_info)]
 
 food <- food[common_rows, , drop = FALSE]
 
@@ -121,10 +248,8 @@ cor_matrix <- cor(metab, food, use = "pairwise.complete.obs", method = "spearman
   as.data.frame() |>
   as.matrix()
 
-cor_matrix[abs(cor_matrix) < 0.26] <- 0
-
-cor_matrix <- cor_matrix[rowSums(cor_matrix) != 0,
-                         colSums(cor_matrix) != 0]
+colnames(cor_matrix) <- gsub(pattern = "_norm", replacement = "",colnames(cor_matrix))
+colnames(cor_matrix) <- gsub(pattern = "_", replacement = " ",colnames(cor_matrix))
 
 rs <- rowSums(abs(cor_matrix))
 
@@ -132,11 +257,62 @@ top_rows <- order(rs, decreasing = TRUE)[1:min(30, nrow(cor_matrix))]
 
 cor_matrix <- cor_matrix[top_rows, ]
 
-metabolites_clustered_food <- pheatmap(cor_matrix, cluster_cols = F)
-metabolites_food_clustered <- pheatmap(cor_matrix, cluster_rows = F)
+sig_cutoff <- 0.26
+sig <- abs(cor_matrix) >= sig_cutoff  # TRUE = significant, FALSE = insignificant
+
+mat_colors <- cor_matrix
+mat_colors[!sig] <- 0
+
+metab_class <- metab_info[,c(1,3:5)] |>
+  column_to_rownames(var = "Name")
+
+metab_class <- metab_class[intersect(rownames(metab_class), rownames(cor_matrix)),] |>
+  dplyr::select(c(Superclass, Class))
+
+
+
+# metabolites clustered ---------------------------------------------------
+
+#calculate silhouette scores for different clusters and distance metrics
+
+calc_clusters_rows(cor_matrix)
+
+#optimal clusters is 2 with manhattan
+
+dist <- dist(cor_matrix, method = "manhattan")
+
+hc <- hclust(dist, method = "complete")
+
+
+metabolites_clustered_food <- pheatmap(mat_colors, 
+                                    annotation_row = metab_class,
+                                    na_col = "white", 
+                                    cluster_cols = F,
+                                    cluster_rows = hc, 
+                                    cutree_rows = 2)
+
+
+# food clustered ----------------------------------------------------------
+
+calc_clusters_cols(cor_matrix)
+
+#optimal clusters is 4 with manhattan
+
+dist <- dist(t(cor_matrix), method = "manhattan")
+
+hc <- hclust(dist, method = "complete")
+
+
+metabolites_food_clustered <- pheatmap(mat_colors, 
+                                       na_col = "white", 
+                                       cluster_rows = F,
+                                       cluster_cols = hc, 
+                                       cutree_cols = 4)
+
+
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Heatmaps")
-ggsave(metabolites_clustered_food, filename = 'metabolites_clustered_food_heatmap.png', dpi = 800, width = 12, height = 8)
+ggsave(metabolites_clustered_food, filename = 'metabolites_clustered_food_heatmap.png', dpi = 800, width = 16, height = 8)
 ggsave(metabolites_food_clustered, filename = 'metabolites_food_clustered_heatmap.png', dpi = 800, width = 12, height = 8)
 
 
@@ -155,10 +331,6 @@ cor_matrix <- cor(metab, genus_abundance_transposed, use = "pairwise.complete.ob
   as.data.frame() |>
   as.matrix()
 
-cor_matrix[abs(cor_matrix) < 0.26] <- 0
-
-cor_matrix <- cor_matrix[rowSums(cor_matrix) != 0,
-                         colSums(cor_matrix) != 0]
 
 rs <- rowSums(abs(cor_matrix))
 
@@ -166,11 +338,64 @@ top_rows <- order(rs, decreasing = TRUE)[1:min(30, nrow(cor_matrix))]
 
 cor_matrix <- cor_matrix[top_rows, ]
 
-metabolites_clustered_microbes <- pheatmap(cor_matrix, annotation_col = genus_phylum, cluster_cols = F)
-metabolites_microbes_clustered <- pheatmap(cor_matrix, annotation_col = genus_phylum, cluster_rows = F)
+sig_cutoff <- 0.26
+sig <- abs(cor_matrix) >= sig_cutoff  # TRUE = significant, FALSE = insignificant
+
+mat_colors <- cor_matrix
+mat_colors[!sig] <- 0
+
+metab_class <- metab_info[,c(1,3:5)] |>
+  column_to_rownames(var = "Name")
+
+metab_class <- metab_class[intersect(rownames(metab_class), rownames(cor_matrix)),] |>
+  dplyr::select(c(Superclass, Class))
+
+
+# metabolites clustered ---------------------------------------------------
+
+#calculate silhouette scores for different clusters and distance metrics
+
+calc_clusters_rows(cor_matrix)
+
+#optimal clusters is 3 with manhattan
+
+dist <- dist(cor_matrix, method = "manhattan")
+
+hc <- hclust(dist, method = "complete")
+
+
+metabolites_clustered_microbes <- pheatmap(mat_colors, 
+                                       annotation_row = metab_class,
+                                       na_col = "white", 
+                                       cluster_cols = F,
+                                       cluster_rows = hc, 
+                                       cutree_rows = 3)
+
+
+# microbes clustered ------------------------------------------------------
+
+#calculate silhouette scores for different clusters and distance metrics
+
+calc_clusters_cols(cor_matrix)
+
+#optimal clusters is 5 with euclidean
+
+dist <- dist(t(cor_matrix), method = "euclidean")
+
+hc <- hclust(dist, method = "complete")
+
+
+metabolites_microbes_clustered <- pheatmap(mat_colors, 
+                                           annotation_col = genus_phylum,
+                                           na_col = "white", 
+                                           cluster_rows = F,
+                                           cluster_cols = hc, 
+                                           cutree_cols = 5)
+
+
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Heatmaps")
-ggsave(metabolites_clustered_microbes, filename = 'metabolites_clustered_microbes_heatmap.png', dpi = 800, width = 12, height = 8)
+ggsave(metabolites_clustered_microbes, filename = 'metabolites_clustered_microbes_heatmap.png', dpi = 800, width = 16, height = 8)
 ggsave(metabolites_microbes_clustered, filename = 'metabolites_microbes_clustered_heatmap.png', dpi = 800, width = 12, height = 8)
 
 
