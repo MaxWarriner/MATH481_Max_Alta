@@ -14,8 +14,6 @@ library(ALDEx2)
 library(microbiomeMarker)
 library(ggsci)
 library(ggpubr)
-library(patchwork)
-library(tidyverse)
 library(parallel)
 library(doParallel)
 library(pROC)
@@ -92,7 +90,9 @@ clr_mat <- t(clr_mat)
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning")
 
-clr_mat <- load("clr_mat.RData")
+clr_mat <- load('clr_mat.RData')
+
+clr_mat <- scale(clr_mat)
 
 # Machine Learning Functions
 
@@ -163,14 +163,24 @@ cv_predict_clr_xgb <- function(
     stop("Some outcome levels have fewer than 2 samples; CV cannot proceed.")
   }
   
+  # xgb_grid <- expand.grid(
+  #   nrounds = c(200, 400, 800, 1200),         # more boosting rounds for convergence
+  #   max_depth = c(3, 6, 9, 12, 15),           # allow deeper trees for complex patterns
+  #   eta = c(0.005, 0.01, 0.05, 0.1, 0.2),     # very fine learning rate control
+  #   gamma = c(0, 0.1, 0.5, 1),                # regularization strength
+  #   colsample_bytree = c(0.6, 0.8, 1.0),      # feature sampling
+  #   min_child_weight = c(1, 3, 5, 7),         # leaf node complexity
+  #   subsample = c(0.6, 0.8, 1.0)              # row sampling
+  # )
+  
   xgb_grid <- expand.grid(
-    nrounds = c(200, 400, 800, 1200),         # more boosting rounds for convergence
-    max_depth = c(3, 6, 9, 12, 15),           # allow deeper trees for complex patterns
-    eta = c(0.005, 0.01, 0.05, 0.1, 0.2),     # very fine learning rate control
-    gamma = c(0, 0.1, 0.5, 1),                # regularization strength
-    colsample_bytree = c(0.6, 0.8, 1.0),      # feature sampling
-    min_child_weight = c(1, 3, 5, 7),         # leaf node complexity
-    subsample = c(0.6, 0.8, 1.0)              # row sampling
+    nrounds = c(100, 300),          # fast, still shows learning behavior
+    max_depth = c(3, 6),            # shallow + moderate
+    eta = c(0.05, 0.1),             # reasonably fast learning
+    gamma = c(0, 0.1),              # mild reg range
+    colsample_bytree = c(0.8),      # fixed for speed
+    min_child_weight = c(1),        # fixed for speed
+    subsample = c(0.8)              # fixed for speed
   )
   
   fitControl <- caret::trainControl(
@@ -281,14 +291,24 @@ cv_predict_xgb_meta <- function(
   nzv <- caret::nearZeroVar(X_full)
   if (length(nzv) > 0) X_full <- X_full[, -nzv, drop = FALSE]
   
+  # xgb_grid <- expand.grid(
+  #   nrounds = c(200, 400, 800, 1200),         # more boosting rounds for convergence
+  #   max_depth = c(3, 6, 9, 12, 15),           # allow deeper trees for complex patterns
+  #   eta = c(0.005, 0.01, 0.05, 0.1, 0.2),     # very fine learning rate control
+  #   gamma = c(0, 0.1, 0.5, 1),                # regularization strength
+  #   colsample_bytree = c(0.6, 0.8, 1.0),      # feature sampling
+  #   min_child_weight = c(1, 3, 5, 7),         # leaf node complexity
+  #   subsample = c(0.6, 0.8, 1.0)              # row sampling
+  # )
+  
   xgb_grid <- expand.grid(
-    nrounds = c(200, 400, 800, 1200),         # more boosting rounds for convergence
-    max_depth = c(3, 6, 9, 12, 15),           # allow deeper trees for complex patterns
-    eta = c(0.005, 0.01, 0.05, 0.1, 0.2),     # very fine learning rate control
-    gamma = c(0, 0.1, 0.5, 1),                # regularization strength
-    colsample_bytree = c(0.6, 0.8, 1.0),      # feature sampling
-    min_child_weight = c(1, 3, 5, 7),         # leaf node complexity
-    subsample = c(0.6, 0.8, 1.0)              # row sampling
+    nrounds = c(100, 300),          # fast, still shows learning behavior
+    max_depth = c(3, 6),            # shallow + moderate
+    eta = c(0.05, 0.1),             # reasonably fast learning
+    gamma = c(0, 0.1),              # mild reg range
+    colsample_bytree = c(0.8),      # fixed for speed
+    min_child_weight = c(1),        # fixed for speed
+    subsample = c(0.8)              # fixed for speed
   )
   
   fitControl <- caret::trainControl(
@@ -344,7 +364,7 @@ cv_predict_xgb_meta <- function(
 
 ## ROC, Variable Importance, and Heatmap plots
 
-plot_roc_curve_gg <- function(model_results, positive_class = NULL, factor) {
+plot_roc_curve_gg <- function(model_results, positive_class = NULL, factor, filename) {
   
   y_true <- model_results$y_true
   if (is.null(positive_class)) {
@@ -367,11 +387,11 @@ plot_roc_curve_gg <- function(model_results, positive_class = NULL, factor) {
     ) +
     theme_minimal(base_size = 14)
   
-  ggsave(filename = paste(factor, "ROC.png", sep = ""), plot = roc, width = 7, height = 5)
+  ggsave(filename = filename, plot = roc, width = 7, height = 5)
   
 }
 
-plot_top_importance <- function(model_results, n_top = 10, bar_color = "#2c7bb6", factor) {
+plot_top_importance <- function(model_results, n_top = 10, bar_color = "#2c7bb6", factor, filename) {
   
   varimp <- model_results$feature_importance %>% 
     arrange(desc(Importance)) %>%
@@ -388,7 +408,7 @@ plot_top_importance <- function(model_results, n_top = 10, bar_color = "#2c7bb6"
     theme_minimal(base_size = 14) +
     theme(legend.position = "none")
   
-  ggsave(filename = paste(factor, "top_importance.png", sep = ""), plot = plot, width = 10, height = 5)
+  ggsave(filename = filename, plot = plot, width = 10, height = 5)
   
 }
 
@@ -399,35 +419,13 @@ plot_top_feature_heatmap_clr <- function(
     metadata_vars,
     outcome_var,
     min_prevalence = 0.05, 
-    filename
+    filename, 
+    clr_mat
 ) {
   
   # 1. Top N features
   top_features <- head(model_results$feature_importance$Feature, n_top)
   
-  # 2. Get genus & family tables
-  get_tax_matrix <- function(ps, taxlevel, prefix) {
-    ps_tax <- tax_glom(ps, taxlevel)
-    otumat <- as.data.frame(otu_table(ps_tax))
-    if (!taxa_are_rows(ps_tax)) otumat <- t(otumat)
-    taxmat <- as.data.frame(tax_table(ps_tax))
-    tax_names <- taxmat[[taxlevel]]
-    tax_names[is.na(tax_names) | tax_names == ""] <- "Unassigned"
-    rownames(otumat) <- paste0(prefix, make.unique(tax_names))
-    present_counts <- rowSums(otumat > 0)
-    keep <- present_counts >= (min_prevalence * ncol(otumat))
-    otumat <- otumat[keep, , drop=FALSE]
-    return(otumat)
-  }
-  
-  fam_tab <- get_tax_matrix(ps_obj, "Family", "F__")
-  gen_tab <- get_tax_matrix(ps_obj, "Genus", "G__")
-  all_feat_tab <- rbind(fam_tab, gen_tab)
-  
-  # 3. CLR transformation
-  all_feat_tab[all_feat_tab == 0] <- 1e-6
-  clr_mat <- compositions::clr(all_feat_tab)
-  clr_mat <- t(clr_mat)  # samples as rows, features as columns
   
   # 4. Get metadata (as numeric)
   meta <- as.data.frame(sample_data(ps_obj))
@@ -495,69 +493,65 @@ for (health_outcome in colnames(health)){
 
 # microbiome only
 microbiome_results <- cv_predict_clr_xgb(ps, health_outcome, meta_cols = c("Age", "sex"), clr_mat = clr_mat)
-microbiome_results$confusion_matrix
-head(microbiome_results$feature_importance, 50)
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models")
 save(microbiome_results, file = paste(health_outcome, "_microbiome_results.RData", sep = ""))
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Heatmaps")
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome Only/Heatmaps")
 plot_top_feature_heatmap_clr(ps_obj = ps, model_results = microbiome_results,
                              n_top = 10, metadata_vars = c("sex", "Age"), 
                              outcome_var = health_outcome, min_prevalence = 0.05, 
-                             filename = paste(health_outcome, "_microbiome_heatmap.png"))
+                             filename = paste(health_outcome, "_microbiome_heatmap.png"), 
+                             clr_mat = clr_mat)
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome Only/ROC Curves")
+plot_roc_curve_gg(microbiome_results, factor = health_outcome, filename = paste(health_outcome, "_microbiome_ROC.png", sep = ""))
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome Only/Top 10 Importance")
+plot_top_importance(microbiome_results, n_top = 10, factor = health_outcome, filename = paste(health_outcome, "_microbiome_top10.png", sep = ""))
 
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
-plot_roc_curve_gg(illness_results, factor = "illness")
+#Metabolome Only
+metabolome_results <- cv_predict_xgb_meta(ps, health_outcome, meta_cols = c("Age", "sex", colnames(metab)))
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Top 10 Importance")
-plot_top_importance(illness_results, n_top = 10, factor = "illness")
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models")
+save(metabolome_results, file = paste(health_outcome, "_metabolome_results.RData", sep = ""))
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Metabolome Only/Heatmaps")
+plot_top_feature_heatmap_clr(ps_obj = ps, model_results = metabolome_results,
+                             n_top = 10, metadata_vars = c("sex", "Age", colnames(metab)), 
+                             outcome_var = health_outcome, min_prevalence = 0.05, 
+                             filename = paste(health_outcome, "_metabolome_heatmap.png"), 
+                             clr_mat = clr_mat)
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Metabolome Only/ROC Curves")
+plot_roc_curve_gg(metabolome_results, factor = health_outcome, filename = paste(health_outcome, "_metabolome_ROC.png", sep = ""))
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Metabolome Only/Top 10 Importance")
+plot_top_importance(metabolome_results, n_top = 10, factor = health_outcome, filename = paste(health_outcome, "_metabolome_top10.png", sep = ""))
 
 
-# Illness w/ microbiome + metabolome
-illness_results_plus <- cv_predict_clr_xgb(ps, "illness", meta_cols = c("Age", "sex", colnames(metab)), clr_mat = clr_mat)
-illness_results_plus$confusion_matrix
-head(illness_results_plus$feature_importance, 50)
+
+#Microbiome + Metabolome
+microbiome_metabolome_results <- cv_predict_clr_xgb(ps, health_outcome, meta_cols = c("Age", "sex", colnames(metab)), clr_mat = clr_mat)
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models")
+save(microbiome_metabolome_results, file = paste(health_outcome, "_microbiome_metabolome_results.RData", sep = ""))
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome + Metabolome/Heatmaps")
-plot_top_feature_heatmap_clr(ps_obj = ps, model_results = illness_results_plus,
-                             n_top = 10, metadata_vars = c("Age", "sex", colnames(metab)), 
-                             outcome_var = "illness", min_prevalence = 0.05)
-
-
-
-
-
+plot_top_feature_heatmap_clr(ps_obj = ps, model_results = microbiome_metabolome_results,
+                             n_top = 10, metadata_vars = c("sex", "Age", colnames(metab)), 
+                             outcome_var = health_outcome, min_prevalence = 0.05, 
+                             filename = paste(health_outcome, "_microbiome_metabolome_heatmap.png"), 
+                             clr_mat = clr_mat)
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome + Metabolome/ROC Curves")
-plot_roc_curve_gg(illness_results_plus, factor = "illness")
+plot_roc_curve_gg(microbiome_metabolome_results, factor = health_outcome, filename = paste(health_outcome, "_microbiome_metabolome_ROC.png", sep = ""))
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome + Metabolome/Top 10 Importance")
-plot_top_importance(illness_results_plus, n_top = 10, factor = "illness")
+plot_top_importance(microbiome_metabolome_results, n_top = 10, factor = health_outcome, filename = paste(health_outcome, "_microbiome_metabolome_top10.png", sep = ""))
 
 
-
-# Illness w/ metabolome
-illness_results_metab <- cv_predict_xgb_meta(ps, "illness", meta_cols = c("Age", "sex", colnames(metab)))
-illness_results_metab$confusion_matrix
-head(illness_results_metab$feature_importance, 50)
-
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome + Metabolome/Heatmaps")
-plot_top_feature_heatmap_clr(ps_obj = ps, model_results = illness_results_plus,
-                             n_top = 10, metadata_vars = c("Age", "sex", colnames(metab)), 
-                             outcome_var = "illness", min_prevalence = 0.05)
-
-
-
-
-
-
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome + Metabolome/ROC Curves")
-plot_roc_curve_gg(illness_results_plus, factor = "illness")
-
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome + Metabolome/Top 10 Importance")
-plot_top_importance(illness_results_plus, n_top = 10, factor = "illness")
 
 }
 
