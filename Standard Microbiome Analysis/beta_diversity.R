@@ -13,16 +13,20 @@ ps <- readRDS('microbiome.RDS')
 
 sam <- ps@sam_data
 
-food <- sam[,184:213]
+food <- sam[,211:213]
+
+food$nutrient_score <- ifelse(food$nutrient_score <= median(food$nutrient_score), "low", "high")
+food$fruit_or_vegetable <- ifelse(food$fruit_or_vegetable <= median(food$fruit_or_vegetable), "low", "high")
+food$animal_product <- ifelse(food$animal_product <= median(food$animal_product), "low", "high")
 
 bdiv <- tibble(nutrient = colnames(food), 
-               jaccard_p = rep(NA, 30), 
-               bray_p = rep(NA, 30))
+               jaccard_p = rep(NA, 3), 
+               bray_p = rep(NA, 3))
 
 bray <- phyloseq::distance(ps, method = "bray")
 jaccard <- phyloseq::distance(ps, method = "jaccard")
 
-for (i in 1:30){
+for (i in 1:3){
   
   permanova_bray <- vegan::adonis2(bray ~ unlist(food[,i]))
   bdiv$bray_p[i] <- permanova_bray$`Pr(>F)`[1]
@@ -33,11 +37,15 @@ for (i in 1:30){
 }
 
 sig <- bdiv |>
-  filter(bray_p <= 0.1 & jaccard_p <= 0.1) |>
+  filter(bray_p <= 0.05 & jaccard_p <= 0.05) |>
   pull(nutrient)
 
 bdiv$adjusted_bray <- p.adjust(bdiv$bray_p, method = "BH")
 bdiv$adjusted_jaccard <- p.adjust(bdiv$jaccard_p, method = "BH")
+
+ps@sam_data$nutrient_score <- ifelse(ps@sam_data$nutrient_score <= median(ps@sam_data$nutrient_score), "low", "high")
+ps@sam_data$fruit_or_vegetable <- ifelse(ps@sam_data$fruit_or_vegetable <= median(ps@sam_data$fruit_or_vegetable), "low", "high")
+ps@sam_data$animal_product <- ifelse(ps@sam_data$animal_product <= median(ps@sam_data$animal_product), "low", "high")
 
 
 #Create PCOA plots for significant stuff
@@ -47,6 +55,8 @@ jaccard <- phyloseq::distance(ps, method = "jaccard")
 
 jaccard_pcoa <- get_pcoa(obj = ps, distmethod = "jaccard", method = "hellinger")
 bray_pcoa <- get_pcoa(obj = ps, distmethod = "bray", method = "hellinger")
+
+sam <- ps@sam_data
 
 create_pcoa_plot <- function(variable, jaccard_dist, bray_dist, jaccard_pcoa, bray_pcoa, sam) {
 
@@ -91,7 +101,8 @@ create_pcoa_plot <- function(variable, jaccard_dist, bray_dist, jaccard_pcoa, br
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Beta Diversity/Microbiome")
 
-for (i in 1:6){
+
+for (i in 1:2){
   create_pcoa_plot(sig[i], jaccard, bray, jaccard_pcoa, bray_pcoa, sam)
 }
 
@@ -113,7 +124,7 @@ ps <- readRDS('microbiome.RDS')
 
 sam <- ps@sam_data
 
-food <- sam[,184:213]
+food <- sam[,211:213]
 
 
 metabolite_data <- read_csv('metabolites_transposed.csv') |>

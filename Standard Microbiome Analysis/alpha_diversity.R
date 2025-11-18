@@ -98,22 +98,22 @@ metabolites <- read_csv('metabolites_transposed.csv') |>
 
 sam <- ps@sam_data
 
-food <- sam[,154:183]
+food <- sam[,c(150:179, 211:213)]
 
 
-sam$shannon <- diversity(metabolites, index = "shannon")
-sam$simpson <- diversity(metabolites, index = "simpson")
+food$shannon <- diversity(metabolites, index = "shannon")
+food$simpson <- diversity(metabolites, index = "simpson")
 
 
-alpha_cors <- tibble(nutrient = colnames(food)[c(-31,-32)], 
-                     Shannon_r = rep(NA, 30),
-                     Shannon_p = rep(NA, 30),
-                     Simpson_r = rep(NA, 30), 
-                     Simpson_p = rep(NA, 30))
+alpha_cors <- tibble(nutrient = colnames(food)[c(-34,-35)], 
+                     Shannon_r = rep(NA, 33),
+                     Shannon_p = rep(NA, 33),
+                     Simpson_r = rep(NA, 33), 
+                     Simpson_p = rep(NA, 33))
 
 
 #Test out nutrients against alpha diversity
-for(i in 1:30){
+for(i in 1:33){
   
   shannon_cor <- cor.test(unlist(food[,i]),food$shannon)
   alpha_cors$Shannon_r[i] <- shannon_cor$statistic
@@ -127,7 +127,7 @@ for(i in 1:30){
 
 
 sig_cors <- alpha_cors |>
-  filter(Shannon_p <= 0.1 | Simpson_p <= 0.1) |>
+  filter(Shannon_p <= 0.05 | Simpson_p <= 0.05) |>
   pull(nutrient)
 
 
