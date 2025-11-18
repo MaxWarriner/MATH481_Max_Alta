@@ -1,5 +1,6 @@
 
-ps <- read_rds('microbiome.RDS')
+library(phyloseq)
+ps <- readRDS('microbiome.RDS')
 
 sam <- data.frame(ps@sam_data)
 

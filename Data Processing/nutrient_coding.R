@@ -1,12 +1,14 @@
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Data Processing")
+library(tidyverse)
 ps <- read_rds('microbiome.RDS')
 sam <- ps@sam_data
 nutrients <- data.frame(read.csv(file = "nutrient_data.csv"))
 
 
+
 #rename columns
 library(dplyr)
-sam <- sam |>
+sam <- data.frame(sam) |>
   rename(teff = TeffFQ, 
          maize = Maize, 
          barley = Barley, 
@@ -52,10 +54,12 @@ sam <- sam |>
          sugar = Sugar44, 
          soft_drinks = SoftdrinkMIRINDAfantaCOCA, 
          cakes = CakeBiscuits,
-         hamburger = FastfoodBURGER, 
-         pizza = pizza, 
          french_fries = FrenchFiriesCHIPS, 
          sambusa = Sambusa)
+
+
+
+
 
 
 # code for nutritional intake
@@ -66,6 +70,8 @@ sam$fat <- rep(0, 57)
 sam$carbs <- rep(0, 57)
 sam$fiber <- rep(0, 57)
 sam$sodium <- rep(0, 57)
+
+sam <- data.frame(sam)
 
 # *adjust sodium
 nutrients <- nutrients |>
@@ -117,73 +123,89 @@ sam$magnesium <- rep(0,57)
 sam$phosphorus <-rep(0,57)
 sam$iron <- rep(0,57)
 sam$zinc <- rep(0,57)
+sam$nutrient_score <- rep(0,57)
+sam$fruit_or_vegetable <- rep(0,57)
+sam$animal_product <- rep(0,57)
+
 
 nutrients[is.na(nutrients)] <- 0
 
 for (i in 1:57){
   
-  for(j in 32:81){
-    sam$PUFA[i] <- sam$PUFA[i] + sam[i,j]*nutrients[j-31,10]
+  # for(j in 32:81){
+  #   sam$PUFA[i] <- sam$PUFA[i] + sam[i,j]*nutrients[j-31,10]
+  # }
+  # 
+  # for(j in 32:81){
+  #   sam$cholesterol[i] <- sam$cholesterol[i] + sam[i,j]*nutrients[j-31,11]
+  # }
+  # 
+  # for(j in 32:81){
+  #   sam$vitaminA[i] <- sam$vitaminA[i] + sam[i,j]*nutrients[j-31,12]
+  # }
+  # 
+  # for(j in 32:81){
+  #   sam$carotene[i] <- sam$carotene[i] + sam[i,j]*nutrients[j-31,13]
+  # }
+  # 
+  # for(j in 32:81){
+  #   sam$vitaminE[i] <- sam$vitaminE[i] + sam[i,j]*nutrients[j-31,14]
+  # }
+  # 
+  # for(j in 32:81){
+  #   sam$vitaminB1[i] <- sam$vitaminB1[i] + sam[i,j]*nutrients[j-31,15]
+  # }
+  # 
+  # for(j in 32:81){
+  #   sam$vitaminB2[i] <- sam$vitaminB2[i] + sam[i,j]*nutrients[j-31,16]
+  # }
+  # 
+  # for(j in 32:81){
+  #   sam$vitaminB6[i] <- sam$vitaminB6[i] + sam[i,j]*nutrients[j-31,17]
+  # }
+  # 
+  # for(j in 32:81){
+  #   sam$folicacid[i] <- sam$folicacid[i] + sam[i,j]*nutrients[j-31,18]
+  # }
+  # 
+  # for(j in 32:81){
+  #   sam$vitaminC[i] <- sam$vitaminC[i] + sam[i,j]*nutrients[j-31,19]
+  # }
+  # 
+  # for(j in 32:81){
+  #   sam$potassium[i] <- sam$potassium[i] + sam[i,j]*nutrients[j-31,21]
+  # }
+  # 
+  # for(j in 32:81){
+  #   sam$calcium[i] <- sam$calcium[i] + sam[i,j]*nutrients[j-31,22]
+  # }
+  # 
+  # for(j in 32:81){
+  #   sam$magnesium[i] <- sam$magnesium[i] + sam[i,j]*nutrients[j-31,23]
+  # }
+  # 
+  # for(j in 32:81){
+  #   sam$phosphorus[i] <- sam$phosphorus[i] + sam[i,j]*nutrients[j-31,24]
+  # }
+  # 
+  # for(j in 32:81){
+  #   sam$iron[i] <- sam$iron[i] + sam[i,j]*nutrients[j-31,25]
+  # }
+  # 
+  # for(j in 32:81){
+  #   sam$zinc[i] <- sam$zinc[i] + sam[i,j]*nutrients[j-31,26]
+  # }
+  
+  for(j in 32:77){
+    sam$nutrient_score[i] <- sam$nutrient_score[i] + sam[i,j]*nutrients[j-31,28]
   }
   
-  for(j in 32:81){
-    sam$cholesterol[i] <- sam$cholesterol[i] + sam[i,j]*nutrients[j-31,11]
+  for(j in 32:77){
+    sam$fruit_or_vegetable[i] <- sam$fruit_or_vegetable[i] + sam[i,j]*nutrients[j-31,29]
   }
   
-  for(j in 32:81){
-    sam$vitaminA[i] <- sam$vitaminA[i] + sam[i,j]*nutrients[j-31,12]
-  }
-  
-  for(j in 32:81){
-    sam$carotene[i] <- sam$carotene[i] + sam[i,j]*nutrients[j-31,13]
-  }
-  
-  for(j in 32:81){
-    sam$vitaminE[i] <- sam$vitaminE[i] + sam[i,j]*nutrients[j-31,14]
-  }
-  
-  for(j in 32:81){
-    sam$vitaminB1[i] <- sam$vitaminB1[i] + sam[i,j]*nutrients[j-31,15]
-  }
-  
-  for(j in 32:81){
-    sam$vitaminB2[i] <- sam$vitaminB2[i] + sam[i,j]*nutrients[j-31,16]
-  }
-  
-  for(j in 32:81){
-    sam$vitaminB6[i] <- sam$vitaminB6[i] + sam[i,j]*nutrients[j-31,17]
-  }
-  
-  for(j in 32:81){
-    sam$folicacid[i] <- sam$folicacid[i] + sam[i,j]*nutrients[j-31,18]
-  }
-  
-  for(j in 32:81){
-    sam$vitaminC[i] <- sam$vitaminC[i] + sam[i,j]*nutrients[j-31,19]
-  }
-  
-  for(j in 32:81){
-    sam$potassium[i] <- sam$potassium[i] + sam[i,j]*nutrients[j-31,21]
-  }
-  
-  for(j in 32:81){
-    sam$calcium[i] <- sam$calcium[i] + sam[i,j]*nutrients[j-31,22]
-  }
-  
-  for(j in 32:81){
-    sam$magnesium[i] <- sam$magnesium[i] + sam[i,j]*nutrients[j-31,23]
-  }
-  
-  for(j in 32:81){
-    sam$phosphorus[i] <- sam$phosphorus[i] + sam[i,j]*nutrients[j-31,24]
-  }
-  
-  for(j in 32:81){
-    sam$iron[i] <- sam$iron[i] + sam[i,j]*nutrients[j-31,25]
-  }
-  
-  for(j in 32:81){
-    sam$zinc[i] <- sam$zinc[i] + sam[i,j]*nutrients[j-31,26]
+  for(j in 32:77){
+    sam$animal_product[i] <- sam$animal_product[i] + sam[i,j]*nutrients[j-31,30]
   }
   
 }
@@ -276,6 +298,8 @@ sam <- sam |>
   mutate(plant_protein_group = ifelse(plant_protein_norm <= unlist(median(sam$plant_protein_norm)), "low", "high"))
 
 sam <- sam[,c(1:152,211, 153:181,212,182:210,213)]
+
+library(phyloseq)
 
 sample_data(ps) <- sam
 
