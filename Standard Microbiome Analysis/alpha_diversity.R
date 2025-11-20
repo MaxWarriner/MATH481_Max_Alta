@@ -3,11 +3,14 @@ library(phyloseq)
 library(vegan)
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Standard Microbiome Analysis")
+
 ps <- readRDS('microbiome.RDS')
 
 sam <- ps@sam_data
 
-food <- sam[,c(150:179, 211:213)]
+sam <- sam[,c(1:212, 214, 213)]
+
+food <- sam[,c(150:179, 210:213)]
 
 #Microbiome diversity
 
@@ -16,15 +19,15 @@ diversity <- estimate_richness(ps, measures = c('Shannon', 'Chao1'))
 food$Shannon <- diversity$Shannon
 food$Chao1 <- diversity$Chao1
 
-alpha_cors <- tibble(nutrient = colnames(food)[c(-34, -35)], 
-                     Shannon_r = rep(NA, 33),
-                     Shannon_p = rep(NA, 33),
-                     Chao1_r = rep(NA, 33), 
-                     Chao1_p = rep(NA, 33))
+alpha_cors <- tibble(nutrient = colnames(food)[c(-35, -36)], 
+                     Shannon_r = rep(NA, 34),
+                     Shannon_p = rep(NA, 34),
+                     Chao1_r = rep(NA, 34), 
+                     Chao1_p = rep(NA, 34))
 
 
 #Test out nutrients against alpha diversity
-for(i in 1:33){
+for(i in 1:34){
   
 shannon_cor <- cor.test(unlist(food[,i]),food$Shannon)
 alpha_cors$Shannon_r[i] <- shannon_cor$statistic
@@ -64,31 +67,6 @@ sodium <- plot_sodium_shannon + plot_sodium_chao
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Alpha Diversity")
 ggsave(sodium, filename = "sodium_alpha_diversity.png", width = 18, height = 6)
 
-#Fruit or Vegetable
-
-plot_fruit_or_vegetable_shannon <- ggplot(data = food, aes(x = fruit_or_vegetable, y = Shannon)) + 
-  geom_point() + 
-  theme_bw() +
-  xlab('Fruits/Vegetables/Week') + 
-  ylab('Shannon Diversity') + 
-  geom_smooth(method = c('lm'), se = F) + 
-  ggtitle(paste('Fruits/Vegetables vs. Shannon Diversity: r = ', round(cor(food$Shannon, food$fruit_or_vegetable), 3), ', p = ', round(alpha_cors$Shannon_p[5],3) , sep = ''))
-
-plot_fruit_or_vegetable_chao <- ggplot(data = food, aes(x = fruit_or_vegetable, y = Chao1)) + 
-  geom_point() +
-  theme_bw() +
-  xlab('Fruits/Vegetables/Week') + 
-  ylab('Chao1 Diversity') + 
-  geom_smooth(method = c('lm'), se = F) + 
-  ggtitle(paste('Fruits/Vegetables vs. Chao1 Diversity: r = ', round(cor(food$Chao1, food$fruit_or_vegetable), 3), ', p = ', round(alpha_cors$Chao1_p[5],3), sep = ''))
-
-library(patchwork)
-fruit_or_vegetables <- plot_fruit_or_vegetable_shannon + plot_fruit_or_vegetable_chao
-
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Alpha Diversity")
-ggsave(fruit_or_vegetables, filename = "fruit_or_vegetables_alpha_diversity.png", width = 18, height = 6)
-
-
 
 # Metabolite Diversity
 
@@ -98,7 +76,7 @@ metabolites <- read_csv('metabolites_transposed.csv') |>
 
 sam <- ps@sam_data
 
-food <- sam[,c(150:179, 211:213)]
+food <- sam[,c(150:179, 211:214)]
 
 
 food$shannon <- diversity(metabolites, index = "shannon")
@@ -233,5 +211,16 @@ fermented_portions <- plot_fermented_portions_shannon + plot_fermented_portions_
 
 ggsave(fermented_portions, filename = "fermented_portions_alpha_diversity.png", width = 18, height = 6)
 
+
+ggplot(data=food, aes(x = mode_injera, y = shannon)) + 
+  geom_boxplot()
+
+summary(aov(shannon ~ mode_injera, data = data.frame(food)))
+
+
+ggplot(data=food, aes(x = mode_injera, y = simpson)) + 
+  geom_boxplot()
+
+summary(aov(simpson ~ mode_injera, data = data.frame(food)))
 
 
