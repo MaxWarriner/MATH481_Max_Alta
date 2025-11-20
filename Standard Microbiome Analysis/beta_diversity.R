@@ -13,20 +13,26 @@ ps <- readRDS('microbiome.RDS')
 
 sam <- ps@sam_data
 
-food <- sam[,211:214]
+sam <- data.frame(sam) |>
+  mutate(calories_group = ifelse(calories <= median(sam$calories), "low", "high"), 
+         meat_portions_group = ifelse(meat_portions <= median(sam$meat_portions), "low", "high"))
 
-food$nutrient_score <- ifelse(food$nutrient_score <= median(food$nutrient_score), "low", "high")
-food$fruit_or_vegetable <- ifelse(food$fruit_or_vegetable <= median(food$fruit_or_vegetable), "low", "high")
-food$animal_product <- ifelse(food$animal_product <= median(food$animal_product), "low", "high")
+food <- sam[,c(180:209, 213, 215)]
+
+food$nutrient_score <- ifelse(sam$nutrient_score <= median(sam$nutrient_score), "low", "high")
+food$fruit_or_vegetable <- ifelse(sam$fruit_or_vegetable <= median(sam$fruit_or_vegetable), "low", "high")
+food$animal_product <- ifelse(sam$animal_product <= median(sam$animal_product), "low", "high")
+
+
 
 bdiv <- tibble(nutrient = colnames(food), 
-               jaccard_p = rep(NA, 4), 
-               bray_p = rep(NA, 4))
+               jaccard_p = rep(NA, 35), 
+               bray_p = rep(NA, 35))
 
 bray <- phyloseq::distance(ps, method = "bray")
 jaccard <- phyloseq::distance(ps, method = "jaccard")
 
-for (i in 1:4){
+for (i in 1:35){
   
   permanova_bray <- vegan::adonis2(bray ~ unlist(food[,i]))
   bdiv$bray_p[i] <- permanova_bray$`Pr(>F)`[1]
@@ -102,11 +108,10 @@ create_pcoa_plot <- function(variable, jaccard_dist, bray_dist, jaccard_pcoa, br
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Beta Diversity/Microbiome")
 
 
-for (i in 1:2){
+for (i in 1:length(sig)){
   create_pcoa_plot(sig[i], jaccard, bray, jaccard_pcoa, bray_pcoa, sam)
 }
 
-create_pcoa_plot("fiber_group", jaccard, bray, jaccard_pcoa, bray_pcoa, sam)
 
 #Metabolite Analysis
 

@@ -211,7 +211,7 @@ for (i in 1:57){
 }
 
 # make columns numeric
-# sam[, 123:152] <- lapply(sam[, 123:152], as.numeric)
+sam[, 123:152] <- lapply(sam[, 123:152], as.numeric)
 
 
 nutrilist <- colnames(sam)[119:148]
@@ -292,12 +292,12 @@ sam <- sam |>
 
 for (i in 1:57){
   for (j in 180:209){
-    sam[i,j] <- ifelse(sam[i,j-29] <= unlist(median(sam[,j-29])), "low", "high")
+    sam[i,j] <- ifelse(sam[i,j-60] <= median(unlist(sam[,j-60])), "low", "high")
   }
 }
 
-sam <- sam |>
-  mutate(plant_protein_group = ifelse(plant_protein_norm <= unlist(median(sam$plant_protein_norm)), "low", "high"))
+sam <- data.frame(sam) |>
+  mutate(plant_protein_group = ifelse(plant_protein <= unlist(median(sam$plant_protein)), "low", "high"))
 
 sam <- sam[,c(1:152,211, 153:181,212,182:210,213)]
 
