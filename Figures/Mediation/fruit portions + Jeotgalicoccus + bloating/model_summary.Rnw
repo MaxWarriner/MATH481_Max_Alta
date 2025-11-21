@@ -1,0 +1,18 @@
+\documentclass[tikz,border=4]{standalone}\usepackage{siunitx}
+\usetikzlibrary{positioning}
+\tikzset{mynode/.style={draw,text width=1in,align=center}
+}
+\begin{document}
+  \begin{tikzpicture}
+    \node[mynode] (m){Jeotgalicoccus};
+    \node[mynode,below left=of m](a) {Fruit Portions};
+    \node[mynode,below right=of m](b) {Bloating};
+    \draw[-latex] (a.north) -- node[auto,font=\footnotesize] {$p=0.011$} (m.west);
+    \draw[-latex] (m.east) -- node[auto,font=\footnotesize] {$p=0.0008$} (b.north);
+    \draw[-latex] (a.east) --
+            node[below=3mm,font=\footnotesize,align=center] {Direct effect:
+                 $p = 0.255$ \\ Indirect effect: $p=0.004$
+                 \\ Proportion Mediated: $\tau = 0.697$}
+                 (b.west);
+  \end{tikzpicture}
+\end{document}

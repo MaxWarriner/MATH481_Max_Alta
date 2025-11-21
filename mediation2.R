@@ -12,17 +12,14 @@ ps <- read_rds('microbiome.RDS')
 
 sam <- ps@sam_data
 
-food <- sam[,154:183]
 
-health <- sam[,83:88]
+# Part 1: Nutrient Mediation ----------------------------------------------
 
-metabolites <- read_csv('metabolites_transposed.csv') |>
-  column_to_rownames(var = "...1")
+div <- estimate_richness(ps)
 
+food <- sam[,c(119:149, 210:212, 214)]
 
-metabolites <- metabolites %>%
-  mutate(across(where(is.numeric), ~ log(.x + 1)))
-
+health <- sam[,78:84]
 
 tax <- data.frame(ps@tax_table@.Data)
 
@@ -62,15 +59,11 @@ colnames(genus_abundance) <- gsub(pattern = " ", replacement = "", colnames(genu
 colnames(genus_abundance) <- gsub(pattern = "\\[", replacement = "", colnames(genus_abundance))
 colnames(genus_abundance) <- gsub(pattern = "]", replacement = "", colnames(genus_abundance))
 
+genus_abundance$shannon <- div$Shannon
+genus_abundance$chao1 <- div$Chao1
 
-common_samples <- intersect(rownames(genus_abundance), rownames(metabolites))
-genus_abundance <- genus_abundance[common_samples,]
-metabolites <- metabolites[common_samples,]
-food <- food[common_samples,]
-health <- health[common_samples,]
 
-combined <- cbind(food, health, genus_abundance, metabolites)
-sam <- sam[common_samples, ]
+combined <- cbind(food, health, genus_abundance)
 combined$sex <- sam$sex
 combined$age <- sam$Age
 
@@ -102,9 +95,9 @@ mediation_dat <- data.frame(
 
 for(health_outcome in health_outcomes){
   
-  for(nutrient in nutrients){
+  for(nutrient in nutrients[-1]){
     
-    nh_formula <- as.formula(paste(health_outcome, " ~ ", nutrient, " + sex + age", sep = ""))
+    nh_formula <- as.formula(paste(health_outcome, " ~ ", nutrient, " + calories + sex + age", sep = ""))
     nh_regression_p <- data.frame(summary(glm(nh_formula, data = combined))$coefficients)$Pr...t..[2]
     
     if(nh_regression_p < 0.05){
@@ -112,16 +105,16 @@ for(health_outcome in health_outcomes){
       
       for(microbe in microbes){
         
-        nm_formula <- as.formula(paste(microbe, " ~ ", nutrient, " + sex + age", sep = ""))
+        nm_formula <- as.formula(paste(microbe, " ~ ", nutrient, " + calories + sex + age", sep = ""))
         nm_regression_p <- data.frame(summary(lm(nm_formula, data = combined))$coefficients)$Pr...t..[2]
         
-        mh_formula <- as.formula(paste(health_outcome, " ~ ", microbe, " + sex + age", sep = ""))
+        mh_formula <- as.formula(paste(health_outcome, " ~ ", microbe, " + calories + sex + age", sep = ""))
         mh_regression_p <- data.frame(summary(glm(mh_formula, data = combined))$coefficients)$Pr...t..[2]
   
         if(nm_regression_p < 0.05 & mh_regression_p < 0.05){
           
-          med.fit_formula <- as.formula(paste(microbe, " ~ ", nutrient, " + sex + age", sep = ""))
-          out.fit_formula <- as.formula(paste(health_outcome, " ~ ", nutrient, " + ", microbe, " + sex + age", sep = ""))
+          med.fit_formula <- as.formula(paste(microbe, " ~ ", nutrient, " + calories + sex + age", sep = ""))
+          out.fit_formula <- as.formula(paste(health_outcome, " ~ ", nutrient, " + ", microbe, " + calories + sex + age", sep = ""))
           
           
           med.fit <- lm(med.fit_formula, data = combined)
@@ -162,32 +155,22 @@ write_csv(mediation_dat, 'mediation.csv')
 write_csv(combined, 'combined_mediation_data.csv')
 
 mediation_dat <- read_csv('mediation.csv')
-
-sam <- sam[common_samples,]
-
-
-#cholesterol vs. LachnospiraceaeNK3A20group vs. diarrhea (bad assumptions for regression)
-
-#cholesterol_norm vs. Streptococcus vs. diarrhea (Done)
+combined <- read_csv('combined_mediation_data.csv')
 
 
-ggplot(data = combined, aes(x = cholesterol_norm, y = Streptococcus)) + 
-  geom_point() + 
-  geom_smooth(method = "lm")
+# Fruit Portions vs. Jeotgalicoccus vs. Bloating Mediation
 
 
-summary(lm(Streptococcus ~ cholesterol_norm + sex + age, data = combined))
-summary(glm(diarrhea ~ Streptococcus + sex + age, data = combined))
-summary(glm(diarrhea ~ Streptococcus + cholesterol_norm + sex + age, data = combined))
+summary(lm(Jeotgalicoccus ~ fruit_portions + sex + age + calories, data = combined))
+summary(lm(bloating ~ Jeotgalicoccus + sex + age + calories, data = combined))
 
+med.fit <- lm(Jeotgalicoccus ~ fruit_portions + calories + sex + age, data = combined)
 
-med.fit <- lm(Streptococcus ~ cholesterol_norm, data = combined)
-
-out.fit <- glm(diarrhea ~ Streptococcus + cholesterol_norm ,data = combined, family = binomial(link = "logit"))
+out.fit <- glm(bloating ~ Jeotgalicoccus + fruit_portions + calories + sex + age ,data = combined, family = binomial(link = "logit"))
 
 
 med.out <- mediate(med.fit, out.fit,
-                   treat = "cholesterol_norm", mediator =  "Streptococcus",
+                   treat = "fruit_portions", mediator =  "Jeotgalicoccus",
                    boot = TRUE, sims = 2000)
 
 sum <- summary(med.out)
@@ -265,4 +248,10 @@ df_mediation <- data.frame(
   CI_upper = c(sum$d.avg.ci[2], sum$z.avg.ci[2], sum$tau.ci[2], sum$n.avg.ci[2]),
   p_value = c(sum$d.avg.p, sum$z.avg.p, sum$tau.p, sum$n.avg.p)
 )
+
+
+
+
+
+
 

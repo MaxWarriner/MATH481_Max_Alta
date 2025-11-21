@@ -55,15 +55,15 @@
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
   \begin{tikzpicture}
-    \node[mynode] (m){Colidextribacter};
-    \node[mynode,below left=of m](a) {Fruit};
-    \node[mynode,below right=of m](b) {Abdominal Pain};
-    \draw[-latex] (a.north) -- node[auto,font=\footnotesize] {$b=-0.54$, $p=0.014$} (m.west);
-    \draw[-latex] (m.east) -- node[auto,font=\footnotesize] {$b=-0.16$, $p=0.009$} (b.north);
+    \node[mynode] (m){Jeotgalicoccus};
+    \node[mynode,below left=of m](a) {Fruit Portions};
+    \node[mynode,below right=of m](b) {Bloating};
+    \draw[-latex] (a.north) -- node[auto,font=\footnotesize] {$p=0.011$} (m.west);
+    \draw[-latex] (m.east) -- node[auto,font=\footnotesize] {$p=0.0008$} (b.north);
     \draw[-latex] (a.east) --
-            node[below=3mm,font=\footnotesize,align=center] {Direct effect, $b=0.12$,
-                 $p=0.098$ \\ Indirect effect, $b=0.12
-$, $p=0.001$}
+            node[below=3mm,font=\footnotesize,align=center] {Direct effect:
+                 $p = 0.255$ \\ Indirect effect: $p=0.004$
+                 \\ Proportion Mediated: $\tau = 0.697$}
                  (b.west);
   \end{tikzpicture}
 \end{document}

@@ -34,11 +34,17 @@ jaccard <- phyloseq::distance(ps, method = "jaccard")
 
 for (i in 1:35){
   
-  permanova_bray <- vegan::adonis2(bray ~ unlist(food[,i]))
-  bdiv$bray_p[i] <- permanova_bray$`Pr(>F)`[1]
+  variable = bdiv$nutrient[i]
   
-  permanova_jaccard <- vegan::adonis2(jaccard ~ unlist(food[,i]))
-  bdiv$jaccard_p[i] <- permanova_jaccard$`Pr(>F)`[1]
+  bray_formula <- as.formula(paste("bray ~ calories_group + ", variable, sep = ""))
+  
+  permanova_bray <- vegan::adonis2(bray_formula, data = food, by = "margin")
+  bdiv$bray_p[i] <- permanova_bray$`Pr(>F)`[2]
+  
+  jaccard_formula <- as.formula(paste("jaccard ~ calories_group + ", variable, sep = ""))
+  
+  permanova_jaccard <- vegan::adonis2(jaccard_formula, data = food, by = "margin")
+  bdiv$jaccard_p[i] <- permanova_jaccard$`Pr(>F)`[2]
   
 }
 
@@ -129,7 +135,7 @@ ps <- readRDS('microbiome.RDS')
 
 sam <- ps@sam_data
 
-food <- sam[,211:214]
+food <- data.frame(sam[,c(180:209, 213, 215)])
 
 
 metabolite_data <- read_csv('metabolites_transposed.csv') |>
@@ -140,18 +146,23 @@ jaccard <- vegan::vegdist(metabolite_data, method = "jaccard")
 
 # PERMANOVA for each metadata variable
 bdiv <- tibble(
-  variable = colnames(food),
+  variable = colnames(food)[-32],
   jaccard_p = NA_real_,
   bray_p = NA_real_
 )
 
-for (i in seq_along(colnames(food))) {
-  var <- colnames(food)[i]
-  permanova_bray <- vegan::adonis2(bray ~ food[[var]])
-  permanova_jaccard <- vegan::adonis2(jaccard ~ food[[var]])
+for (i in seq_along(colnames(food)[-32])) {
+  variable = bdiv$variable[i]
   
-  bdiv$bray_p[i] <- permanova_bray$`Pr(>F)`[1]
-  bdiv$jaccard_p[i] <- permanova_jaccard$`Pr(>F)`[1]
+  bray_formula <- as.formula(paste("bray ~ calories_group + ", variable, sep = ""))
+  
+  permanova_bray <- vegan::adonis2(bray_formula, data = food, by = "margin")
+  bdiv$bray_p[i] <- permanova_bray$`Pr(>F)`[2]
+  
+  jaccard_formula <- as.formula(paste("jaccard ~ calories_group + ", variable, sep = ""))
+  
+  permanova_jaccard <- vegan::adonis2(jaccard_formula, data = food, by = "margin")
+  bdiv$jaccard_p[i] <- permanova_jaccard$`Pr(>F)`[2]
 }
 
 # Adjust p-values
@@ -193,12 +204,8 @@ create_pcoa_plot <- function(variable, bray_scores, jaccard_scores) {
   bray_scores[[variable]] <- as.factor(bray_scores[[variable]])
   jaccard_scores[[variable]] <- as.factor(jaccard_scores[[variable]])
   
-  # p-values
-  permanova_bray <- vegan::adonis2(bray ~ food[[variable]])
-  permanova_jaccard <- vegan::adonis2(jaccard ~ food[[variable]])
-  
-  p_bray <- permanova_bray$`Pr(>F)`[1]
-  p_jaccard <- permanova_jaccard$`Pr(>F)`[1]
+  p_bray <- bdiv$bray_p[which(bdiv$variable == variable)]
+  p_jaccard <- bdiv$jaccard_p[which(bdiv$variable == variable)]
   
   p_text_bray <- ifelse(p_bray < 0.001, "p < 0.001", paste0("p = ", signif(p_bray, 3)))
   p_text_jaccard <- ifelse(p_jaccard < 0.001, "p < 0.001", paste0("p = ", signif(p_jaccard, 3)))
@@ -265,4 +272,3 @@ for (var in sig_vars) {
   create_pcoa_plot(var, bray_scores, jaccard_scores)
 }                                                 
 
-create_pcoa_plot("fiber_group", bray_scores, jaccard_scores)
