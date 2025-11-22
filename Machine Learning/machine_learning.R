@@ -35,12 +35,12 @@ metab <- metab |>
 
 
 #scale nutrients
-nutr <- ps@sam_data[,154:183]
+nutr <- ps@sam_data[,c(119:149, 210:212, 214)]
 nutr <- as.data.frame(scale(nutr))
 
 health<- as.data.frame(ps@sam_data)
 
-health <- health[,82:88]
+health <- health[,78:84]
 
 sam <- data.frame(ps@sam_data)
 
@@ -61,7 +61,6 @@ ps@sam_data$sex = ifelse(ps@sam_data$sex == "male", 1, 0)
 
 #merge metabolites into ps sample data 
 sample_data(ps) <- cbind(health, metab, nutr, sam[,1:2]) # all together
-sample_data(ps) <- cbind(health, nutr, sam[,1:2]) # just nutrients
 
 
 #Function to get workable matrix for microbiome data
@@ -90,14 +89,14 @@ clr_mat <- t(clr_mat)
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning")
 
-clr_mat <- load('clr_mat.RData')
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/clr_mat.RData")
 
 clr_mat <- scale(clr_mat)
 
 # Machine Learning Functions
 
 
-#Overall XGBoost function that can include metabolomics
+#Overall XGBoost function that can include microbiome + sample data
 
 cv_predict_clr_xgb <- function(
     ps_obj,
@@ -246,7 +245,7 @@ cv_predict_clr_xgb <- function(
   ))
 }
 
-#Metabolomics Only XGBoost Function
+#Sample Data Only XGBoost Function
 
 cv_predict_xgb_meta <- function(
     ps_obj,
@@ -494,62 +493,38 @@ for (health_outcome in colnames(health)){
 # microbiome only
 microbiome_results <- cv_predict_clr_xgb(ps, health_outcome, meta_cols = c("Age", "sex"), clr_mat = clr_mat)
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models")
-save(microbiome_results, file = paste(health_outcome, "_microbiome_results.RData", sep = ""))
+top10micro <- microbiome_results$feature_importance %>% 
+  arrange(desc(Importance)) |>
+  pull(Feature)
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome Only/Heatmaps")
-plot_top_feature_heatmap_clr(ps_obj = ps, model_results = microbiome_results,
-                             n_top = 10, metadata_vars = c("sex", "Age"), 
-                             outcome_var = health_outcome, min_prevalence = 0.05, 
-                             filename = paste(health_outcome, "_microbiome_heatmap.png"), 
-                             clr_mat = clr_mat)
+top10micro <- top10micro[1:10]
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome Only/ROC Curves")
-plot_roc_curve_gg(microbiome_results, factor = health_outcome, filename = paste(health_outcome, "_microbiome_ROC.png", sep = ""))
-
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome Only/Top 10 Importance")
-plot_top_importance(microbiome_results, n_top = 10, factor = health_outcome, filename = paste(health_outcome, "_microbiome_top10.png", sep = ""))
+#get top 10 features from microbiome
 
 
 #Metabolome Only
 metabolome_results <- cv_predict_xgb_meta(ps, health_outcome, meta_cols = c("Age", "sex", colnames(metab)))
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models")
-save(metabolome_results, file = paste(health_outcome, "_metabolome_results.RData", sep = ""))
+top10metab <- metabolome_results$feature_importance %>% 
+  arrange(desc(Importance)) |>
+  pull(Feature)
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Metabolome Only/Heatmaps")
-plot_top_feature_heatmap_clr(ps_obj = ps, model_results = metabolome_results,
-                             n_top = 10, metadata_vars = c("sex", "Age", colnames(metab)), 
-                             outcome_var = health_outcome, min_prevalence = 0.05, 
-                             filename = paste(health_outcome, "_metabolome_heatmap.png"), 
-                             clr_mat = clr_mat)
-
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Metabolome Only/ROC Curves")
-plot_roc_curve_gg(metabolome_results, factor = health_outcome, filename = paste(health_outcome, "_metabolome_ROC.png", sep = ""))
-
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Metabolome Only/Top 10 Importance")
-plot_top_importance(metabolome_results, n_top = 10, factor = health_outcome, filename = paste(health_outcome, "_metabolome_top10.png", sep = ""))
+top10metab <- top10metab[1:10]
 
 
+#Nutrients Only
+nutrients_results <- cv_predict_xgb_meta(ps, health_outcome, meta_cols = c("Age", "sex", colnames(nutr)))
 
-#Microbiome + Metabolome
-microbiome_metabolome_results <- cv_predict_clr_xgb(ps, health_outcome, meta_cols = c("Age", "sex", colnames(metab)), clr_mat = clr_mat)
+top10nutr <- nutrients_results$feature_importance %>% 
+  arrange(desc(Importance)) |>
+  pull(Feature)
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models")
-save(microbiome_metabolome_results, file = paste(health_outcome, "_microbiome_metabolome_results.RData", sep = ""))
+top10nutr <- top10nutr[1:10]
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome + Metabolome/Heatmaps")
-plot_top_feature_heatmap_clr(ps_obj = ps, model_results = microbiome_metabolome_results,
-                             n_top = 10, metadata_vars = c("sex", "Age", colnames(metab)), 
-                             outcome_var = health_outcome, min_prevalence = 0.05, 
-                             filename = paste(health_outcome, "_microbiome_metabolome_heatmap.png"), 
-                             clr_mat = clr_mat)
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome + Metabolome/ROC Curves")
-plot_roc_curve_gg(microbiome_metabolome_results, factor = health_outcome, filename = paste(health_outcome, "_microbiome_metabolome_ROC.png", sep = ""))
+#Full results with top 30 features
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Microbiome + Metabolome/Top 10 Importance")
-plot_top_importance(microbiome_metabolome_results, n_top = 10, factor = health_outcome, filename = paste(health_outcome, "_microbiome_metabolome_top10.png", sep = ""))
+
 
 
 

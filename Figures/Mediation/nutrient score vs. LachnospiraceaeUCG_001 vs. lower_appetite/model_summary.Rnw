@@ -1,0 +1,18 @@
+\documentclass[tikz,border=4]{standalone}\usepackage{siunitx}
+\usetikzlibrary{positioning}
+\tikzset{mynode/.style={draw,text width=1.5in,align=center}
+}
+\begin{document}
+  \begin{tikzpicture}
+    \node[mynode] (m){LachnospiraceaeUCG001};
+    \node[mynode,below left=of m](a) {Nutrient Score};
+    \node[mynode,below right=of m](b) {Abdominal Pain};
+    \draw[-latex] (a.north) -- node[auto,font=\footnotesize] {$p=0.007$} (m.west);
+    \draw[-latex] (m.east) -- node[auto,font=\footnotesize] {$p=0.008$} (b.north);
+    \draw[-latex] (a.east) --
+            node[below=3mm,font=\footnotesize,align=center] {Direct effect:
+                 $p = 0.091$ \\ Indirect effect: $p=0.025$
+                 \\ Proportion Mediated: $\tau = 0.326$}
+                 (b.west);
+  \end{tikzpicture}
+\end{document}

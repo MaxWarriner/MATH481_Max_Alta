@@ -6,6 +6,8 @@ library(patchwork)
 library(tidyverse)
 library(vroom)
 library(philr)
+library(phyloseq)
+library(mediation)
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta")
 ps <- read_rds('microbiome.RDS')
@@ -154,7 +156,10 @@ write_csv(mediation_dat, 'mediation.csv')
 # 
 write_csv(combined, 'combined_mediation_data.csv')
 
+library(tidyverse)
 mediation_dat <- read_csv('mediation.csv')
+mediation_dat$adjusted_indirect_p <- p.adjust(mediation_dat$indirect_p, method = "BH")
+
 combined <- read_csv('combined_mediation_data.csv')
 
 
@@ -186,26 +191,18 @@ df_mediation <- data.frame(
 
 
 
+#nutrient score vs. LachnospiraceaeUCG_001 vs. lower_appetite
 
+summary(lm(LachnospiraceaeUCG_001 ~ nutrient_score + sex + age + calories, data = combined))
+summary(lm(lower_appetite ~ LachnospiraceaeUCG_001 + sex + age + calories, data = combined))
 
-#vitaminB1_norm vs. LachnospiraceaeNK3A20group vs. diarrhea (bad assumptions for plot)
+med.fit <- lm(LachnospiraceaeUCG_001 ~ nutrient_score + calories + sex + age, data = combined)
 
-
-
-#fruit_portions_norm vs. Colidextribacter vs. abdominalpain
-
-summary(lm(Colidextribacter ~ fruit_portions_norm + sex + age, data = combined))
-summary(glm(abdominalpain ~ Colidextribacter + sex + age, data = combined))
-summary(glm(abdominalpain ~ Colidextribacter + fruit_portions_norm + sex + age, data = combined))
-
-
-med.fit <- lm(Colidextribacter ~ fruit_portions_norm, data = combined)
-
-out.fit <- glm(abdominalpain ~ Colidextribacter + fruit_portions_norm ,data = combined, family = binomial(link = "logit"))
+out.fit <- glm(lower_appetite ~ LachnospiraceaeUCG_001 + nutrient_score + calories + sex + age ,data = combined, family = binomial(link = "logit"))
 
 
 med.out <- mediate(med.fit, out.fit,
-                   treat = "fruit_portions_norm", mediator =  "Colidextribacter",
+                   treat = "nutrient_score", mediator =  "LachnospiraceaeUCG_001",
                    boot = TRUE, sims = 2000)
 
 sum <- summary(med.out)
@@ -218,37 +215,6 @@ df_mediation <- data.frame(
   CI_upper = c(sum$d.avg.ci[2], sum$z.avg.ci[2], sum$tau.ci[2], sum$n.avg.ci[2]),
   p_value = c(sum$d.avg.p, sum$z.avg.p, sum$tau.p, sum$n.avg.p)
 )
-
-
-#vitaminB1_norm vs. Enterobacter vs. abdominalpain: assumptions are bad
-
-#potassium_norm vs. LachnospiraceaeUCG_001 vs. lower_appetite
-
-summary(lm(LachnospiraceaeUCG_001 ~ potassium_norm + sex + age, data = combined))
-summary(glm(lower_appetite ~ LachnospiraceaeUCG_001 + sex + age, data = combined))
-summary(glm(lower_appetite ~ LachnospiraceaeUCG_001 + potassium_norm + sex + age, data = combined))
-
-
-med.fit <- lm(LachnospiraceaeUCG_001 ~ potassium_norm, data = combined)
-
-out.fit <- glm(lower_appetite ~ LachnospiraceaeUCG_001 + potassium_norm ,data = combined, family = binomial(link = "logit"))
-
-
-med.out <- mediate(med.fit, out.fit,
-                   treat = "potassium_norm", mediator =  "LachnospiraceaeUCG_001",
-                   boot = TRUE, sims = 2000)
-
-sum <- summary(med.out)
-
-
-df_mediation <- data.frame(
-  Effect = c("ACME", "ADE", "Total Effect", "Prop. Mediated"),
-  Estimate = c(sum$d.avg, sum$z.avg, sum$tau.coef, sum$n.avg),
-  CI_lower = c(sum$d.avg.ci[1], sum$z.avg.ci[1], sum$tau.ci[1], sum$n.avg.ci[1]),
-  CI_upper = c(sum$d.avg.ci[2], sum$z.avg.ci[2], sum$tau.ci[2], sum$n.avg.ci[2]),
-  p_value = c(sum$d.avg.p, sum$z.avg.p, sum$tau.p, sum$n.avg.p)
-)
-
 
 
 
