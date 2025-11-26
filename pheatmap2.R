@@ -43,36 +43,27 @@ colnames(tax) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Sp
 
 abundance <- cbind(abundance, tax)
 
-for (j in 1:48601){
-  abundance$across_samples[j] = mean(as.numeric(abundance[j,1:57]))
-}
-
 sum <- abundance |>
-  arrange(-across_samples) |>
   filter(Genus != "none") |>
-  group_by(Phylum, Genus) |>
-  summarize(mean_abundance = mean(across_samples)) |>
-  arrange(-mean_abundance)
+  group_by(Phylum, Genus) 
 
-top30 <- sum[1:30,]
+genus_phylum <- sum[,c(63, 59)] |>
+  distinct()
 
-top_genera <- top30$Genus
+genus_phylum <- column_to_rownames(genus_phylum, var = "Genus")
 
-filtered_abundance <- abundance |>
-  filter(Genus %in% top_genera)
-
-genus_abundance <- filtered_abundance %>%
+genus_abundance <- abundance %>%
   group_by(Genus) %>%
   summarise(across(where(is.numeric), ~ sum(.x, na.rm = TRUE)))
 
 genus_abundance_transposed <- genus_abundance %>%
   column_to_rownames("Genus") %>%
   t() %>%
-  as.data.frame()
+  as.data.frame() |>
+  select(-none)
 
-genus_abundance_transposed <- genus_abundance_transposed[-58,]
 
-food <- sam[,211:213]
+food <- sam[,c(150:179, 210:212, 214)]
 
 common_samples <- intersect(rownames(genus_abundance_transposed), rownames(metab))
 
@@ -167,6 +158,12 @@ cor_matrix <- cor(genus_abundance_transposed, food, use = "pairwise.complete.obs
 colnames(cor_matrix) <- gsub(pattern = "_norm", replacement = "",colnames(cor_matrix))
 colnames(cor_matrix) <- gsub(pattern = "_", replacement = " ",colnames(cor_matrix))
 
+rs <- rowSums(abs(cor_matrix))
+
+top_rows <- order(rs, decreasing = TRUE)[1:min(30, nrow(cor_matrix))]
+
+cor_matrix <- cor_matrix[top_rows, ]
+
 sig_cutoff <- 0.26
 sig <- abs(cor_matrix) >= sig_cutoff  # TRUE = significant, FALSE = insignificant
 
@@ -177,10 +174,6 @@ cor_matrix <- cor_matrix[rowSums(cor_matrix) != 0,
 mat_colors <- cor_matrix
 mat_colors[!sig] <- 0
 
-
-genus_phylum <- top30[,c(2,1)]
-
-genus_phylum <- column_to_rownames(genus_phylum, var = "Genus")
 
 
 # microbes clustered ------------------------------------------------------
@@ -201,7 +194,7 @@ microbes_clustered_food <- pheatmap(mat_colors,
                                     na_col = "white", 
                                     cluster_cols = F,
                                     cluster_rows = hc, 
-                                    cutree_rows = )
+                                    cutree_rows = 2)
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Heatmaps")
 ggsave(microbes_clustered_food, filename = 'microbes_clustered_food_heatmap2.png', dpi = 800, width = 14, height = 6)
@@ -272,4 +265,5 @@ metabolites_clustered_food <- pheatmap(mat_colors,
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Heatmaps")
 ggsave(metabolites_clustered_food, filename = 'metabolites_clustered_food_heatmap2.png', dpi = 800, width = 16, height = 8)
+
 

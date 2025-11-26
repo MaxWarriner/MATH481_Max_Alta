@@ -10,7 +10,7 @@ sam <- ps@sam_data
 
 sam <- sam[,c(1:212, 214, 213)]
 
-food <- sam[,c(119:179, 210:213)]
+food <- sam[,c(119:149, 210:213)]
 
 #Microbiome diversity
 
@@ -19,15 +19,15 @@ diversity <- estimate_richness(ps, measures = c('Shannon', 'Chao1'))
 food$Shannon <- diversity$Shannon
 food$Chao1 <- diversity$Chao1
 
-alpha_cors <- tibble(nutrient = colnames(food)[c(-1, -66, -67)], 
-                     Shannon_beta = rep(NA, 64),
-                     Shannon_p = rep(NA, 64),
-                     Chao1_beta = rep(NA, 64), 
-                     Chao1_p = rep(NA, 64))
+alpha_cors <- tibble(nutrient = colnames(food)[c(-1, -36, -37)], 
+                     Shannon_beta = rep(NA, 34),
+                     Shannon_p = rep(NA, 34),
+                     Chao1_beta = rep(NA, 34), 
+                     Chao1_p = rep(NA, 34))
 
 
 #Test out nutrients against alpha diversity
-for(i in 1:64){
+for(i in 1:34){
   
   variable = alpha_cors$nutrient[i]
   
@@ -96,15 +96,15 @@ food$shannon <- diversity(metabolites, index = "shannon")
 food$simpson <- diversity(metabolites, index = "simpson")
 
 
-alpha_cors <- tibble(nutrient = colnames(food)[c(-1, -66, -67, -68, -69)], 
-                     Shannon_beta = rep(NA, 64),
-                     Shannon_p = rep(NA, 64),
-                     Simpson_beta = rep(NA, 64), 
-                     Simpson_p = rep(NA, 64))
+alpha_cors <- tibble(nutrient = colnames(food)[c(-1, -36, -37, -38, -39)], 
+                     Shannon_beta = rep(NA, 34),
+                     Shannon_p = rep(NA, 34),
+                     Simpson_beta = rep(NA, 34), 
+                     Simpson_p = rep(NA, 34))
 
 
 #Test out nutrients against alpha diversity
-for(i in 1:64){
+for(i in 1:34){
   
   variable = alpha_cors$nutrient[i]
   

@@ -48,9 +48,12 @@ for (i in 1:35){
   
 }
 
-sig <- bdiv |>
-  filter(bray_p <= 0.05 & jaccard_p <= 0.05) |>
+sigtable <- bdiv |>
+  filter(bray_p <= 0.05 & jaccard_p <= 0.05)
+
+sig <- sigtable |>
   pull(nutrient)
+
 
 bdiv$adjusted_bray <- p.adjust(bdiv$bray_p, method = "BH")
 bdiv$adjusted_jaccard <- p.adjust(bdiv$jaccard_p, method = "BH")
@@ -71,12 +74,9 @@ bray_pcoa <- get_pcoa(obj = ps, distmethod = "bray", method = "hellinger")
 sam <- ps@sam_data
 
 create_pcoa_plot <- function(variable, jaccard_dist, bray_dist, jaccard_pcoa, bray_pcoa, sam) {
-
-  permanova_jaccard <- vegan::adonis2(jaccard_dist ~ sam[[variable]])
-  permanova_bray <- vegan::adonis2(bray_dist ~ sam[[variable]])
   
-  pval_jaccard <- permanova_jaccard$`Pr(>F)`[1]
-  pval_bray <- permanova_bray$`Pr(>F)`[1]
+  pval_jaccard <- sigtable$jaccard_p[i]
+  pval_bray <- sigtable$bray_p[i]
   
   p_text_jaccard <- ifelse(pval_jaccard < 0.001, "p < 0.001",
                            paste("p =", format(round(pval_jaccard, 3), nsmall = 3)))
