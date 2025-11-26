@@ -172,14 +172,24 @@ cv_predict_clr_xgb <- function(
   #   subsample = c(0.6, 0.8, 1.0)              # row sampling
   # )
   
+  # xgb_grid <- expand.grid(
+  #   nrounds = c(100, 300),          # fast, still shows learning behavior
+  #   max_depth = c(3, 6),            # shallow + moderate
+  #   eta = c(0.05, 0.1),             # reasonably fast learning
+  #   gamma = c(0, 0.1),              # mild reg range
+  #   colsample_bytree = c(0.8),      # fixed for speed
+  #   min_child_weight = c(1),        # fixed for speed
+  #   subsample = c(0.8)              # fixed for speed
+  # )
+  
   xgb_grid <- expand.grid(
-    nrounds = c(100, 300),          # fast, still shows learning behavior
-    max_depth = c(3, 6),            # shallow + moderate
-    eta = c(0.05, 0.1),             # reasonably fast learning
-    gamma = c(0, 0.1),              # mild reg range
-    colsample_bytree = c(0.8),      # fixed for speed
-    min_child_weight = c(1),        # fixed for speed
-    subsample = c(0.8)              # fixed for speed
+    nrounds = c(200, 400, 800),            # remove 1200 (longest runs)
+    max_depth = c(3, 6, 9, 12),            # keep almost all, drop 15
+    eta = c(0.01, 0.05, 0.1, 0.2),         # drop only the extremely slow 0.005
+    gamma = c(0, 0.1, 0.5, 1),             # keep full range
+    colsample_bytree = c(0.6, 0.8, 1.0),   # unchanged
+    min_child_weight = c(1, 3, 5),         # drop only 7
+    subsample = c(0.6, 0.8, 1.0)           # unchanged
   )
   
   fitControl <- caret::trainControl(
@@ -299,16 +309,28 @@ cv_predict_xgb_meta <- function(
   #   min_child_weight = c(1, 3, 5, 7),         # leaf node complexity
   #   subsample = c(0.6, 0.8, 1.0)              # row sampling
   # )
+  # 
+  # xgb_grid <- expand.grid(
+  #   nrounds = c(100, 300),          # fast, still shows learning behavior
+  #   max_depth = c(3, 6),            # shallow + moderate
+  #   eta = c(0.05, 0.1),             # reasonably fast learning
+  #   gamma = c(0, 0.1),              # mild reg range
+  #   colsample_bytree = c(0.8),      # fixed for speed
+  #   min_child_weight = c(1),        # fixed for speed
+  #   subsample = c(0.8)              # fixed for speed
+  # )
   
   xgb_grid <- expand.grid(
-    nrounds = c(100, 300),          # fast, still shows learning behavior
-    max_depth = c(3, 6),            # shallow + moderate
-    eta = c(0.05, 0.1),             # reasonably fast learning
-    gamma = c(0, 0.1),              # mild reg range
-    colsample_bytree = c(0.8),      # fixed for speed
-    min_child_weight = c(1),        # fixed for speed
-    subsample = c(0.8)              # fixed for speed
+    nrounds = c(200, 400, 800),            # remove 1200 (longest runs)
+    max_depth = c(3, 6, 9, 12),            # keep almost all, drop 15
+    eta = c(0.01, 0.05, 0.1, 0.2),         # drop only the extremely slow 0.005
+    gamma = c(0, 0.1, 0.5, 1),             # keep full range
+    colsample_bytree = c(0.6, 0.8, 1.0),   # unchanged
+    min_child_weight = c(1, 3, 5),         # drop only 7
+    subsample = c(0.6, 0.8, 1.0)           # unchanged
   )
+  
+  
   
   fitControl <- caret::trainControl(
     method = "cv",
@@ -488,7 +510,7 @@ plot_top_feature_heatmap_clr <- function(
   
 }
 
-for (health_outcome in colnames(health)){
+for (health_outcome in colnames(health)[7]){
 
 # microbiome only
 microbiome_results <- cv_predict_clr_xgb(ps, health_outcome, meta_cols = c("Age", "sex"), clr_mat = clr_mat)
@@ -524,7 +546,25 @@ top10nutr <- top10nutr[1:10]
 
 #Full results with top 30 features
 
+clr_mat <- clr_mat[,which(colnames(clr_mat) %in% top10micro)]
 
+full <- cv_predict_clr_xgb(ps, health_outcome, meta_cols = c("Age", "sex", top10metab, top10nutr), clr_mat = clr_mat)
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models")
+save(full, file = paste(health_outcome, "_results.RData", sep = ""))
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Heatmaps")
+plot_top_feature_heatmap_clr(ps_obj = ps, model_results = full,
+                             n_top = 10, metadata_vars = c("Age", "sex", top10micro, top10metab, top10nutr), 
+                             outcome_var = health_outcome, min_prevalence = 0.05, 
+                             filename = paste(health_outcome, "_heatmap.png"), 
+                             clr_mat = clr_mat)
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
+plot_roc_curve_gg(full, factor = health_outcome, filename = paste(health_outcome, "_ROC.png", sep = ""))
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Top 10 Importance")
+plot_top_importance(full, n_top = 10, factor = health_outcome, filename = paste(health_outcome, "_top10.png", sep = ""))
 
 
 
