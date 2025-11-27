@@ -174,6 +174,10 @@ cor_matrix <- cor_matrix[rowSums(cor_matrix) != 0,
 mat_colors <- cor_matrix
 mat_colors[!sig] <- 0
 
+mat_colors <- mat_colors[rowSums(mat_colors) != 0,
+                         colSums(mat_colors) != 0]
+
+cor_matrix <- cor_matrix[which(rownames(cor_matrix) %in% rownames(mat_colors)),]
 
 
 # microbes clustered ------------------------------------------------------
@@ -182,7 +186,7 @@ mat_colors[!sig] <- 0
 
 calc_clusters_rows(cor_matrix)
 
-#optimal clusters is 2 with Manhattan
+#optimal clusters is 3 with Manhattan
 
 dist <- dist(cor_matrix, method = "manhattan")
 
@@ -194,7 +198,7 @@ microbes_clustered_food <- pheatmap(mat_colors,
                                     na_col = "white", 
                                     cluster_cols = F,
                                     cluster_rows = hc, 
-                                    cutree_rows = 2)
+                                    cutree_rows = 3)
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Heatmaps")
 ggsave(microbes_clustered_food, filename = 'microbes_clustered_food_heatmap2.png', dpi = 800, width = 14, height = 6)
