@@ -200,6 +200,7 @@ for(i in sigs){
   
   
   combined <- plot_shannon + plot_simpson +
+    plot_layout(guides = "collect") +
     plot_annotation(title = "Metabolome Alpha Diversity") &
     theme(
       plot.title = element_text(hjust = 0.5, size = 20)
