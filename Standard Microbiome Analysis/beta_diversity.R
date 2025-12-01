@@ -127,7 +127,8 @@ create_pcoa_plot <- function(variable, jaccard_dist, bray_dist, jaccard_pcoa, br
   ggsave(combined_plot,
          filename = paste(variable, "_pcoa_combined.png", sep = ""),
          device = "png",
-         height = 6, width = 14, units = "in")
+         height = 6, width = 14, units = "in", 
+         dpi = 800)
   
   return(combined_plot)
 }
@@ -297,7 +298,7 @@ create_pcoa_plot <- function(variable, bray_scores, jaccard_scores) {
   ggsave(
     filename = paste0(variable, "_metabolite_pcoa.png"),
     plot = combined,
-    width = 12, height = 6, dpi = 300
+    width = 12, height = 6, dpi = 800
   )
   
   combined
@@ -311,11 +312,6 @@ setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Beta Diversity/Metabolo
 for (var in sig_vars) {
   create_pcoa_plot(var, bray_scores, jaccard_scores)
 }                                                 
-
-
-2 * (sd(sam$fruit_or_vegetable) / sqrt(length(sam$fruit_or_vegetable)))
-
-
 
 
 
