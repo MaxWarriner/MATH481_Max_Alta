@@ -90,7 +90,14 @@ create_pcoa_plot <- function(variable, jaccard_dist, bray_dist, jaccard_pcoa, br
     guides(color=guide_legend(title=gsub("_", " ", variable), override.aes = list(size = 4))) +
     theme(legend.title = element_blank(), legend.text = element_text(size = 20)) +
     annotate("text", x = Inf, y = Inf, label = p_text_jaccard,
-             hjust = 1.1, vjust = 1.5, size = 12, fontface = "bold")
+             hjust = 1.1, vjust = 1.5, size = 12, fontface = "bold") + 
+    theme(
+      plot.title = element_text(size = 18),
+      axis.title = element_text(size = 16),
+      axis.text  = element_text(size = 14),
+      legend.title = element_text(size = 16),
+      legend.text  = element_text(size = 14)
+    )
   
   pcoa_bray_plot <- ggordpoint(obj = bray_pcoa, biplot = FALSE, speciesannot = TRUE,
                                factorNames = c(variable), ellipse = TRUE, linesize = 1.5,
@@ -99,9 +106,23 @@ create_pcoa_plot <- function(variable, jaccard_dist, bray_dist, jaccard_pcoa, br
     guides(color=guide_legend(title=gsub("_", " ", variable), override.aes = list(size = 4))) +
     theme(legend.title = element_blank(), legend.text = element_text(size = 20)) +
     annotate("text", x = Inf, y = Inf, label = p_text_bray,
-             hjust = 1.1, vjust = 1.5, size = 12, fontface = "bold")
+             hjust = 1.1, vjust = 1.5, size = 12, fontface = "bold") +
+    theme(
+      plot.title = element_text(size = 18),
+      axis.title = element_text(size = 16),
+      axis.text  = element_text(size = 14),
+      legend.title = element_text(size = 16),
+      legend.text  = element_text(size = 14)
+    )
   
-  combined_plot <- pcoa_jaccard_plot + pcoa_bray_plot
+  combined_plot <- pcoa_jaccard_plot + pcoa_bray_plot + 
+    plot_layout(guides = "collect") +
+    plot_annotation(title = "Microbiome Beta Diversity") &
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 20),
+      legend.title = element_blank(),
+      legend.text  = element_text(size = 24)
+    )
   
   ggsave(combined_plot,
          filename = paste(variable, "_pcoa_combined.png", sep = ""),
@@ -223,13 +244,19 @@ create_pcoa_plot <- function(variable, bray_scores, jaccard_scores) {
       level = 0.95
     ) +
     labs(
-      title = paste(variable, "(Bray–Curtis)"),
+      title = paste(gsub("_"," ", variable), "(Bray–Curtis)"),
       subtitle = p_text_bray,
       x = paste0("PCoA1 (", bray_var[1], "%)"),
       y = paste0("PCoA2 (", bray_var[2], "%)")
     ) +
     theme_bw(base_size = 14) +
-    theme(legend.title = element_blank())
+    theme(legend.title = element_blank()) + 
+    theme(
+      plot.title = element_text(size = 18),
+      axis.title = element_text(size = 16),
+      axis.text  = element_text(size = 14),
+      legend.text  = element_text(size = 14)
+    )
   
   # Jaccard PCoA
   p_jaccard_plot <- ggplot(jaccard_scores, aes(x = Axis1, y = Axis2, color = .data[[variable]])) +
@@ -244,15 +271,28 @@ create_pcoa_plot <- function(variable, bray_scores, jaccard_scores) {
       level = 0.95
     ) +
     labs(
-      title = paste(variable, "(Jaccard)"),
+      title = paste(gsub("_", " ", variable), "(Jaccard)"),
       subtitle = p_text_jaccard,
       x = paste0("PCoA1 (", jaccard_var[1], "%)"),
       y = paste0("PCoA2 (", jaccard_var[2], "%)")
     ) +
     theme_bw(base_size = 14) +
-    theme(legend.title = element_blank())
+    theme(legend.title = element_blank()) + 
+    theme(
+      plot.title = element_text(size = 18),
+      axis.title = element_text(size = 16),
+      axis.text  = element_text(size = 14),
+      legend.text  = element_text(size = 14)
+    )
   
-  combined <- p_jaccard_plot + p_bray_plot
+  combined <- p_jaccard_plot + p_bray_plot + 
+    plot_layout(guides = "collect") +
+    plot_annotation(title = "Metabolome Beta Diversity") &
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 20),
+      legend.title = element_blank(),
+      legend.text  = element_text(size = 24)
+    )
   
   ggsave(
     filename = paste0(variable, "_metabolite_pcoa.png"),
@@ -271,4 +311,11 @@ setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Beta Diversity/Metabolo
 for (var in sig_vars) {
   create_pcoa_plot(var, bray_scores, jaccard_scores)
 }                                                 
+
+
+2 * (sd(sam$fruit_or_vegetable) / sqrt(length(sam$fruit_or_vegetable)))
+
+
+
+
 

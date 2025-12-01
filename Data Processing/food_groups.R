@@ -21,7 +21,7 @@ cols <- colnames(sam)[32:36]   # the columns to check
 sam$mode_injera <- cols[max.col(sam[cols], ties.method = "first")]
 
 sam <- data.frame(sam) |>
-  mutate(injera_sum = teff + barley + sorghum + maize + wheat)
+  mutate(injera_sum = teff_injera + barley_injera + sorghum_injera + maize_injera + wheat_injera)
 
 sample_data(ps) <- sam
 
