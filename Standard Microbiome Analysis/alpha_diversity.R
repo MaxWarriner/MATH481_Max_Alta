@@ -60,25 +60,52 @@ for(i in sigs){
   
   variable = alpha_cors$nutrient[i]
   
-  plot_shannon <- ggplot(data = food, aes(x = !!sym(variable), y = Shannon)) + 
+  plot_shannon <- ggplot(data = food, aes(x = !!sym(variable), y = Shannon, colour = calories)) + 
     geom_point() + 
     theme_bw() +
-    xlab(paste(gsub(pattern = "_", replacement = " ", variable), "/week", sep = "")) + 
-    ylab('Shannon Diversity') + 
-    geom_smooth(method = c('lm'), se = F) + 
-    ggtitle(paste(gsub(pattern = "_", replacement = " ", variable)," vs. Shannon Diversity: r = ", round(cor(food$Shannon, food[[variable]]), 3), ', p = ', round(alpha_cors$Shannon_p[i],3) , sep = ''))
+    xlab(paste(gsub("_", " ", variable), "/week", sep = "")) + 
+    ylab("Shannon Diversity") + 
+    geom_smooth(method = "lm", se = FALSE) +
+    ggtitle(
+      bquote(.(gsub("_", " ", variable)) ~ "vs. Shannon Diversity:" ~
+               beta == .(round(alpha_cors$Shannon_beta[i], 3)) * "," ~
+               "p =" ~ .(round(alpha_cors$Shannon_p[i], 3)))
+    ) +
+    theme(
+      plot.title = element_text(size = 18),
+      axis.title = element_text(size = 16),
+      axis.text  = element_text(size = 14),
+      legend.title = element_text(size = 16),
+      legend.text  = element_text(size = 14)
+    )
   
-  plot_chao <- ggplot(data = food, aes(x = !!sym(variable), y = Chao1)) + 
+  plot_chao <- ggplot(data = food, aes(x = !!sym(variable), y = Chao1, colour = calories)) + 
     geom_point() +
     theme_bw() +
-    xlab(paste(gsub(pattern = "_", replacement = " ", variable), "/week", sep = "")) + 
-    ylab('Chao1 Diversity') + 
-    geom_smooth(method = c('lm'), se = F) + 
-    ggtitle(paste(gsub(pattern = "_", replacement = " ", variable)," vs. Chao1 Diversity: r = ", round(cor(food$Chao1, food[[variable]]), 3), ', p = ', round(alpha_cors$Chao1_p[i],3) , sep = ''))
+    xlab(paste(gsub("_", " ", variable), "/week", sep = "")) + 
+    ylab("Chao1 Diversity") + 
+    geom_smooth(method = "lm", se = FALSE) +
+    ggtitle(
+      bquote(.(gsub("_", " ", variable)) ~ "vs. Chao1 Diversity:" ~
+               beta == .(round(alpha_cors$Chao1_beta[i], 3)) * "," ~
+               "p =" ~ .(round(alpha_cors$Chao1_p[i], 3)))
+    ) +
+    theme(
+      plot.title = element_text(size = 18),
+      axis.title = element_text(size = 16),
+      axis.text  = element_text(size = 14),
+      legend.title = element_text(size = 16),
+      legend.text  = element_text(size = 14)
+    )
   
   combined <- plot_shannon + plot_chao + 
+    plot_layout(guides = "collect") +
     plot_annotation(title = "Microbiome Alpha Diversity") &
-    theme(plot.title = element_text(hjust = 0.5))
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 20),
+      legend.title = element_text(size = 16),
+      legend.text  = element_text(size = 14)
+    )
   
   ggsave(combined, filename = paste(variable, "_alpha_diversity.png", sep = ""), width = 18, height = 6)
   
@@ -136,25 +163,47 @@ for(i in sigs){
   
   variable = alpha_cors$nutrient[i]
   
-  plot_shannon <- ggplot(data = food, aes(x = !!sym(variable), y = shannon)) + 
+  plot_shannon <- ggplot(data = food, aes(x = !!sym(variable), y = shannon, colour = calories)) + 
     geom_point() + 
     theme_bw() +
-    xlab(paste(gsub(pattern = "_", replacement = " ", variable), "/week", sep = "")) + 
-    ylab('Shannon Diversity') + 
-    geom_smooth(method = c('lm'), se = F) + 
-    ggtitle(paste(gsub(pattern = "_", replacement = " ", variable)," vs. Shannon Diversity: r = ", round(cor(food$shannon, food[[variable]]), 3), ', p = ', round(alpha_cors$Shannon_p[i],3) , sep = ''))
+    xlab(paste(gsub("_", " ", variable), "/week", sep = "")) + 
+    ylab("Shannon Diversity") + 
+    geom_smooth(method = "lm", se = FALSE) +
+    ggtitle(
+      bquote(.(gsub("_", " ", variable)) ~ "vs. Shannon Diversity:" ~
+               beta == ~ .(round(alpha_cors$Shannon_beta, 5)) * "," ~
+               "p =" ~ .(round(alpha_cors$Shannon_p[i], 3)))
+    ) +
+    theme(
+      plot.title = element_text(size = 18),
+      axis.title = element_text(size = 16),
+      axis.text  = element_text(size = 14)
+    )
   
-  plot_simpson <- ggplot(data = food, aes(x = !!sym(variable), y = simpson)) + 
+  
+  plot_simpson <- ggplot(data = food, aes(x = !!sym(variable), y = simpson, colour = calories)) + 
     geom_point() +
     theme_bw() +
-    xlab(paste(gsub(pattern = "_", replacement = " ", variable), "/week", sep = "")) + 
-    ylab('Simpson Diversity') + 
-    geom_smooth(method = c('lm'), se = F) + 
-    ggtitle(paste(gsub(pattern = "_", replacement = " ", variable)," vs. Simpson Diversity: r = ", round(cor(food$simpson, food[[variable]]), 3), ', p = ', round(alpha_cors$Simpson_p[i],3) , sep = ''))
+    xlab(paste(gsub("_", " ", variable), "/week", sep = "")) + 
+    ylab("Simpson Diversity") + 
+    geom_smooth(method = "lm", se = FALSE) +
+    ggtitle(
+      bquote(.(gsub("_", " ", variable)) ~ "vs. Simpson Diversity:" ~
+               beta == ~ .(round(alpha_cors$Simpson_beta, 5)) * "," ~
+               "p =" ~ .(round(alpha_cors$Simpson_p[i], 3)))
+    ) +
+    theme(
+      plot.title = element_text(size = 18),
+      axis.title = element_text(size = 16),
+      axis.text  = element_text(size = 14)
+    )
   
-  combined <- plot_shannon + plot_simpson + 
+  
+  combined <- plot_shannon + plot_simpson +
     plot_annotation(title = "Metabolome Alpha Diversity") &
-    theme(plot.title = element_text(hjust = 0.5))
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 20)
+    )
   
   ggsave(combined, filename = paste(variable, "_alpha_diversity.png", sep = ""), width = 18, height = 6)
   
