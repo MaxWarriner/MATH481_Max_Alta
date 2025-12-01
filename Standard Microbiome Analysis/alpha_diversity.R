@@ -107,7 +107,7 @@ for(i in sigs){
       legend.text  = element_text(size = 14)
     )
   
-  ggsave(combined, filename = paste(variable, "_alpha_diversity.png", sep = ""), width = 18, height = 6, dpi = 400)
+  ggsave(combined, filename = paste(variable, "_alpha_diversity.png", sep = ""), width = 18, height = 6, dpi = 800)
   
 }
 
@@ -206,7 +206,7 @@ for(i in sigs){
       plot.title = element_text(hjust = 0.5, size = 20)
     )
   
-  ggsave(combined, filename = paste(variable, "_alpha_diversity.png", sep = ""), width = 18, height = 6, dpi = 400)
+  ggsave(combined, filename = paste(variable, "_alpha_diversity.png", sep = ""), width = 18, height = 6, dpi = 800)
   
 }
 
