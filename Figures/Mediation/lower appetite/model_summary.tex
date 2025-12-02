@@ -50,20 +50,35 @@
 
 \usepackage{alltt}\usepackage{siunitx}
 \usetikzlibrary{positioning}
-\tikzset{mynode/.style={draw,text width=1.5in,align=center}
+\tikzset{mynode/.style={draw,text width=2 in,align=center}
 }
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
   \begin{tikzpicture}
-    \node[mynode] (m){LachnospiraceaeUCG001};
-    \node[mynode,below left=of m](a) {Nutrient Score};
-    \node[mynode,below right=of m](b) {Abdominal Pain};
-    \draw[-latex] (a.north) -- node[auto,font=\footnotesize] {$p=0.007$} (m.west);
-    \draw[-latex] (m.east) -- node[auto,font=\footnotesize] {$p=0.008$} (b.north);
-    \draw[-latex] (a.east) --
-            node[below=3mm,font=\footnotesize,align=center] {Direct effect:
-                 $p = 0.091$ \\ Indirect effect: $p=0.025$
-                 \\ Proportion Mediated: $\tau = 0.326$}
-                 (b.west);
+  
+  % Mediators
+    \node[mynode] (m1){\textbf{LachnospiraceaeUCG001}};
+    \node[mynode, below = 1.5 of m1] (m2){\textbf{Papillibacter}};
+    \node[mynode, below = 1.5 of m2] (m3){\textbf{Yaniella}};
+    
+    % Treatments
+    \node[mynode, left = 3 of m2](a) {\textbf{Vitamin C} \\ Direct Effect: (+) $p = 0.413$ \\ Indirect Effect: (+) $p = 0.001^{**}$ \\ Total Effect: (+) $p = 0.066^{.}$};
+    
+    % Health Outcomes
+    \node[mynode, right = 3 of m2](b) {\textbf{Low Appetite} \\ Comparative Fit $= 0.744$ \\ Tucker-Lewis $= 0.487$ \\ RMSEA $=0.114$ \\ SRMR $=0.071$};
+    
+    % Vitamin C to mediators
+    \draw[-latex] (a.north) -- node[auto,font=\footnotesize] {(-) $p = 0.11$} (m1.west);
+    \draw[-latex] (a.east) -- node[auto,font=\footnotesize] {(-) $p = 0.09^{.}$} (m2.west);
+    \draw[-latex] (a.south) -- node[auto,font=\footnotesize] {(-) $p = 0.28$} (m3.west);
+    
+    
+    % Mediators to outcome
+    \draw[-latex] (m1.east) -- node[auto,font=\footnotesize] {(-) $p = 0.004^{**}$} (b.north);
+    \draw[-latex] (m2.east) -- node[auto,font=\footnotesize] {(-) $p = 0.043^{.}$} (b.west);
+    \draw[-latex] (m3.east) -- node[auto,font=\footnotesize] {(-) $p 0.079^{.}$} (b.south);
+    
+    
+
   \end{tikzpicture}
 \end{document}

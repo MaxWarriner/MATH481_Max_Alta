@@ -71,7 +71,7 @@ combined$age <- sam$Age
 
 nutrients <- colnames(food)[c(1:5, 7:15, 17, 19:22, 24, 31:35)]
 microbes <- colnames(genus_abundance)
-health_outcomes <- colnames(health)[c(2, 4, 5, 6)]
+health_outcomes <- colnames(health)
 
 
 #mediation package
@@ -126,7 +126,7 @@ for(health_outcome in health_outcomes){
           
           med.out <- mediate(med.fit, out.fit,
                              treat = nutrient, mediator =  microbe,
-                             boot = TRUE, sims = 2000)
+                             boot = TRUE, sims = 1000)
           
             
             mediation_dat <- rbind(mediation_dat, data.frame(
@@ -225,33 +225,150 @@ fit <- sem(
 summary(fit, standardized = TRUE, fit.measures = TRUE)
 
 
+# Bloating Mediation
+# Model 1: 
+# Treatment 1: fruit_portions 
+# Mediators: Atopostipes, Jeotgalicoccus, Oceanicella, Subdoligranulum
+
+library(lavaan)
+
+model <- '
+
+  ###################################
+  # Treatment 1: fruit_portions
+  ###################################
+  Atopostipes ~ a1*fruit_portions + age + sex + calories
+  Oceanicella ~ a2*fruit_portions + age + sex + calories
+  Subdoligranulum ~ a3*fruit_portions + age + sex + calories
 
 
-summary(lm(Jeotgalicoccus ~ fruit_portions + sex + age + calories, data = combined))
-summary(lm(bloating ~ Jeotgalicoccus + sex + age + calories, data = combined))
+  ###################################
+  # Outcome: diarrhea
+  ###################################
+  bloating ~ b1*Atopostipes + 
+             b2*Oceanicella +
+             b3*Subdoligranulum +
+             c1*fruit_portions +
+             age + sex + calories
 
-med.fit <- lm(Jeotgalicoccus ~ fruit_portions + calories + sex + age, data = combined)
+  ###################################
+  # Indirect effects
+  ###################################
 
-out.fit <- glm(bloating ~ Jeotgalicoccus + fruit_portions + calories + sex + age ,data = combined, family = binomial(link = "logit"))
+  ## fruit_portions → mediators → diarrhea
+  ind_fruit_1 := a1*b1
+  ind_fruit_2 := a2*b2
+  ind_fruit_3 := a3*b3
+  total_ind_fruit := ind_fruit_1 + ind_fruit_2 + ind_fruit_3
+  total_effect_fruit := c1 + total_ind_fruit
 
+'
 
-med.out <- mediate(med.fit, out.fit,
-                   treat = "fruit_portions", mediator =  "Jeotgalicoccus",
-                   boot = TRUE, sims = 2000)
-
-sum <- summary(med.out)
-
-
-df_mediation <- data.frame(
-  Effect = c("ACME", "ADE", "Total Effect", "Prop. Mediated"),
-  Estimate = c(sum$d.avg, sum$z.avg, sum$tau.coef, sum$n.avg),
-  CI_lower = c(sum$d.avg.ci[1], sum$z.avg.ci[1], sum$tau.ci[1], sum$n.avg.ci[1]),
-  CI_upper = c(sum$d.avg.ci[2], sum$z.avg.ci[2], sum$tau.ci[2], sum$n.avg.ci[2]),
-  p_value = c(sum$d.avg.p, sum$z.avg.p, sum$tau.p, sum$n.avg.p)
+fit <- sem(
+  model,
+  data = combined,
+  ordered = "bloating",
+  estimator = "WLSMV"
 )
 
+summary(fit, standardized = TRUE, fit.measures = TRUE)
 
 
+# Abdominal Pain Mediation
+# Model 1: 
+# Treatment 1: fruit_or_vegetable 
+# Mediators: Hespellia + Mobiluncus + Papillibacter
+
+library(lavaan)
+
+model <- '
+
+  ###################################
+  # Treatment 1: fruit_or_vegetable
+  ###################################
+  Hespellia ~ a1*fruit_or_vegetable + age + sex + calories
+  Mobiluncus ~ a2*fruit_or_vegetable + age + sex + calories
+  Papillibacter ~ a3*fruit_or_vegetable + age + sex + calories
+
+
+  ###################################
+  # Outcome: abdominalpain
+  ###################################
+  abdominalpain ~ b1*Hespellia + 
+             b2*Mobiluncus +
+             b3*Papillibacter +
+             c1*fruit_or_vegetable +
+             age + sex + calories
+
+  ###################################
+  # Indirect effects
+  ###################################
+
+  ## fruit_or_vegetable → mediators → diarrhea
+  ind_fruit_veg_1 := a1*b1
+  ind_fruit_veg_2 := a2*b2
+  ind_fruit_veg_3 := a3*b3
+  total_ind_fruit_veg := ind_fruit_veg_1 + ind_fruit_veg_2 + ind_fruit_veg_3
+  total_effect_fruit_veg := c1 + total_ind_fruit_veg
+
+'
+
+fit <- sem(
+  model,
+  data = combined,
+  ordered = "abdominalpain",
+  estimator = "WLSMV"
+)
+
+summary(fit, standardized = TRUE, fit.measures = TRUE)
+
+
+
+# lower appetite Mediation
+# Treatment 2: vitaminC  
+# Mediators: LachnospiraceaeUCG_001 + Papillibacter + Yaniella
+
+library(lavaan)
+
+model <- '
+  
+  ###################################
+  # Treatment 2: vitaminC
+  ###################################
+  LachnospiraceaeUCG_001 ~ a1*vitaminC + age + sex + calories
+  Papillibacter ~ a2*vitaminC + age + sex + calories
+  Yaniella ~ a3*vitaminC + age + sex + calories 
+
+  ###################################
+  # Outcome: lower_appetite
+  ###################################
+  lower_appetite ~ b1*LachnospiraceaeUCG_001 + 
+             b2*Papillibacter +
+             b3*Yaniella +
+             c1*vitaminC + 
+             age + sex + calories
+
+  ###################################
+  # Indirect effects
+  ###################################
+  
+  ## vitaminC → mediators → lower_appetite
+  ind_VitC_1 := a1*b1
+  ind_VitC_2 := a2*b2
+  ind_VitC_3 := a3*b3
+  total_ind_VitC := ind_VitC_1 + ind_VitC_2 + ind_VitC_3
+  total_effect_VitC := c1 + total_ind_VitC
+
+'
+
+fit <- sem(
+  model,
+  data = combined,
+  ordered = "lower_appetite",
+  estimator = "WLSMV"
+)
+
+summary(fit, standardized = TRUE, fit.measures = TRUE)
 
 
 

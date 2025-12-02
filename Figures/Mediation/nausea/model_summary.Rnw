@@ -1,0 +1,64 @@
+\documentclass[tikz,border=4]{standalone}\usepackage{siunitx}
+\usetikzlibrary{positioning}
+\tikzset{mynode/.style={draw,text width=2 in,align=center}
+}
+\begin{document}
+  \begin{tikzpicture}
+  
+  % Mediators
+    \node[mynode] (m1){\textbf{Eubacteriumventriosumgroup}};
+    \node[mynode, below = 3.5 of m1] (m2){\textbf{Hespellia}};
+    \node[mynode, below = 3.5 of m2] (m3){\textbf{Cryomorpha}};
+    \node[mynode, below = 3.5 of m3] (m4){\textbf{GCA900066755}};
+    \node[mynode, below = 3.5 of m4] (m5){\textbf{Oribacterium}};
+    \node[mynode, below = 3.5 of m5] (m6){\textbf{FamilyXIIIUCG001}};
+    
+    % Treatments
+    \node[mynode, left = 7 of m1](a) {\textbf{Fiber} \\ Direct Effect: (-) $p = 0.138$ \\ Indirect Effect: (-) $p = 0.843$ \\ Total Effect: (-) $p = 0.263$};
+    \node[mynode, below = 2 of a](b) {\textbf{Fruit Portions} \\ Direct Effect: (+) $p = 0.858$ \\ Indirect Effect: (+) $p = 0.912$ \\ Total Effect: (+) $p = 0.502$};
+    \node[mynode, below = 2 of b](c) {\textbf{Vitamin A} \\ Direct Effect: (-) $p = 0.466$ \\ Indirect Effect: (+) $p = 0.095^{.}$ \\ Total Effect: (+) $p = 0.353$};
+    \node[mynode, below = 2 of c](d) {\textbf{Vitamin C} \\ Direct Effect: (+) $p = 0.300$ \\ Indirect Effect: (-) $p = 0.534$ \\ Total Effect: (+) $p = 0.384$};
+    \node[mynode, below = 2 of d](e) {\textbf{Plant Protein} \\ Direct Effect: (-) $p = 0.985$ \\ Indirect Effect: (+) $p = 0.769$ \\ Total Effect: (+) $p = 0.934$};
+    \node[mynode, below = 2 of e](f) {\textbf{Fruit \& Vegetable Portions} \\ Direct Effect: (+) $p = 0.953$ \\ Indirect Effect: (+) $p = 0.903$ \\ Total Effect: (+) $p = 0.920$};
+    
+    
+    % Health Outcomes
+    \node[mynode, right = 5 of m3](g) {\textbf{Nausea} \\ Comparative Fit $= 1.00$ \\ Tucker-Lewis $= 1.05$ \\ RMSEA $=0.00$ \\ SRMR $=0.092$};
+    
+    % Fiber to mediators
+    \draw[-latex] (a.east) -- node[pos=0.25, above, ,font=\footnotesize] {(+) $p = 0.062^{.$} (m1.west);
+    
+     % Fruit Portions to mediators
+    \draw[-latex] (b.east) -- node[auto,font=\footnotesize] {(+) $p = 0.718$} (m2.west);
+    
+     % Vitamin A to mediators
+    \draw[-latex] (c.east) -- node[auto,font=\footnotesize] {(-) $p = 0.498$} (m3.west);
+    \draw[-latex] (c.east) -- node[auto,font=\footnotesize] {(-) $p = 0.218$} (m4.west);
+    \draw[-latex] (c.east) -- node[auto,font=\footnotesize] {(-) $p = 0.493$} (m5.west);
+    
+    % Vitamin A to mediators
+    \draw[-latex] (d.east) -- node[auto,font=\footnotesize] {(-) $p = 0.332$} (m6.west);
+    \draw[-latex] (d.east) -- node[auto,font=\footnotesize] {(+) $p = 0.058^{.}$} (m2.west);
+    \draw[-latex] (d.east) -- node[auto,font=\footnotesize] {(-) $p = 0.551$} (m5.west);
+
+    % Plant Protein to mediators
+    \draw[-latex] (e.east) -- node[auto,font=\footnotesize] {(+) $p = 0.382$} (m5.west);
+    \draw[-latex] (e.east) -- node[auto,font=\footnotesize] {(-) $p = 0.941$} (m2.west);
+    
+    % Fruit or Vegetable to mediators
+    \draw[-latex] (f.east) -- node[auto,font=\footnotesize] {(-) $p = 0.325$} (m2.west);
+    
+
+    
+    % Mediators to outcome
+    \draw[-latex] (m1.east) -- node[auto,font=\footnotesize] {(-) $p < 0.001^{***}$} (g.north);
+    \draw[-latex] (m2.east) -- node[auto,font=\footnotesize] {(+) $p = 0.578$} (g.west);
+    \draw[-latex] (m3.east) -- node[auto,font=\footnotesize] {(-) $p = 0.302$} (g.west);
+    \draw[-latex] (m4.east) -- node[auto,font=\footnotesize] {(-) $p < 0.018^{*}$} (g.west);
+    \draw[-latex] (m5.east) -- node[auto,font=\footnotesize] {(-) $p = 0.181$} (g.south);
+    \draw[-latex] (m6.east) -- node[auto,font=\footnotesize] {(-) $p = 0.011^{*}$} (g.south);
+    
+    
+
+  \end{tikzpicture}
+\end{document}
