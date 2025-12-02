@@ -371,5 +371,357 @@ fit <- sem(
 summary(fit, standardized = TRUE, fit.measures = TRUE)
 
 
+# Illness Mediation
+# Model 1: 
+# Treatment 1: fruit_portions 
+# Mediators: Clostridiumsensustricto1 + Isobaculum + LachnospiraceaeUCG_001 + Victivallis
+# Treatment 2: vitaminA
+# Mediators: LachnospiraceaeUCG_001
+# Treatment 3: vitaminC
+# Mediators: Clostridiumsensustricto1 + Colidextribacter + Isobaculum + LachnospiraceaeUCG_001 + Victivallis
+# Treatment 4: plant_protein
+# Mediators: LachnospiraceaeUCG_001
+# Treatment 5: nutrient_score
+# Mediators: LachnospiraceaeUCG_001
+# Treament 6: fruit_or_vegetable
+# Mediators: LachnospiraceaeUCG_001
+
+library(lavaan)
+
+model <- '
+
+  ###################################
+  # Treatment 1: fruit_portions
+  ###################################
+  Clostridiumsensustricto1 ~ a1*fruit_portions + age + sex + calories
+  Isobaculum ~ a2*fruit_portions + age + sex + calories
+  LachnospiraceaeUCG_001 ~ a3*fruit_portions + age + sex + calories
+  Victivallis ~ a4*fruit_portions + age + sex + calories
+
+  ###################################
+  # Treatment 2: vitaminA
+  ###################################
+  LachnospiraceaeUCG_001 ~ a5*vitaminA + age + sex + calories
+
+  ###################################
+  # Treatment 3: vitaminC
+  ###################################
+  Clostridiumsensustricto1 ~ a6*vitaminC + age + sex + calories
+  Colidextribacter ~ a7*vitaminC + age + sex + calories
+  Isobaculum ~ a8*vitaminC + age + sex + calories
+  LachnospiraceaeUCG_001 ~ a9*vitaminC + age + sex + calories
+  Victivallis ~ a10*vitaminC + age + sex + calories
+  
+  ###################################
+  # Treatment 4: plant_protein
+  ###################################
+  LachnospiraceaeUCG_001 ~ a11*plant_protein + age + sex + calories
+
+
+  ###################################
+  # Treatment 5: nutrient_score
+  ###################################
+  LachnospiraceaeUCG_001 ~ a12*nutrient_score + age + sex + calories
+  
+  
+  ###################################
+  # Treatment 5: fruit_or_vegetable
+  ###################################
+  LachnospiraceaeUCG_001 ~ a13*fruit_or_vegetable + age + sex + calories
+
+
+  ###################################
+  # Outcome: illness
+  ###################################
+  illness ~  b1*Clostridiumsensustricto1 + 
+             b2*Isobaculum +
+             b3*LachnospiraceaeUCG_001 +
+             b4*Victivallis + 
+             b5*Colidextribacter +
+             c1*fruit_portions +
+             c2*vitaminA + 
+             c3*vitaminC + 
+             c4*plant_protein + 
+             c5*nutrient_score + 
+             c6*fruit_or_vegetable + 
+             age + sex + calories
+
+  ###################################
+  # Indirect effects
+  ###################################
+
+  ## fruit_portions → mediators → illness
+  ind_fruit_1 := a1*b1
+  ind_fruit_2 := a1*b2
+  ind_fruit_3 := a1*b3
+  ind_fruit_4 := a1*b4
+  total_ind_fruit := ind_fruit_1  + ind_fruit_2 + ind_fruit_3 + ind_fruit_4
+  total_effect_fruit := c1 + total_ind_fruit
+  
+  ## vitaminA → mediators → illness
+  ind_vitA_1 := a5*b3
+  total_ind_vitA := ind_vitA_1
+  total_effect_vitA := c2 + total_ind_vitA
+  
+  ## vitaminC → mediators → illness
+  ind_vitC_1 := a6*b1
+  ind_vitC_2 := a7*b5
+  ind_vitC_3 := a8*b2
+  ind_vitC_4 := a9*b3
+  ind_vitC_5 := a10*b4
+  total_ind_vitC := ind_vitC_1 + ind_vitC_2 + ind_vitC_3 + ind_vitC_4 + ind_vitC_5
+  total_effect_vitC := c3 + total_ind_vitC
+
+  ## plant_protein → mediators → illness
+  ind_plant_prot_1 := a11*b3
+  total_ind_plant_prot := ind_plant_prot_1
+  total_effect_plant_prot := c4 + total_ind_plant_prot
+
+  ## nutrient_score → mediators → illness
+  ind_nutr_score_1 := a12*b3
+  total_ind_nutr_score := ind_nutr_score_1
+  total_effect_nutr_score := c5 + total_ind_nutr_score
+
+  ## fruit_or_vegetable → mediators → illness
+  ind_nutr_fruit_veg_1 := a13*b3
+  total_ind_fruit_veg := ind_nutr_fruit_veg_1
+  total_effect_fruit_veg := c6 + total_ind_fruit_veg
+
+
+'
+
+fit <- sem(
+  model,
+  data = combined,
+  ordered = "illness",
+  estimator = "WLSMV"
+)
+
+summary(fit, standardized = TRUE, fit.measures = TRUE)
+
+
+
+# lower appetite Mediation
+# Treatment 2: vitaminC  
+# Mediators: LachnospiraceaeUCG_001 + Papillibacter + Yaniella
+
+library(lavaan)
+
+model <- '
+  
+  ###################################
+  # Treatment 2: vitaminC
+  ###################################
+  LachnospiraceaeUCG_001 ~ a1*vitaminC + age + sex + calories
+  Papillibacter ~ a2*vitaminC + age + sex + calories
+  Yaniella ~ a3*vitaminC + age + sex + calories 
+
+  ###################################
+  # Outcome: lower_appetite
+  ###################################
+  lower_appetite ~ b1*LachnospiraceaeUCG_001 + 
+             b2*Papillibacter +
+             b3*Yaniella +
+             c1*vitaminC + 
+             age + sex + calories
+
+  ###################################
+  # Indirect effects
+  ###################################
+  
+  ## vitaminC → mediators → lower_appetite
+  ind_VitC_1 := a1*b1
+  ind_VitC_2 := a2*b2
+  ind_VitC_3 := a3*b3
+  total_ind_VitC := ind_VitC_1 + ind_VitC_2 + ind_VitC_3
+  total_effect_VitC := c1 + total_ind_VitC
+
+'
+
+fit <- sem(
+  model,
+  data = combined,
+  ordered = "lower_appetite",
+  estimator = "WLSMV"
+)
+
+summary(fit, standardized = TRUE, fit.measures = TRUE)
+
+
+# cough Mediation
+# Treatment 1: fruit_portions
+# Mediators: Atopostipes, Blautia, Hespellia, Jeotgalicoccus
+# Treatment 2: vitaminC
+#Mediators: Catenisphaera, Colidextribacter, Hespellia, Jeotgalicoccus, Papillibacter
+# Treatment 3: plant_protein
+# Mediators: Enterobacter, Hespellia, Papillibacter
+
+
+
+library(lavaan)
+
+model <- '
+
+
+  ###################################
+  # Treatment 2: vitaminC
+  ###################################
+  Catenisphaera ~ a1*vitaminC + age + sex + calories
+  Colidextribacter ~ a2*vitaminC + age + sex + calories
+  Hespellia ~ a3*vitaminC + age + sex + calories
+  Jeotgalicoccus ~ a4*vitaminC + age + sex + calories
+  Papillibacter ~ a5*vitaminC + age + sex + calories
+
+
+  ###################################
+  # Outcome: cough
+  ###################################
+  cough ~ b1*Atopostipes + 
+             b2*Blautia +
+             b3*Catenisphaera + 
+             b4*Colidextribacter + 
+             b5*Enterobacter + 
+             c1*vitaminC + 
+             age + sex + calories
+
+  ###################################
+  # Indirect effects
+  ###################################
+  
+  ## vitaminC → mediators → cough
+  ind_vitC_1 := a1*b1
+  ind_vitC_2 := a2*b2
+  ind_vitC_3 := a3*b3
+  ind_vitC_4 := a4*b4
+  ind_vitC_5 := a5*b5
+  total_ind_vitC := ind_vitC_1 + ind_vitC_2 + ind_vitC_3 + ind_vitC_4 + ind_vitC_5
+  total_effect_vitC := c1 + total_ind_vitC
+
+'
+
+fit <- sem(
+  model,
+  data = combined,
+  ordered = "cough",
+  estimator = "WLSMV"
+)
+
+summary(fit, standardized = TRUE, fit.measures = TRUE)
+
+
+# Nausea Mediation
+# Treatment 1: fiber
+# Mediators: Eubacteriumventriosumgroup
+# Treatment 2: fruit_portions
+#Mediators: Hespellia
+# Treatment 3: vitaminA
+# Mediators: Cryomorpha, GCA_900066755, Oribacterium
+# Treatment 4: vitaminC
+# Mediators: FamilyXIIIUCG_001, Hespellia, Oribacterium
+# Treatment 5: plant_protein
+# Mediators: Hespellia, Oribacterium
+# Treatment 6: fruit_or_vegetable
+# Mediators: Hespellia
+
+
+library(lavaan)
+
+model <- '
+
+  ###################################
+  # Treatment 1: fiber
+  ###################################
+  Eubacteriumventriosumgroup ~ a1*fiber + age + sex + calories
+
+  ###################################
+  # Treatment 2: fruit_portions
+  ###################################
+  Hespellia ~ a2*fruit_portions + age + sex + calories
+
+  ###################################
+  # Treatment 3: vitaminA
+  ###################################
+  Cryomorpha ~ a3*vitaminA + age + sex + calories
+  GCA_900066755 ~ a4*vitaminA + age + sex + calories
+  Oribacterium ~ a5*vitaminA + age + sex + calories
+
+  ###################################
+  # Treatment 4: vitaminC
+  ###################################
+  FamilyXIIIUCG_001 ~ a6*vitaminC + age + sex + calories
+  Hespellia ~ a7*vitaminC + age + sex + calories
+  Oribacterium ~ a8*vitaminC + age + sex + calories
+
+  ###################################
+  # Treatment 5: plant_protein
+  ###################################
+  Hespellia ~ a9*plant_protein + age + sex + calories
+  Oribacterium ~ a10*plant_protein + age + sex + calories
+
+  ###################################
+  # Treatment 6: fruit_or_vegetable
+  ###################################
+  Hespellia ~ a11*fruit_or_vegetable + age + sex + calories
+
+  ###################################
+  # Outcome: nausea
+  ###################################
+  nausea ~ b1*Eubacteriumventriosumgroup +
+           b2*Hespellia +
+           b3*Cryomorpha +
+           b4*GCA_900066755 +
+           b5*Oribacterium +
+           b6*FamilyXIIIUCG_001 +
+           c1*fiber + 
+           c2*fruit_portions + 
+           c3*vitaminA + 
+           c4*vitaminC + 
+           c5*plant_protein + 
+           c6*fruit_or_vegetable + 
+           age + sex + calories
+
+  ###################################
+  # Indirect effects
+  ###################################
+
+  ## fiber → mediators → nausea
+  ind_fiber := a1*b1
+
+  ## fruit_portions → mediators → nausea
+  ind_fruit_portions := a2*b2
+
+  ## vitaminA → mediators → nausea
+  ind_vitaminA_1 := a3*b3
+  ind_vitaminA_2 := a4*b4
+  ind_vitaminA_3 := a5*b5
+  total_ind_vitaminA := ind_vitaminA_1 + ind_vitaminA_2 + ind_vitaminA_3
+  total_effect_vitaminA := c3 + total_ind_vitaminA
+
+  ## vitaminC → mediators → nausea
+  ind_vitaminC_1 := a6*b6
+  ind_vitaminC_2 := a7*b2
+  ind_vitaminC_3 := a8*b5
+  total_ind_vitaminC := ind_vitaminC_1 + ind_vitaminC_2 + ind_vitaminC_3
+  total_effect_vitaminC := c4 + total_ind_vitaminC
+
+  ## plant_protein → mediators → nausea
+  ind_plant_protein_1 := a9*b2
+  ind_plant_protein_2 := a10*b5
+  total_ind_plant_protein := ind_plant_protein_1 + ind_plant_protein_2
+  total_effect_plant_protein := c5 + total_ind_plant_protein
+
+  ## fruit_or_vegetable → mediators → nausea
+  ind_fruit_or_veg := a11*b2
+  total_effect_fruit_or_veg := c6 + ind_fruit_or_veg
+'
+
+fit <- sem(
+  model,
+  data = combined,
+  ordered = "nausea",
+  estimator = "WLSMV"
+)
+
+summary(fit, standardized = TRUE, fit.measures = TRUE)
 
 
