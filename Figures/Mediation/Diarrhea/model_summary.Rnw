@@ -1,0 +1,38 @@
+\documentclass[tikz,border=4]{standalone}\usepackage{siunitx}
+\usetikzlibrary{positioning}
+\tikzset{mynode/.style={draw,text width=2 in,align=center}
+}
+\begin{document}
+  \begin{tikzpicture}
+  
+  % Mediators
+    \node[mynode] (m1){\textbf{Blautia}};
+    \node[mynode, below = 1.5 of m1] (m2){\textbf{Catenisphaera}};
+    \node[mynode, below = 1.5 of m2] (m3){\textbf{FamilyXIIIUCG001}};
+    \node[mynode, below = 1.5 of m3] (m4){\textbf{Isobaculum}};
+    
+    % Treatments
+    \node[mynode, left = 5.5 of m2](a) {\textbf{Grain Portions} \\ Direct Effect: $p = 0.156$ \\ Indirect Effect: $p = 0.234$ \\ Total Effect: $p = 0.051^{.}$};
+    \node[mynode,below = 1 of a](b) {\textbf{Vitamin C} \\ Direct Effect: $p = 0.863$ \\ Indirect Effect: $p = 0.017^{*}$ \\ Total Effect: $p = 0.073^{.}$};
+    
+    % Health Outcomes
+    \node[mynode, right = 5.5 of m3](d) {\textbf{Diarrhea} \\ Comparative Fit $= 0.496$ \\ Tucker-Lewis $= 0.496$ \\ RMSEA $=0.19$ \\ SRMR $=0.16$};
+    
+    % Grains to mediators
+    \draw[-latex] (a.east) -- node[auto,font=\footnotesize] {$p = 0.073^{.}$} (m1.west);
+    
+    % Vitamin C to mediators
+    \draw[-latex] (b.north) -- node[auto,font=\footnotesize] {$p = 0.110$} (m2.west);
+    \draw[-latex] (b.east) -- node[auto,font=\footnotesize] {$p = 0.055^{.}$} (m3.west);
+    \draw[-latex] (b.south) -- node[auto,font=\footnotesize] {$p = 0.041^{*}$} (m4.west);
+    
+    % Mediators to outcome
+    \draw[-latex] (m1.east) -- node[auto,font=\footnotesize] {$p = 0.093^{.}$} (d.north);
+    \draw[-latex] (m2.east) -- node[auto,font=\footnotesize] {$p < 0.001^{***}$} (d.west);
+    \draw[-latex] (m3.east) -- node[auto,font=\footnotesize] {$p < 0.001^{***}$} (d.west);
+    \draw[-latex] (m4.east) -- node[auto,font=\footnotesize] {$p = 0.029^{*}$} (d.south);
+    
+    
+
+  \end{tikzpicture}
+\end{document}

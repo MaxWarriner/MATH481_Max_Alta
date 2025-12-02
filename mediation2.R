@@ -69,9 +69,9 @@ combined <- cbind(food, health, genus_abundance)
 combined$sex <- sam$sex
 combined$age <- sam$Age
 
-nutrients <- colnames(food)
+nutrients <- colnames(food)[c(1:5, 7:15, 17, 19:22, 24, 31:35)]
 microbes <- colnames(genus_abundance)
-health_outcomes <- colnames(health)
+health_outcomes <- colnames(health)[c(2, 4, 5, 6)]
 
 
 #mediation package
@@ -152,18 +152,79 @@ for(health_outcome in health_outcomes){
 
 
 # Save initial mediation
+mediation_dat$adjusted_indirect_p <- p.adjust(mediation_dat$indirect_p, method = "BH")
+mediation_dat$adjusted_total_p <- p.adjust(mediation_dat$total_p, method = "BH")
 write_csv(mediation_dat, 'mediation.csv')
 # 
 write_csv(combined, 'combined_mediation_data.csv')
 
 library(tidyverse)
 mediation_dat <- read_csv('mediation.csv')
-mediation_dat$adjusted_indirect_p <- p.adjust(mediation_dat$indirect_p, method = "BH")
 
 combined <- read_csv('combined_mediation_data.csv')
 
+# diarrhea Mediation
+# Model 1: 
+# Treatment 1: grain_portions 
+# Mediators: Blautia
+# Treatment 2: vitaminC 
+# Mediators: Catenisphaera, FamilyXIIIUCG_001, Isobaculum, Z20
 
-# Fruit Portions vs. Jeotgalicoccus vs. Bloating Mediation
+library(lavaan)
+
+model <- '
+
+  ###################################
+  # Treatment 1: grain_portions
+  ###################################
+  Blautia ~ a1*grain_portions + age + sex + calories
+
+  ###################################
+  # Treatment 2: vitaminC
+  ###################################
+  Catenisphaera     ~ a2*vitaminC + age + sex + calories
+  FamilyXIIIUCG_001 ~ a3*vitaminC + age + sex + calories
+  Isobaculum        ~ a4*vitaminC + age + sex + calories
+
+  ###################################
+  # Outcome: diarrhea
+  ###################################
+  diarrhea ~ b1*Blautia + 
+             b2*Catenisphaera +
+             b3*FamilyXIIIUCG_001 +
+             b4*Isobaculum +
+             c1*grain_portions +
+             c2*vitaminC +
+             age + sex + calories
+
+  ###################################
+  # Indirect effects
+  ###################################
+
+  ## grain_portions → Blautia → diarrhea
+  ind_grain := a1*b1
+  total_effect_grain := c1 + ind_grain
+
+  ## vitaminC → mediators → diarrhea
+  ind_vitC_1 := a2*b2
+  ind_vitC_2 := a3*b3
+  ind_vitC_3 := a4*b4
+
+  total_ind_vitC := ind_vitC_1 + ind_vitC_2 + ind_vitC_3
+  total_effect_vitC := c2 + total_ind_vitC
+
+'
+
+fit <- sem(
+  model,
+  data = combined,
+  ordered = "diarrhea",
+  estimator = "WLSMV"
+)
+
+summary(fit, standardized = TRUE, fit.measures = TRUE)
+
+
 
 
 summary(lm(Jeotgalicoccus ~ fruit_portions + sex + age + calories, data = combined))
@@ -189,32 +250,6 @@ df_mediation <- data.frame(
   p_value = c(sum$d.avg.p, sum$z.avg.p, sum$tau.p, sum$n.avg.p)
 )
 
-
-
-#nutrient score vs. LachnospiraceaeUCG_001 vs. lower_appetite
-
-summary(lm(LachnospiraceaeUCG_001 ~ nutrient_score + sex + age + calories, data = combined))
-summary(lm(lower_appetite ~ LachnospiraceaeUCG_001 + sex + age + calories, data = combined))
-
-med.fit <- lm(LachnospiraceaeUCG_001 ~ nutrient_score + calories + sex + age, data = combined)
-
-out.fit <- glm(lower_appetite ~ LachnospiraceaeUCG_001 + nutrient_score + calories + sex + age ,data = combined, family = binomial(link = "logit"))
-
-
-med.out <- mediate(med.fit, out.fit,
-                   treat = "nutrient_score", mediator =  "LachnospiraceaeUCG_001",
-                   boot = TRUE, sims = 2000)
-
-sum <- summary(med.out)
-
-
-df_mediation <- data.frame(
-  Effect = c("ACME", "ADE", "Total Effect", "Prop. Mediated"),
-  Estimate = c(sum$d.avg, sum$z.avg, sum$tau.coef, sum$n.avg),
-  CI_lower = c(sum$d.avg.ci[1], sum$z.avg.ci[1], sum$tau.ci[1], sum$n.avg.ci[1]),
-  CI_upper = c(sum$d.avg.ci[2], sum$z.avg.ci[2], sum$tau.ci[2], sum$n.avg.ci[2]),
-  p_value = c(sum$d.avg.p, sum$z.avg.p, sum$tau.p, sum$n.avg.p)
-)
 
 
 
