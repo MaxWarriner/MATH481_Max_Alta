@@ -64,7 +64,6 @@ colnames(genus_abundance) <- gsub(pattern = "]", replacement = "", colnames(genu
 genus_abundance$shannon <- div$Shannon
 genus_abundance$chao1 <- div$Chao1
 
-
 combined <- cbind(food, health, genus_abundance)
 combined$sex <- sam$sex
 combined$age <- sam$Age
@@ -154,29 +153,24 @@ for(health_outcome in health_outcomes){
 # Save initial mediation
 mediation_dat$adjusted_total_p <- p.adjust(mediation_dat$total_p, method = "BH")
 
-write_csv(mediation_dat, 'mediation.csv')
+write_csv(mediation_dat, 'mediation_microbiome.csv')
 # 
-write_csv(combined, 'combined_mediation_data.csv')
+write_csv(combined, 'combined_mediation_microbiome_data.csv')
 
 library(tidyverse)
-mediation_dat <- read_csv('mediation.csv')
+mediation_dat <- read_csv('mediation_microbiome.csv')
 
-combined <- read_csv('combined_mediation_data.csv')
+combined <- read_csv('combined_mediation_microbiome_data.csv')
+
+
+
+# Microbiome Mediation ----------------------------------------------------
 
 # diarrhea Mediation
-# Model 1: 
-# Treatment 1: grain_portions 
-# Mediators: Blautia + Rothia 
-# Treatment 2: vitaminC 
+# Treatment 1: grain_portions
+# Mediators: Blautia, Rothia
+# Treatment 1: vitaminC 
 # Mediators: Catenisphaera, FamilyXIIIUCG_001, Isobaculum, Z20
-# Treatment 3: phosphorus
-# Mediators: Haemophilus, Rothia
-# Treatment 4: iron
-# Mediators: Blautia, Catenisphaera, Rothia
-# Treatment 5: zinc
-# Mediators: Catenisphaera, Isobaculum, Rothia
-# Treatment 6: plant_protein
-# Mediators: Oribacterium
 
 library(lavaan)
 
@@ -185,61 +179,25 @@ model <- '
   ###################################
   # Treatment 1: grain_portions
   ###################################
-  Blautia ~ a1*grain_portions + age + sex + calories
-  Rothia  ~ a2*grain_portions + age + sex + calories
-
+  Blautia  ~ a1*grain_portions + age + sex + calories
+  
+  
   ###################################
   # Treatment 2: vitaminC
   ###################################
-  Catenisphaera     ~ a3*vitaminC + age + sex + calories
-  FamilyXIIIUCG_001 ~ a4*vitaminC + age + sex + calories
-  Isobaculum        ~ a5*vitaminC + age + sex + calories
-  Z20               ~ a6*vitaminC + age + sex + calories
-
-  ###################################
-  # Treatment 3: phosphorus
-  ###################################
-  Haemophilus ~ a7*phosphorus + age + sex + calories
-  Rothia      ~ a8*phosphorus + age + sex + calories
-
-  ###################################
-  # Treatment 4: iron
-  ###################################
-  Blautia       ~ a9*iron + age + sex + calories
-  Catenisphaera ~ a10*iron + age + sex + calories
-  Rothia        ~ a11*iron + age + sex + calories
-
-  ###################################
-  # Treatment 5: zinc
-  ###################################
-  Catenisphaera ~ a12*zinc + age + sex + calories
-  Isobaculum    ~ a13*zinc + age + sex + calories
-  Rothia        ~ a14*zinc + age + sex + calories
-
-  ###################################
-  # Treatment 6: plant_protein
-  ###################################
-  Oribacterium ~ a15*plant_protein + age + sex + calories
+  Catenisphaera     ~ a2*vitaminC + age + sex + calories
+  FamilyXIIIUCG_001 ~ a3*vitaminC + age + sex + calories
+  Isobaculum        ~ a4*vitaminC + age + sex + calories
 
   ###################################
   # Outcome: diarrhea
   ###################################
-  diarrhea ~   b1*Blautia +
-      b2*Rothia +
-      b3*Catenisphaera +
-      b4*FamilyXIIIUCG_001 +
-      b5*Isobaculum +
-      b6*Z20 +
-      b7*Haemophilus +
-      b8*Oribacterium +
-
+  diarrhea ~ b1*Blautia +
+      b2*Catenisphaera +
+      b3*FamilyXIIIUCG_001 +
+      b4*Isobaculum +
       c1*grain_portions +
       c2*vitaminC +
-      c3*phosphorus +
-      c4*iron +
-      c5*zinc +
-      c6*plant_protein +
-
       age + sex + calories
 
   ###################################
@@ -248,41 +206,15 @@ model <- '
 
   ## grain_portions
   ind_grain_1 := a1*b1
-  ind_grain_2 := a2*b2
-  total_ind_grain := ind_grain_1 + ind_grain_2
+  total_ind_grain := ind_grain_1
   total_effect_grain := c1 + total_ind_grain
 
   ## vitaminC
-  ind_vitC_1 := a3*b3
-  ind_vitC_2 := a4*b4
-  ind_vitC_3 := a5*b5
-  ind_vitC_4 := a6*b6
-  total_ind_vitC := ind_vitC_1 + ind_vitC_2 + ind_vitC_3 + ind_vitC_4
+  ind_vitC_1 := a2*b2
+  ind_vitC_2 := a3*b3
+  ind_vitC_3 := a4*b4
+  total_ind_vitC := ind_vitC_1 + ind_vitC_2 + ind_vitC_3
   total_effect_vitC := c2 + total_ind_vitC
-
-  ## phosphorus
-  ind_phos_1 := a7*b7
-  ind_phos_2 := a8*b2
-  total_ind_phosphorus := ind_phos_1 + ind_phos_2
-  total_effect_phosphorus := c3 + total_ind_phosphorus
-
-  ## iron
-  ind_iron_1 := a9*b1
-  ind_iron_2 := a10*b3
-  ind_iron_3 := a11*b2
-  total_ind_iron := ind_iron_1 + ind_iron_2 + ind_iron_3
-  total_effect_iron := c4 + total_ind_iron
-
-  ## zinc
-  ind_zinc_1 := a12*b3
-  ind_zinc_2 := a13*b5
-  ind_zinc_3 := a14*b2
-  total_ind_zinc := ind_zinc_1 + ind_zinc_2 + ind_zinc_3
-  total_effect_zinc := c5 + total_ind_zinc
-
-  ## plant_protein
-  ind_pp_1 := a15*b8
-  total_effect_plant_protein := c6 + ind_pp_1
 
 '
 
@@ -442,5 +374,279 @@ fit <- sem(
 summary(fit, standardized = TRUE, fit.measures = TRUE)
 
 
+# Metabolomics Mediation --------------------------------------------------
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta")
+metab <- read_csv('metabolites_transposed.csv') |>
+  column_to_rownames(var = "ID")
+
+common_samples <- intersect(rownames(metab), rownames(sam))
+
+metab <- metab[common_samples,]
+metab <- scale(metab)
+
+sam <- sam[common_samples,]
+
+food <- sam[,c(119:149, 210:212, 214)]
+
+health <- sam[,78:84]
+
+combined <- cbind(food, health, metab)
+combined$sex <- sam$sex
+combined$age <- sam$Age
+
+nutrients <- colnames(food)
+metabolites <- colnames(metab)
+health_outcomes <- colnames(health)[c(-1, -3, -7)]
+
+
+
+
+library(mediation)
+set.seed(101)
+
+mediation_dat <- data.frame(
+  nutrient = character(),
+  microbe = character(),
+  health_outcome = character(),
+  total_effect = numeric(),
+  total_p = numeric(),
+  direct_effect = numeric(),
+  direct_p = numeric(),
+  indirect_effect = numeric(),
+  indirect_p = numeric(),
+  proportion_estimate = numeric(),
+  proportion_p = numeric(),
+  stringsAsFactors = FALSE
+)
+
+
+for(health_outcome in health_outcomes){
+  
+  for(nutrient in nutrients[-1]){
+    
+    nh_formula <- as.formula(paste(health_outcome, " ~ ", nutrient, " + calories + sex + age", sep = ""))
+    nh_regression_p <- data.frame(summary(glm(nh_formula, data = combined))$coefficients)$Pr...t..[2]
+    
+    if(nh_regression_p < 0.05){
+      
+      
+      for(metabolite in metabolites){
+        
+        nm_formula <- as.formula(paste(metabolite, " ~ ", nutrient, " + calories + sex + age", sep = ""))
+        nm_regression_p <- data.frame(summary(lm(nm_formula, data = combined))$coefficients)$Pr...t..[2]
+        
+        mh_formula <- as.formula(paste(health_outcome, " ~ ", metabolite, " + calories + sex + age", sep = ""))
+        mh_regression_p <- data.frame(summary(glm(mh_formula, data = combined))$coefficients)$Pr...t..[2]
+        
+        if(nm_regression_p < 0.05 & mh_regression_p < 0.05){
+          
+          med.fit_formula <- as.formula(paste(metabolite, " ~ ", nutrient, " + calories + sex + age", sep = ""))
+          out.fit_formula <- as.formula(paste(health_outcome, " ~ ", nutrient, " + ", metabolite, " + calories + sex + age", sep = ""))
+          
+          
+          med.fit <- lm(med.fit_formula, data = combined)
+          
+          out.fit <- glm(out.fit_formula,data = combined, family = binomial(link = "logit"))
+          
+          
+          med.out <- mediate(med.fit, out.fit,
+                             treat = nutrient, mediator =  metabolite,
+                             boot = TRUE, sims = 1000)
+          
+          
+          mediation_dat <- rbind(mediation_dat, data.frame(
+            nutrient = nutrient,
+            metabolite = metabolite, 
+            health_outcome = health_outcome, 
+            total_effect = med.out$tau.coef,
+            total_p = med.out$tau.p,
+            direct_effect = med.out$z.avg,
+            direct_p = med.out$z.avg.p,
+            indirect_effect = med.out$d.avg, 
+            indirect_p = med.out$d.avg.p, 
+            proportion_estimate = med.out$n.avg, 
+            proportion_p = med.out$n.avg.p
+          ))
+          
+        }
+        
+      }
+    }
+  }
+}
+
+# Save initial mediation
+mediation_dat$adjusted_total_p <- p.adjust(mediation_dat$total_p, method = "BH")
+mediation_dat <- mediation_dat |>
+  filter(adjusted_total_p < 0.05)
+
+write_csv(mediation_dat, 'mediation_metabolomics.csv')
+# 
+write_csv(combined, 'combined_mediation_metabolomics_data.csv')
+
+mediation_dat <- read_csv('mediation_metabolomics.csv')
+
+combined <- read_csv('combined_mediation_metabolomics_data.csv')
+
+
+# diarrhea Mediation
+# Treatment 1: grain_portions
+# Mediators: X3.4.Dihydroxybenzoic.acid, Hamamelitannin, X6.Oxooctadecanoic.acid
+# Treatment 3: vitaminC
+# Mediators: Diisopropyl.phosphate, X1.Stearoyl.2.arachidonoyl.sn.glycero.3.phospho..1..myo.inositol.
+
+
+library(lavaan)
+
+model <- '
+
+  ###################################
+  # Treatment 1: grain_portions
+  ###################################
+  X3.4.Dihydroxybenzoic.acid  ~ a1*grain_portions + age + sex + calories
+  Hamamelitannin  ~ a2*grain_portions + age + sex + calories
+  X6.Oxooctadecanoic.acid  ~ a3*grain_portions + age + sex + calories
+  
+  
+  ###################################
+  # Treatment 3: vitaminC
+  ###################################
+  Diisopropyl.phosphate  ~ a4*vitaminC + age + sex + calories
+  X1.Stearoyl.2.arachidonoyl.sn.glycero.3.phospho..1..myo.inositol. ~ a5*vitaminC + age + sex + calories
+
+  ###################################
+  # Outcome: diarrhea
+  ###################################
+  diarrhea ~ b1*X3.4.Dihydroxybenzoic.acid +
+      b2*Hamamelitannin +
+      b3*X6.Oxooctadecanoic.acid +
+      b4*Diisopropyl.phosphate +
+      b5*X1.Stearoyl.2.arachidonoyl.sn.glycero.3.phospho..1..myo.inositol. + 
+      c1*grain_portions +
+      c3*vitaminC +
+      age + sex + calories
+
+  ###################################
+  # Indirect + total effects
+  ###################################
+
+  ## grain_portions
+  ind_grain_1 := a1*b1
+  ind_grain_2 := a2*b2
+  ind_grain_3 := a3*b3
+  total_ind_grain := ind_grain_1 + ind_grain_2 + ind_grain_3
+  total_effect_grain := c1 + total_ind_grain
+
+  ## vitaminC
+  ind_vitC_1 := a4*b4
+  ind_vitC_2 := a5*b5
+  total_ind_vitC := ind_vitC_1 + ind_vitC_2
+  total_effect_vitC := c3 + total_ind_vitC
+
+'
+
+fit <- sem(
+  model,
+  data = combined,
+  ordered = "diarrhea",
+  estimator = "WLSMV"
+)
+
+summary(fit, standardized = TRUE, fit.measures = TRUE)
+
+
+
+# bloating Mediation
+# Treatment 1: fruit_portions
+# Mediators: L.Threonine, X4.Hydroxy.4.methyl.2.pentanone, Aniline, X2.Keto.3.deoxyoctonic.acid
+
+
+library(lavaan)
+
+model <- '
+
+  ###################################
+  # Treatment 1: fruit_portions
+  ###################################
+  L.Threonine  ~ a1*fruit_portions + age + sex + calories
+  X4.Hydroxy.4.methyl.2.pentanone  ~ a2*fruit_portions + age + sex + calories
+  Aniline  ~ a3*fruit_portions + age + sex + calories
+  X2.Keto.3.deoxyoctonic.acid  ~ a4*fruit_portions + age + sex + calories
+
+  ###################################
+  # Outcome: diarrhea
+  ###################################
+  bloating ~ b1*L.Threonine +
+      b2*X4.Hydroxy.4.methyl.2.pentanone +
+      b3*Aniline +
+      b4*X2.Keto.3.deoxyoctonic.acid +
+      c1*fruit_portions +
+      age + sex + calories
+
+  ###################################
+  # Indirect + total effects
+  ###################################
+
+  ## fruit_portions
+  ind_fruit_1 := a1*b1
+  ind_fruit_2 := a2*b2
+  ind_fruit_3 := a3*b3
+  ind_fruit_4 := a4*b4
+  total_ind_fruit := ind_fruit_1 + ind_fruit_2 + ind_fruit_3 + ind_fruit_4
+  total_effect_fruit := c1 + total_ind_fruit
+
+'
+
+fit <- sem(
+  model,
+  data = combined,
+  ordered = "bloating",
+  estimator = "WLSMV"
+)
+
+summary(fit, standardized = TRUE, fit.measures = TRUE)
+
+
+# abdominalpain Mediation
+# Treatment 1: fruit_or_vegetable
+# Mediators: Aniline
+
+
+library(lavaan)
+
+model <- '
+
+  ###################################
+  # Treatment 1: fruit_or_vegetable
+  ###################################
+  Aniline  ~ a1*fruit_or_vegetable + age + sex + calories
+
+  ###################################
+  # Outcome: abdominalpain
+  ###################################
+  abdominalpain ~ b1*Aniline +
+      c1*fruit_or_vegetable +
+      age + sex + calories
+
+  ###################################
+  # Indirect + total effects
+  ###################################
+
+  ## fruit_portions
+  ind_fruit_veg_1 := a1*b1
+  total_ind_fruit_veg := ind_fruit_veg_1
+  total_effect_fruit_veg := c1 + total_ind_fruit_veg
+
+'
+
+fit <- sem(
+  model,
+  data = combined,
+  ordered = "abdominalpain",
+  estimator = "WLSMV"
+)
+
+summary(fit, standardized = TRUE, fit.measures = TRUE)
 
 

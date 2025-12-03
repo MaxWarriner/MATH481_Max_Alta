@@ -6,26 +6,19 @@
   \begin{tikzpicture}
   
   % Mediators
-    \node[mynode] (m1){\textbf{Hespellia}};
-    \node[mynode, below = 1.5 of m1] (m2){\textbf{Mobiluncus}};
-    \node[mynode, below = 1.5 of m2] (m3){\textbf{Papillibacter}};
+    \node[mynode] (m1){\textbf{Aniline}};
     
     % Treatments
-    \node[mynode, left = 3 of m2](a) {\textbf{Fruit \& Vegetable Portions} \\ Direct Effect: $p = 0.786$ \\ Indirect Effect: $p = 0.044^{*}$ \\ Total Effect: $p = 0.014^{*}$};
+    \node[mynode, left = 3 of m1](a) {\textbf{Fruit \& Vegetable Portions} \\ Direct Effect: (+) $p = 0.110$ \\ (+) Indirect Effect: $p = 0.135$ \\ Total Effect: (+) $p = 0.019^{*}$};
     
     % Health Outcomes
-    \node[mynode, right = 3 of m2](b) {\textbf{Abdominal Pain} \\ Comparative Fit $= 0.985$ \\ Tucker-Lewis $= 0.970$ \\ RMSEA $=0.029$ \\ SRMR $=0.067$};
+    \node[mynode, right = 3 of m1](b) {\textbf{Abdominal Pain} \\ Comparative Fit $= 1$ \\ Tucker-Lewis $= 1$ \\ RMSEA $=0$ \\ SRMR $=0$};
     
     % Fruit to mediators
-    \draw[-latex] (a.north) -- node[auto,font=\footnotesize] {(+) $p = 0.032^{*}$} (m1.west);
-    \draw[-latex] (a.east) -- node[auto,font=\footnotesize] {(+) $p = 0.024^{.}$} (m2.west);
-    \draw[-latex] (a.south) -- node[auto,font=\footnotesize] {(-) $p = 0.121$} (m3.west);
-    
+    \draw[-latex] (a.east) -- node[auto,font=\footnotesize] {(+) $p = 0.025^{*}$} (m1.west);
     
     % Mediators to outcome
-    \draw[-latex] (m1.east) -- node[auto,font=\footnotesize] {(+) $p < 0.001^{***}$} (b.north);
-    \draw[-latex] (m2.east) -- node[auto,font=\footnotesize] {(-) $p = 0.077^{.}$} (b.west);
-    \draw[-latex] (m3.east) -- node[auto,font=\footnotesize] {(+) $p 0.025^{*}$} (b.south);
+    \draw[-latex] (m1.east) -- node[auto,font=\footnotesize] {(+) $p = 0.042^{*}$} (b.west);
     
     
 

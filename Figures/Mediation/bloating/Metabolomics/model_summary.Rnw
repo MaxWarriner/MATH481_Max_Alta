@@ -1,0 +1,36 @@
+\documentclass[tikz,border=4]{standalone}\usepackage{siunitx}
+\usetikzlibrary{positioning}
+\tikzset{mynode/.style={draw,text width=2.5 in,align=center}
+}
+\begin{document}
+  \begin{tikzpicture}
+  
+  % Mediators
+    \node[mynode] (m1){\textbf{L.Threonine}};
+    \node[mynode, below = 1.5 of m1] (m2){\textbf{X4.Hydroxy.4.methyl.2.pentanone}};
+    \node[mynode, below = 1.5 of m2] (m3){\textbf{Aniline}};
+    \node[mynode, below = 1.5 of m3] (m4){\textbf{X2.Keto.3.deoxyoctonic.acid}};
+    
+    % Treatments
+    \node[mynode, left = 3 of m2](a) {\textbf{Fruit Portions} \\ Direct Effect: (+) $p = 0.998$ \\ Indirect Effect: (+) $p = 0.030^{*}$ \\ Total Effect: (+) $p = 0.033^{*}$};
+    
+    % Health Outcomes
+    \node[mynode, right = 3 of m2](b) {\textbf{Bloating} \\ Comparative Fit $= 0.227$ \\ Tucker-Lewis $= -0.289$ \\ RMSEA $=0.255$ \\ SRMR $=0.159$};
+    
+    % Fruit to mediators
+    \draw[-latex] (a.north) -- node[auto,font=\footnotesize] {(+) $p = 0.026^{*}$} (m1.west);
+    \draw[-latex] (a.east) -- node[auto,font=\footnotesize] {(+) $p = 0.014^{*}$} (m2.west);
+    \draw[-latex] (a.east) -- node[auto,font=\footnotesize] {(+) $p = 0.121$} (m3.west);
+    \draw[-latex] (a.south) -- node[auto,font=\footnotesize] {(+) $p = 0.085^{.}$} (m4.west);
+    
+    
+    % Mediators to outcome
+    \draw[-latex] (m1.east) -- node[auto,font=\footnotesize] {(+) $p = 0.083^{.}$} (b.north);
+    \draw[-latex] (m2.east) -- node[auto,font=\footnotesize] {(+) $p = 0.064^{.}$} (b.west);
+    \draw[-latex] (m3.east) -- node[below=0.5,font=\footnotesize] {(+) $p = 0.088^{.}$} (b.west);
+    \draw[-latex] (m4.east) -- node[below=0.5,font=\footnotesize] {(+) $p = 0.051^{.}$} (b.south);
+    
+    
+
+  \end{tikzpicture}
+\end{document}
