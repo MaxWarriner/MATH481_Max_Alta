@@ -11,7 +11,7 @@
     \node[mynode, below = 1.5 of m2] (m3){\textbf{Papillibacter}};
     
     % Treatments
-    \node[mynode, left = 3 of m2](a) {\textbf{Fruit \& Vegetable Portions} \\ Direct Effect: $p = 0.786$ \\ Indirect Effect: $p = 0.044^{*}$ \\ Total Effect: $p = 0.014^{*}$};
+    \node[mynode, left = 3 of m2](a) {\textbf{Fruit \& Vegetable Portions} \\ Direct Effect: (+) $p = 0.786$ \\ Indirect Effect: (+) $p = 0.044^{*}$ \\ Total Effect: (+) $p = 0.014^{*}$};
     
     % Health Outcomes
     \node[mynode, right = 3 of m2](b) {\textbf{Abdominal Pain} \\ Comparative Fit $= 0.985$ \\ Tucker-Lewis $= 0.970$ \\ RMSEA $=0.029$ \\ SRMR $=0.067$};
@@ -25,7 +25,7 @@
     % Mediators to outcome
     \draw[-latex] (m1.east) -- node[auto,font=\footnotesize] {(+) $p < 0.001^{***}$} (b.north);
     \draw[-latex] (m2.east) -- node[auto,font=\footnotesize] {(-) $p = 0.077^{.}$} (b.west);
-    \draw[-latex] (m3.east) -- node[auto,font=\footnotesize] {(+) $p 0.025^{*}$} (b.south);
+    \draw[-latex] (m3.east) -- node[auto,font=\footnotesize] {(+) $p = 0.025^{*}$} (b.south);
     
     
 

@@ -246,7 +246,7 @@ model <- '
 
 
   ###################################
-  # Outcome: diarrhea
+  # Outcome: bloating
   ###################################
   bloating ~ b1*Atopostipes + 
              b2*Oceanicella +
@@ -489,6 +489,8 @@ mediation_dat <- read_csv('mediation_metabolomics.csv')
 
 combined <- read_csv('combined_mediation_metabolomics_data.csv')
 
+combined <- cbind(combined[,c(1:42, 505:506)], scale(combined[, 42:504]))
+
 
 # diarrhea Mediation
 # Treatment 1: grain_portions
@@ -648,5 +650,59 @@ fit <- sem(
 )
 
 summary(fit, standardized = TRUE, fit.measures = TRUE)
+
+
+
+# lower_appetite Mediation
+# Treatment 1: vitaminA
+# Mediators: Decanoylcarnitine, Phe.Val, Ala.Val, X15.Ketoprostaglandin.F2.alpha., Thr.Leu
+
+model <- '
+
+  ###################################
+  # Treatment 1: vitaminA
+  ###################################
+  Decanoylcarnitine  ~ a1*vitaminA + age + sex + calories
+  Phe.Val  ~ a2*vitaminA + age + sex + calories
+  Ala.Val  ~ a3*vitaminA + age + sex + calories
+  X15.Ketoprostaglandin.F2.alpha.  ~ a4*vitaminA + age + sex + calories
+  Thr.Leu  ~ a5*vitaminA + age + sex + calories
+
+  ###################################
+  # Outcome: lower_appetite
+  ###################################
+  lower_appetite ~ b1*Decanoylcarnitine +
+      b2*Phe.Val +
+      b3*Ala.Val +
+      b4*X15.Ketoprostaglandin.F2.alpha. +
+      b5*Thr.Leu +
+      c1*vitaminA +
+      age + sex + calories
+
+  ###################################
+  # Indirect + total effects
+  ###################################
+
+  ## vitaminA
+  ind_vitA_1 := a1*b1
+  ind_vitA_2 := a2*b2
+  ind_vitA_3 := a3*b3
+  ind_vitA_4 := a4*b4
+  total_ind_vitA := ind_vitA_1 + ind_vitA_2 + ind_vitA_3 + ind_vitA_4
+  total_effect_vitA := c1 + total_ind_vitA
+
+'
+
+fit <- sem(
+  model,
+  data = combined,
+  ordered = "lower_appetite",
+  estimator = "WLSMV"
+)
+
+summary(fit, standardized = TRUE, fit.measures = TRUE)
+
+
+
 
 
