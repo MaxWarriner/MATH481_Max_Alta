@@ -484,7 +484,7 @@ mediation_dat <- mediation_dat |>
 write_csv(mediation_dat, 'mediation_metabolomics.csv')
 # 
 write_csv(combined, 'combined_mediation_metabolomics_data.csv')
-
+library(tidyverse)
 mediation_dat <- read_csv('mediation_metabolomics.csv')
 
 combined <- read_csv('combined_mediation_metabolomics_data.csv')
@@ -635,7 +635,7 @@ model <- '
   # Indirect + total effects
   ###################################
 
-  ## fruit_portions
+  ## fruit_or_vegetable
   ind_fruit_veg_1 := a1*b1
   total_ind_fruit_veg := ind_fruit_veg_1
   total_effect_fruit_veg := c1 + total_ind_fruit_veg
