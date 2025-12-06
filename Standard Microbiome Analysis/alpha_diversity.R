@@ -18,8 +18,10 @@ diversity <- estimate_richness(ps, measures = c('Shannon', 'Chao1'))
 
 food$Shannon <- diversity$Shannon
 food$Chao1 <- diversity$Chao1
+food$age <- sam$Age
+food$sex <- sam$sex
 
-alpha_cors <- tibble(nutrient = colnames(food)[c(-1, -36, -37)], 
+alpha_cors <- tibble(nutrient = colnames(food)[c(-1, -36, -37, -38, -39)], 
                      Shannon_beta = rep(NA, 34),
                      Shannon_p = rep(NA, 34),
                      Chao1_beta = rep(NA, 34), 
@@ -31,13 +33,13 @@ for(i in 1:34){
   
   variable = alpha_cors$nutrient[i]
   
-  shannon_formula <- as.formula(paste("Shannon ~ ", variable, " + calories", sep = ""))
+  shannon_formula <- as.formula(paste("Shannon ~ ", variable, " + calories + sex + age", sep = ""))
   
   shannon_mod <- data.frame(summary(lm(shannon_formula, data = data.frame(food)))$coefficients)
   alpha_cors$Shannon_beta[i] <- shannon_mod$Estimate[2]
   alpha_cors$Shannon_p[i] <- shannon_mod$Pr...t..[2]
   
-  Chao1_formula <- as.formula(paste("Chao1 ~ ", variable, " + calories", sep = ""))
+  Chao1_formula <- as.formula(paste("Chao1 ~ ", variable, " + calories + sex + age", sep = ""))
   
   Chao1_mod <- data.frame(summary(lm(Chao1_formula, data = data.frame(food)))$coefficients)
   alpha_cors$Chao1_beta[i] <- Chao1_mod$Estimate[2]
@@ -98,16 +100,11 @@ for(i in sigs){
       legend.text  = element_text(size = 14)
     )
   
-  combined <- plot_shannon + plot_chao + 
-    plot_layout(guides = "collect") +
-    plot_annotation(title = "Microbiome Alpha Diversity") &
-    theme(
-      plot.title = element_text(hjust = 0.5, size = 20),
-      legend.title = element_text(size = 16),
-      legend.text  = element_text(size = 14)
-    )
+
   
-  ggsave(combined, filename = paste(variable, "_alpha_diversity.png", sep = ""), width = 18, height = 6, dpi = 800)
+  
+  ggsave(plot_shannon, filename = paste(variable, "_shannon_alpha_diversity.png", sep = ""), width = 12, height = 6, dpi = 800)
+  ggsave(plot_chao, filename = paste(variable, "_chao1_alpha_diversity.png", sep = ""), width = 12, height = 6, dpi = 800)
   
 }
 
@@ -123,7 +120,7 @@ food$shannon <- diversity(metabolites, index = "shannon")
 food$simpson <- diversity(metabolites, index = "simpson")
 
 
-alpha_cors <- tibble(nutrient = colnames(food)[c(-1, -36, -37, -38, -39)], 
+alpha_cors <- tibble(nutrient = colnames(food)[c(-1, -36, -37, -38, -39, -40, -41)], 
                      Shannon_beta = rep(NA, 34),
                      Shannon_p = rep(NA, 34),
                      Simpson_beta = rep(NA, 34), 
@@ -135,13 +132,13 @@ for(i in 1:34){
   
   variable = alpha_cors$nutrient[i]
   
-  shannon_formula <- as.formula(paste("shannon ~ ", variable, " + calories", sep = ""))
+  shannon_formula <- as.formula(paste("shannon ~ ", variable, " + calories + sex + age", sep = ""))
   
   shannon_mod <- data.frame(summary(lm(shannon_formula, data = data.frame(food)))$coefficients)
   alpha_cors$Shannon_beta[i] <- shannon_mod$Estimate[2]
   alpha_cors$Shannon_p[i] <- shannon_mod$Pr...t..[2]
   
-  simpson_formula <- as.formula(paste("simpson ~ ", variable, " + calories", sep = ""))
+  simpson_formula <- as.formula(paste("simpson ~ ", variable, " + calories + sex + age", sep = ""))
   
   simpson_mod <- data.frame(summary(lm(simpson_formula, data = data.frame(food)))$coefficients)
   alpha_cors$Simpson_beta[i] <- simpson_mod$Estimate[2]
@@ -199,14 +196,8 @@ for(i in sigs){
     )
   
   
-  combined <- plot_shannon + plot_simpson +
-    plot_layout(guides = "collect") +
-    plot_annotation(title = "Metabolome Alpha Diversity") &
-    theme(
-      plot.title = element_text(hjust = 0.5, size = 20)
-    )
-  
-  ggsave(combined, filename = paste(variable, "_alpha_diversity.png", sep = ""), width = 18, height = 6, dpi = 800)
+  ggsave(plot_shannon, filename = paste(variable, "_shannon_alpha_diversity.png", sep = ""), width = 12, height = 6, dpi = 800)
+  ggsave(plot_simpson, filename = paste(variable, "_simpson_alpha_diversity.png", sep = ""), width = 12, height = 6, dpi = 800)
   
 }
 
