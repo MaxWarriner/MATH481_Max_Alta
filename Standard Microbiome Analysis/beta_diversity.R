@@ -23,28 +23,30 @@ food$nutrient_score <- ifelse(sam$nutrient_score <= median(sam$nutrient_score), 
 food$fruit_or_vegetable <- ifelse(sam$fruit_or_vegetable <= median(sam$fruit_or_vegetable), "low", "high")
 food$animal_product <- ifelse(sam$animal_product <= median(sam$animal_product), "low", "high")
 
+food$age <- sam$Age
+food$sex <- sam$sex
 
 
-bdiv <- tibble(nutrient = colnames(food), 
-               jaccard_p = rep(NA, 35), 
-               bray_p = rep(NA, 35))
+bdiv <- tibble(nutrient = colnames(food)[c(-32, -36, -37)], 
+               jaccard_p = rep(NA, 34), 
+               bray_p = rep(NA, 34))
 
 bray <- phyloseq::distance(ps, method = "bray")
 jaccard <- phyloseq::distance(ps, method = "jaccard")
 
-for (i in 1:35){
+for (i in 1:34){
   
   variable = bdiv$nutrient[i]
   
-  bray_formula <- as.formula(paste("bray ~ calories_group + ", variable, sep = ""))
+  bray_formula <- as.formula(paste("bray ~ calories_group + sex + age + ", variable, sep = ""))
   
   permanova_bray <- vegan::adonis2(bray_formula, data = food, by = "margin")
-  bdiv$bray_p[i] <- permanova_bray$`Pr(>F)`[2]
+  bdiv$bray_p[i] <- permanova_bray$`Pr(>F)`[4]
   
-  jaccard_formula <- as.formula(paste("jaccard ~ calories_group + ", variable, sep = ""))
+  jaccard_formula <- as.formula(paste("jaccard ~ calories_group + sex + age + ", variable, sep = ""))
   
   permanova_jaccard <- vegan::adonis2(jaccard_formula, data = food, by = "margin")
-  bdiv$jaccard_p[i] <- permanova_jaccard$`Pr(>F)`[2]
+  bdiv$jaccard_p[i] <- permanova_jaccard$`Pr(>F)`[4]
   
 }
 
@@ -88,15 +90,15 @@ create_pcoa_plot <- function(variable, jaccard_dist, bray_dist, jaccard_pcoa, br
                                   ellipse_linewd = 1, ellipse_lty = 2) +
     ggtitle(paste(gsub("_", " ", variable), "(Jaccard)")) +
     guides(color=guide_legend(title=gsub("_", " ", variable), override.aes = list(size = 4))) +
-    theme(legend.title = element_blank(), legend.text = element_text(size = 20)) +
+    theme(legend.title = element_blank(), legend.text = element_text(size = 28)) +
     annotate("text", x = Inf, y = Inf, label = p_text_jaccard,
-             hjust = 1.1, vjust = 1.5, size = 12, fontface = "bold") + 
+             hjust = 1.1, vjust = 1.5, size = 16, fontface = "bold") + 
     theme(
-      plot.title = element_text(size = 18),
-      axis.title = element_text(size = 16),
-      axis.text  = element_text(size = 14),
-      legend.title = element_text(size = 16),
-      legend.text  = element_text(size = 14)
+      plot.title = element_text(size = 32),
+      axis.title = element_text(size = 28),
+      axis.text  = element_text(size = 26),
+      legend.title = element_text(size = 28),
+      legend.text  = element_text(size = 26)
     )
   
   pcoa_bray_plot <- ggordpoint(obj = bray_pcoa, biplot = FALSE, speciesannot = TRUE,
@@ -104,15 +106,15 @@ create_pcoa_plot <- function(variable, jaccard_dist, bray_dist, jaccard_pcoa, br
                                ellipse_linewd = 1, ellipse_lty = 2) +
     ggtitle(paste(gsub("_", " ", variable), "(Bray-Curtis)")) +
     guides(color=guide_legend(title=gsub("_", " ", variable), override.aes = list(size = 4))) +
-    theme(legend.title = element_blank(), legend.text = element_text(size = 20)) +
+    theme(legend.title = element_blank(), legend.text = element_text(size = 28)) +
     annotate("text", x = Inf, y = Inf, label = p_text_bray,
-             hjust = 1.1, vjust = 1.5, size = 12, fontface = "bold") +
+             hjust = 1.1, vjust = 1.5, size = 16, fontface = "bold") +
     theme(
-      plot.title = element_text(size = 18),
-      axis.title = element_text(size = 16),
-      axis.text  = element_text(size = 14),
-      legend.title = element_text(size = 16),
-      legend.text  = element_text(size = 14)
+      plot.title = element_text(size = 32),
+      axis.title = element_text(size = 28),
+      axis.text  = element_text(size = 26),
+      legend.title = element_text(size = 28),
+      legend.text  = element_text(size = 26)
     )
   
   combined_plot <- pcoa_jaccard_plot + pcoa_bray_plot + 
@@ -158,7 +160,8 @@ ps <- readRDS('microbiome.RDS')
 sam <- ps@sam_data
 
 food <- data.frame(sam[,c(180:209, 213, 215)])
-
+food$sex <- sam$sex
+food$age <- sam$Age
 
 metabolite_data <- read_csv('metabolites_transposed.csv') |>
   column_to_rownames('...1')
@@ -168,23 +171,23 @@ jaccard <- vegan::vegdist(metabolite_data, method = "jaccard")
 
 # PERMANOVA for each metadata variable
 bdiv <- tibble(
-  variable = colnames(food)[-32],
+  variable = colnames(food)[c(-32, -33, -34)],
   jaccard_p = NA_real_,
   bray_p = NA_real_
 )
 
-for (i in seq_along(colnames(food)[-32])) {
+for (i in seq_along(colnames(food)[c(-32, -33, -34)])) {
   variable = bdiv$variable[i]
   
-  bray_formula <- as.formula(paste("bray ~ calories_group + ", variable, sep = ""))
+  bray_formula <- as.formula(paste("bray ~ calories_group + sex + age + ", variable, sep = ""))
   
   permanova_bray <- vegan::adonis2(bray_formula, data = food, by = "margin")
-  bdiv$bray_p[i] <- permanova_bray$`Pr(>F)`[2]
+  bdiv$bray_p[i] <- permanova_bray$`Pr(>F)`[4]
   
-  jaccard_formula <- as.formula(paste("jaccard ~ calories_group + ", variable, sep = ""))
+  jaccard_formula <- as.formula(paste("jaccard ~ calories_group + sex + age + ", variable, sep = ""))
   
   permanova_jaccard <- vegan::adonis2(jaccard_formula, data = food, by = "margin")
-  bdiv$jaccard_p[i] <- permanova_jaccard$`Pr(>F)`[2]
+  bdiv$jaccard_p[i] <- permanova_jaccard$`Pr(>F)`[4]
 }
 
 # Adjust p-values
@@ -195,7 +198,7 @@ bdiv <- bdiv %>%
   )
 
 sig_vars <- bdiv %>%
-  filter(bray_p <= 0.1 & jaccard_p <= 0.1) %>%
+  filter(bray_p <= 0.1 | jaccard_p <= 0.1) %>%
   pull(variable)
 
 # -------------------------------------------------------------------------
@@ -250,13 +253,14 @@ create_pcoa_plot <- function(variable, bray_scores, jaccard_scores) {
       x = paste0("PCoA1 (", bray_var[1], "%)"),
       y = paste0("PCoA2 (", bray_var[2], "%)")
     ) +
-    theme_bw(base_size = 14) +
+    theme_bw(base_size = 28) +
     theme(legend.title = element_blank()) + 
-    theme(
-      plot.title = element_text(size = 18),
-      axis.title = element_text(size = 16),
-      axis.text  = element_text(size = 14),
-      legend.text  = element_text(size = 14)
+        theme(
+      plot.title = element_text(size = 32),
+      axis.title = element_text(size = 28),
+      axis.text  = element_text(size = 26),
+      legend.title = element_text(size = 28),
+      legend.text  = element_text(size = 26)
     )
   
   # Jaccard PCoA
@@ -277,20 +281,21 @@ create_pcoa_plot <- function(variable, bray_scores, jaccard_scores) {
       x = paste0("PCoA1 (", jaccard_var[1], "%)"),
       y = paste0("PCoA2 (", jaccard_var[2], "%)")
     ) +
-    theme_bw(base_size = 14) +
+    theme_bw(base_size = 28) +
     theme(legend.title = element_blank()) + 
     theme(
-      plot.title = element_text(size = 18),
-      axis.title = element_text(size = 16),
-      axis.text  = element_text(size = 14),
-      legend.text  = element_text(size = 14)
+      plot.title = element_text(size = 32),
+      axis.title = element_text(size = 28),
+      axis.text  = element_text(size = 26),
+      legend.title = element_text(size = 28),
+      legend.text  = element_text(size = 26)
     )
   
   combined <- p_jaccard_plot + p_bray_plot + 
     plot_layout(guides = "collect") +
     plot_annotation(title = "Metabolome Beta Diversity") &
     theme(
-      plot.title = element_text(hjust = 0.5, size = 20),
+      plot.title = element_text(hjust = 0.5, size = 30),
       legend.title = element_blank(),
       legend.text  = element_text(size = 24)
     )
@@ -298,7 +303,7 @@ create_pcoa_plot <- function(variable, bray_scores, jaccard_scores) {
   ggsave(
     filename = paste0(variable, "_metabolite_pcoa.png"),
     plot = combined,
-    width = 12, height = 6, dpi = 800
+    width = 16, height = 8, dpi = 800
   )
   
   combined
