@@ -90,12 +90,13 @@ plot_roc_curve_gg_multi <- function(model_list,
     geom_line(size = 1.2) +
     geom_abline(linetype = "dashed", color = "gray50") +
     labs(
-      title = paste0(factor, ": Overlaid ROC Curves"),
+      title = paste0(factor, ": ROC"),
       x = "False Positive Rate (1 - Specificity)",
       y = "True Positive Rate (Sensitivity)",
-      color = "Model"
+      color = "Model (AUC)"
     ) +
-    theme_minimal(base_size = 14)
+    theme_minimal(base_size = 14) +
+    theme(title = element_text(hjust = 0.5, size = 16))
   
   ggsave(filename = filename, plot = roc_plot, width = 10, height = 6, dpi = 500)
   
@@ -118,9 +119,171 @@ model_list <- list(microbiome_results, metabolome_results, nutrient_results, ful
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
 plot_roc_curve_gg_multi(
   model_list = model_list,
-  model_names = factor(c("Microbiome", "Metabolome", "Nutrients", "Combined"), levels = c("Microbiome", "Metabolome", "Nutrients", "Combined")),
+  model_names = factor(c("Microbiome (0.924)", "Metabolome (0.558)", "Nutrients (0.808)", "Combined (0.901)"), levels = c("Microbiome (0.924)", "Metabolome (0.558)", "Nutrients (0.808)", "Combined (0.901)")),
   factor = "Diarrhea",
   filename = "diarrhea_roc_overlay.png"
 )
+
+
+
+# Model Performance Heatmap -----------------------------------------------
+
+#Diarrhea
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/diarrhea_metabolome_results.RData")
+diarrhea_metabolome_results <- metabolome_results
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/diarrhea_microbiome_results.RData")
+diarrhea_microbiome_results <- microbiome_results
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/diarrhea_nutrient_results.RData")
+diarrhea_nutrient_results <- nutrients_results
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/diarrhea_results.RData")
+diarrhea_full_results <- full
+
+y_true_microbiome <- diarrhea_microbiome_results$y_true
+y_true_metabolome <- diarrhea_metabolome_results$y_true
+y_true_nutrients <- diarrhea_nutrient_results$y_true
+y_true_full <- diarrhea_full_results$y_true
+
+
+microbiome_results <- list(y_true = y_true_microbiome, xgb_fit = diarrhea_microbiome_results$xgb_fit)
+metabolome_results <- list(y_true = y_true_metabolome, xgb_fit = diarrhea_metabolome_results$xgb_fit)
+nutrient_results <- list(y_true = y_true_nutrients, xgb_fit = diarrhea_nutrient_results$xgb_fit)
+full_results <- list(y_true = y_true_full, xgb_fit = diarrhea_full_results$xgb_fit)
+
+model_list <- list(microbiome_results, metabolome_results, nutrient_results, full_results)
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
+diarrhea <- plot_roc_curve_gg_multi(
+  model_list = model_list,
+  model_names = factor(c("Microbiome (0.924)", "Metabolome (0.558)", "Nutrients (0.808)", "Combined (0.901)"), levels = c("Microbiome (0.924)", "Metabolome (0.558)", "Nutrients (0.808)", "Combined (0.901)")),
+  factor = "Diarrhea",
+  filename = "diarrhea_roc_overlay.png"
+)
+
+
+#Abdominal Pain
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/abdominalpain_metabolome_results.RData")
+abdominalpain_metabolome_results <- metabolome_results
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/abdominalpain_microbiome_results.RData")
+abdominalpain_microbiome_results <- microbiome_results
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/abdominalpain_nutrient_results.RData")
+abdominalpain_nutrient_results <- nutrients_results
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/abdominalpain_results.RData")
+abdominalpain_full_results <- full
+
+y_true_microbiome <- abdominalpain_microbiome_results$y_true
+y_true_metabolome <- abdominalpain_metabolome_results$y_true
+y_true_nutrients <- abdominalpain_nutrient_results$y_true
+y_true_full <- abdominalpain_full_results$y_true
+
+
+microbiome_results <- list(y_true = y_true_microbiome, xgb_fit = abdominalpain_microbiome_results$xgb_fit)
+metabolome_results <- list(y_true = y_true_metabolome, xgb_fit = abdominalpain_metabolome_results$xgb_fit)
+nutrient_results <- list(y_true = y_true_nutrients, xgb_fit = abdominalpain_nutrient_results$xgb_fit)
+full_results <- list(y_true = y_true_full, xgb_fit = abdominalpain_full_results$xgb_fit)
+
+model_list <- list(microbiome_results, metabolome_results, nutrient_results, full_results)
+
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
+abdominalpain <- plot_roc_curve_gg_multi(
+  model_list = model_list,
+  model_names = factor(c("Microbiome", "Metabolome", "Nutrients", "Combined"), levels = c("Microbiome", "Metabolome", "Nutrients", "Combined")),
+  factor = "abdominalpain",
+  filename = "abdominalpain_roc_overlay.png"
+)
+
+
+# Lower Appetite
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/lower_appetite_metabolome_results.RData")
+lower_appetite_metabolome_results <- metabolome_results
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/lower_appetite_microbiome_results.RData")
+lower_appetite_microbiome_results <- microbiome_results
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/lower_appetite_nutrient_results.RData")
+lower_appetite_nutrient_results <- nutrients_results
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/lower_appetite_results.RData")
+lower_appetite_full_results <- full
+
+y_true_microbiome <- lower_appetite_microbiome_results$y_true
+y_true_metabolome <- lower_appetite_metabolome_results$y_true
+y_true_nutrients <- lower_appetite_nutrient_results$y_true
+y_true_full <- lower_appetite_full_results$y_true
+
+
+microbiome_results <- list(y_true = y_true_microbiome, xgb_fit = lower_appetite_microbiome_results$xgb_fit)
+metabolome_results <- list(y_true = y_true_metabolome, xgb_fit = lower_appetite_metabolome_results$xgb_fit)
+nutrient_results <- list(y_true = y_true_nutrients, xgb_fit = lower_appetite_nutrient_results$xgb_fit)
+full_results <- list(y_true = y_true_full, xgb_fit = lower_appetite_full_results$xgb_fit)
+
+model_list <- list(microbiome_results, metabolome_results, nutrient_results, full_results)
+
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
+lower_appetite <- plot_roc_curve_gg_multi(
+  model_list = model_list,
+  model_names = factor(c("Microbiome", "Metabolome", "Nutrients", "Combined"), levels = c("Microbiome", "Metabolome", "Nutrients", "Combined")),
+  factor = "lower_appetite",
+  filename = "lower_appetite_roc_overlay.png"
+)
+
+
+#Bloating
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/bloating_metabolome_results.RData")
+bloating_metabolome_results <- metabolome_results
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/bloating_microbiome_results.RData")
+bloating_microbiome_results <- microbiome_results
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/bloating_nutrient_results.RData")
+bloating_nutrient_results <- nutrients_results
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/bloating_results.RData")
+bloating_full_results <- full
+
+
+
+y_true_microbiome <- bloating_microbiome_results$y_true
+y_true_metabolome <- bloating_metabolome_results$y_true
+y_true_nutrients <- bloating_nutrient_results$y_true
+y_true_full <- bloating_full_results$y_true
+
+
+microbiome_results <- list(y_true = y_true_microbiome, xgb_fit = bloating_microbiome_results$xgb_fit)
+metabolome_results <- list(y_true = y_true_metabolome, xgb_fit = bloating_metabolome_results$xgb_fit)
+nutrient_results <- list(y_true = y_true_nutrients, xgb_fit = bloating_nutrient_results$xgb_fit)
+full_results <- list(y_true = y_true_full, xgb_fit = bloating_full_results$xgb_fit)
+
+model_list <- list(microbiome_results, metabolome_results, nutrient_results, full_results)
+
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
+bloating <- plot_roc_curve_gg_multi(
+  model_list = model_list,
+  model_names = factor(c("Microbiome", "Metabolome", "Nutrients", "Combined"), levels = c("Microbiome", "Metabolome", "Nutrients", "Combined")),
+  factor = "bloating",
+  filename = "bloating_roc_overlay.png"
+)
+
+
+heatmapdat <- tibble(`Abdominal Pain` = abdominalpain$auc, 
+                     Bloating = bloating$auc, 
+                     Diarrhea = diarrhea$auc, 
+                     `Lower Appetite` = lower_appetite$auc)
+
+rownames(heatmapdat) <- c("Microbiome", "Metabolome", "Nutrients", "Combined")
+
+heatmapdat <- as.matrix(heatmapdat)
+
+pheatmap::pheatmap(t(heatmapdat), cluster_rows = F, cluster_cols = F, legend_title = "AUC")
+
+library(ComplexHeatmap)
+library(ggplot2)
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning")
+png("Models_Heatmap.png", width = 1200, height = 500, res = 150)
+ComplexHeatmap::Heatmap(heatmapdat, name = "AUC", cluster_rows = F, cluster_columns = F, column_names_side = "top", column_names_rot = 0, column_names_centered = T, row_names_side = "left")
+dev.off()
+
+
+
+
+
+
+
 
 

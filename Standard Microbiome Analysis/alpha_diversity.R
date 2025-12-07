@@ -74,11 +74,11 @@ for(i in sigs){
                "p =" ~ .(round(alpha_cors$Shannon_p[i], 3)))
     ) +
     theme(
-      plot.title = element_text(size = 18),
-      axis.title = element_text(size = 16),
-      axis.text  = element_text(size = 14),
-      legend.title = element_text(size = 16),
-      legend.text  = element_text(size = 14)
+      plot.title = element_text(size = 32),
+      axis.title = element_text(size = 28),
+      axis.text  = element_text(size = 26),
+      legend.title = element_text(size = 28),
+      legend.text  = element_text(size = 26)
     )
   
   plot_chao <- ggplot(data = food, aes(x = !!sym(variable), y = Chao1, colour = calories)) + 
@@ -93,11 +93,11 @@ for(i in sigs){
                "p =" ~ .(round(alpha_cors$Chao1_p[i], 3)))
     ) +
     theme(
-      plot.title = element_text(size = 18),
-      axis.title = element_text(size = 16),
-      axis.text  = element_text(size = 14),
-      legend.title = element_text(size = 16),
-      legend.text  = element_text(size = 14)
+      plot.title = element_text(size = 32),
+      axis.title = element_text(size = 28),
+      axis.text  = element_text(size = 26),
+      legend.title = element_text(size = 28),
+      legend.text  = element_text(size = 26)
     )
   
 
@@ -172,9 +172,11 @@ for(i in sigs){
                "p =" ~ .(round(alpha_cors$Shannon_p[i], 3)))
     ) +
     theme(
-      plot.title = element_text(size = 18),
-      axis.title = element_text(size = 16),
-      axis.text  = element_text(size = 14)
+      plot.title = element_text(size = 32),
+      axis.title = element_text(size = 28),
+      axis.text  = element_text(size = 26),
+      legend.title = element_text(size = 28),
+      legend.text  = element_text(size = 26)
     )
   
   
@@ -190,14 +192,16 @@ for(i in sigs){
                "p =" ~ .(round(alpha_cors$Simpson_p[i], 3)))
     ) +
     theme(
-      plot.title = element_text(size = 18),
-      axis.title = element_text(size = 16),
-      axis.text  = element_text(size = 14)
+      plot.title = element_text(size = 32),
+      axis.title = element_text(size = 28),
+      axis.text  = element_text(size = 26),
+      legend.title = element_text(size = 28),
+      legend.text  = element_text(size = 26)
     )
   
   
-  ggsave(plot_shannon, filename = paste(variable, "_shannon_alpha_diversity.png", sep = ""), width = 12, height = 6, dpi = 800)
-  ggsave(plot_simpson, filename = paste(variable, "_simpson_alpha_diversity.png", sep = ""), width = 12, height = 6, dpi = 800)
+  ggsave(plot_shannon, filename = paste(variable, "_shannon_alpha_diversity.png", sep = ""), width = 14, height = 6, dpi = 800)
+  ggsave(plot_simpson, filename = paste(variable, "_simpson_alpha_diversity.png", sep = ""), width = 14, height = 6, dpi = 800)
   
 }
 
