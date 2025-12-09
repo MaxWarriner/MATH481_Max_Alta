@@ -315,4 +315,53 @@ setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Top 10
 plot_top_importance(full, factor = "Diarrhea", filename = "diarrhea_top10.png")
 
 
+# Nutrient Score Bar Plot-------------------------------------------------------
+
+
+ps <- read_rds("microbiome.RDS")
+
+sam <- ps@sam_data
+
+
+
+consump <- ggplot(data = sam, aes(y = nutrient_score, x = "")) +
+  
+  # Shaded regions with legend
+  geom_rect(aes(
+    xmin = -Inf, xmax = Inf,
+    ymin = 42, ymax = Inf,
+    fill = "Acceptable"
+  ), alpha = 0.2) +
+  
+  geom_rect(aes(
+    xmin = -Inf, xmax = Inf,
+    ymin = -Inf, ymax = 42,
+    fill = "Borderline"
+  ), alpha = 0.2) +
+  
+  geom_boxplot(width = 0.4) +
+  
+  scale_fill_manual(
+    name = "",
+    values = c(
+      "Acceptable" = "lightgreen",
+      "Borderline" = "salmon"
+    )
+  ) +
+  
+  xlab("") +
+  ylab('') + 
+  ggtitle("Food Consumption Score") + 
+  theme_bw() &
+    theme(plot.title = element_text(hjust = 0.5, size = 16), 
+          legend.text = element_text(size = 16))
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures")
+ggsave(consump, filename = "Food_Consumption_Score_Summary.png", width = 6, height = 5, dpi = 800)
+
+
+
+
+
+
 

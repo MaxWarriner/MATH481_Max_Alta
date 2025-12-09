@@ -12,6 +12,22 @@ sam <- sam[,c(1:212, 214, 213)]
 
 health <- sam[,78:84]
 
+div <- estimate_richness(ps, measures = c("Shannon", "Chao1"))
+
+sam$shannon <- div$Shannon
+sam$chao1 <- div$Chao1
+
+t.test(formula = chao1 ~ illness, data = data.frame(sam))
+t.test(formula = chao1 ~ diarrhea, data = data.frame(sam))
+t.test(formula = chao1 ~ cough, data = data.frame(sam))
+t.test(formula = chao1 ~ bloating, data = data.frame(sam))
+t.test(formula = chao1 ~ abdominalpain, data = data.frame(sam))
+t.test(formula = chao1 ~ lower_appetite, data = data.frame(sam))
+t.test(formula = chao1 ~ nausea, data = data.frame(sam))
+
+ggplot(data = sam, aes(x = as.factor(abdominalpain), y = chao1)) + 
+  geom_boxplot()
+
 run_maaslin2_and_plot <- function(
     ps_obj, 
     variable, 
