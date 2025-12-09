@@ -205,4 +205,14 @@ for(i in sigs){
   
 }
 
+calculate_sem <- function(x) {
+  # Remove NA values if present
+  x <- na.omit(x) 
+  sd_val <- sd(x) # Calculate the standard deviation
+  n_val <- length(x) # Get the sample size
+  sem <- sd_val / sqrt(n_val) # Calculate SEM
+  return(sem)
+}
+
+
 

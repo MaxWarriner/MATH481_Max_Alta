@@ -98,7 +98,7 @@ plot_roc_curve_gg_multi <- function(model_list,
     theme_minimal(base_size = 14) +
     theme(title = element_text(hjust = 0.5, size = 16))
   
-  ggsave(filename = filename, plot = roc_plot, width = 10, height = 6, dpi = 500)
+  ggsave(filename = filename, plot = roc_plot, width = 6, height = 3.5, dpi = 500)
   
   return(list(auc = auc_values, plot = roc_plot))
 }
@@ -281,9 +281,38 @@ dev.off()
 
 
 
+# Top Features ------------------------------------------------------------
 
 
+plot_top_importance <- function(model_results, n_top = 10, bar_color = "#2c7bb6", factor, filename) {
+  
+  varimp <- model_results$feature_importance %>% 
+    arrange(desc(Importance)) %>%
+    head(n_top)
+  
+  plot <- ggplot(varimp, aes(x = reorder(Feature, Importance), y = Importance)) +
+    geom_bar(stat = "identity", fill = bar_color) +
+    coord_flip() +
+    labs(
+      title = paste(factor, ": Top", n_top, "Feature Importance"),
+      x = "",
+      y = "Importance"
+    ) +
+    theme_minimal(base_size = 22) +
+    theme(legend.position = "none")
+  
+  ggsave(filename = filename, plot = plot, width = 12, height = 5)
+  
+}
 
+
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/diarrhea_results.RData")
+
+full$feature_importance$Feature <- gsub(pattern = "G__", replacement = "", full$feature_importance$Feature)
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Top 10 Importance")
+
+plot_top_importance(full, factor = "Diarrhea", filename = "diarrhea_top10.png")
 
 
 

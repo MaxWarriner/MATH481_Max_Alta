@@ -200,13 +200,13 @@ for (i in 1:57){
     sam$nutrient_score[i] <- sam$nutrient_score[i] + sam[i,j]*nutrients[j-31,27]
   }
 
-  for(j in 32:77){
-    sam$fruit_or_vegetable[i] <- sam$fruit_or_vegetable[i] + sam[i,j]*nutrients[j-31,28]
-  }
-  
-  for(j in 32:77){
-    sam$animal_product[i] <- sam$animal_product[i] + sam[i,j]*nutrients[j-31,29]
-  }
+  # for(j in 32:77){
+  #   sam$fruit_or_vegetable[i] <- sam$fruit_or_vegetable[i] + sam[i,j]*nutrients[j-31,28]
+  # }
+  # 
+  # for(j in 32:77){
+  #   sam$animal_product[i] <- sam$animal_product[i] + sam[i,j]*nutrients[j-31,29]
+  # }
   
 }
 
@@ -302,6 +302,37 @@ sam <- data.frame(sam) |>
 sam <- sam[,c(1:152,211, 153:181,212,182:210,213)]
 
 library(phyloseq)
+
+sample_data(ps) <- sam
+
+write_rds(ps, 'microbiome.RDS')
+
+# New nutrient score calculations
+
+sam <- data.frame(sam) |>
+  mutate(meat_fish_eggs = meat_portions + eggs, 
+         fat_oil = oil + butter, 
+         sugar_sweets = sugar + cakes + soft_drinks, 
+         cereal_grain_tuber = injera_sum + rice + pasta + oats + barley_porride + sweet_potato + potatoes)
+
+for (i in 1:57){
+
+
+sam$nutrient_score[i] = (min(7, sam$cereal_grain_tuber[i])*2 + 
+           min(7, sam$legume_portions[i])*3 + 
+           min(7, sam$dairy_portions[i])*4 + 
+           min(7, sam$meat_fish_eggs[i])*4 + 
+           min(7, sam$vegetable_portions[i]) + 
+           min(7, sam$fruit_portions[i]) + 
+           min(7, sam$fat_oil[i])*0.5 + 
+           min(7, sam$sugar_sweets[i])*0.5)
+
+}
+
+
+mean(sam$nutrient_score)
+
+view(lily_ps@sam_data)
 
 sample_data(ps) <- sam
 
