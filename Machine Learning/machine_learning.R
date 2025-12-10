@@ -172,25 +172,25 @@ cv_predict_clr_xgb <- function(
   #   subsample = c(0.6, 0.8, 1.0)              # row sampling
   # )
   
-  # xgb_grid <- expand.grid(
-  #   nrounds = c(100, 300),          # fast, still shows learning behavior
-  #   max_depth = c(3, 6),            # shallow + moderate
-  #   eta = c(0.05, 0.1),             # reasonably fast learning
-  #   gamma = c(0, 0.1),              # mild reg range
-  #   colsample_bytree = c(0.8),      # fixed for speed
-  #   min_child_weight = c(1),        # fixed for speed
-  #   subsample = c(0.8)              # fixed for speed
-  # )
-  
   xgb_grid <- expand.grid(
-    nrounds = c(200, 400, 800),            # remove 1200 (longest runs)
-    max_depth = c(3, 6, 9, 12),            # keep almost all, drop 15
-    eta = c(0.01, 0.05, 0.1, 0.2),         # drop only the extremely slow 0.005
-    gamma = c(0, 0.1, 0.5, 1),             # keep full range
-    colsample_bytree = c(0.6, 0.8, 1.0),   # unchanged
-    min_child_weight = c(1, 3, 5),         # drop only 7
-    subsample = c(0.6, 0.8, 1.0)           # unchanged
+    nrounds = c(100, 300),          # fast, still shows learning behavior
+    max_depth = c(3, 6),            # shallow + moderate
+    eta = c(0.05, 0.1),             # reasonably fast learning
+    gamma = c(0, 0.1),              # mild reg range
+    colsample_bytree = c(0.8),      # fixed for speed
+    min_child_weight = c(1),        # fixed for speed
+    subsample = c(0.8)              # fixed for speed
   )
+  
+  # xgb_grid <- expand.grid(
+  #   nrounds = c(200, 400, 800),            # remove 1200 (longest runs)
+  #   max_depth = c(3, 6, 9, 12),            # keep almost all, drop 15
+  #   eta = c(0.01, 0.05, 0.1, 0.2),         # drop only the extremely slow 0.005
+  #   gamma = c(0, 0.1, 0.5, 1),             # keep full range
+  #   colsample_bytree = c(0.6, 0.8, 1.0),   # unchanged
+  #   min_child_weight = c(1, 3, 5),         # drop only 7
+  #   subsample = c(0.6, 0.8, 1.0)           # unchanged
+  # )
   
   fitControl <- caret::trainControl(
     method = "cv",
@@ -310,25 +310,25 @@ cv_predict_xgb_meta <- function(
   #   subsample = c(0.6, 0.8, 1.0)              # row sampling
   # )
   # 
-  # xgb_grid <- expand.grid(
-  #   nrounds = c(100, 300),          # fast, still shows learning behavior
-  #   max_depth = c(3, 6),            # shallow + moderate
-  #   eta = c(0.05, 0.1),             # reasonably fast learning
-  #   gamma = c(0, 0.1),              # mild reg range
-  #   colsample_bytree = c(0.8),      # fixed for speed
-  #   min_child_weight = c(1),        # fixed for speed
-  #   subsample = c(0.8)              # fixed for speed
-  # )
-  
   xgb_grid <- expand.grid(
-    nrounds = c(200, 400, 800),            # remove 1200 (longest runs)
-    max_depth = c(3, 6, 9, 12),            # keep almost all, drop 15
-    eta = c(0.01, 0.05, 0.1, 0.2),         # drop only the extremely slow 0.005
-    gamma = c(0, 0.1, 0.5, 1),             # keep full range
-    colsample_bytree = c(0.6, 0.8, 1.0),   # unchanged
-    min_child_weight = c(1, 3, 5),         # drop only 7
-    subsample = c(0.6, 0.8, 1.0)           # unchanged
+    nrounds = c(100, 300),          # fast, still shows learning behavior
+    max_depth = c(3, 6),            # shallow + moderate
+    eta = c(0.05, 0.1),             # reasonably fast learning
+    gamma = c(0, 0.1),              # mild reg range
+    colsample_bytree = c(0.8),      # fixed for speed
+    min_child_weight = c(1),        # fixed for speed
+    subsample = c(0.8)              # fixed for speed
   )
+  
+  # xgb_grid <- expand.grid(
+  #   nrounds = c(200, 400, 800),            # remove 1200 (longest runs)
+  #   max_depth = c(3, 6, 9, 12),            # keep almost all, drop 15
+  #   eta = c(0.01, 0.05, 0.1, 0.2),         # drop only the extremely slow 0.005
+  #   gamma = c(0, 0.1, 0.5, 1),             # keep full range
+  #   colsample_bytree = c(0.6, 0.8, 1.0),   # unchanged
+  #   min_child_weight = c(1, 3, 5),         # drop only 7
+  #   subsample = c(0.6, 0.8, 1.0)           # unchanged
+  # )
   
   
   
@@ -412,7 +412,7 @@ plot_roc_curve_gg <- function(model_results, positive_class = NULL, factor, file
   
 }
 
-plot_top_importance <- function(model_results, n_top = 10, bar_color = "#2c7bb6", factor, filename) {
+plot_top_importance <- function(model_results, n_top = 20, bar_color = "#2c7bb6", factor, filename) {
   
   varimp <- model_results$feature_importance %>% 
     arrange(desc(Importance)) %>%
@@ -510,52 +510,57 @@ plot_top_feature_heatmap_clr <- function(
   
 }
 
-for (health_outcome in colnames(health)[7]){
-
+for (health_outcome in colnames(health)[c(2, 4, 5, 6)]){
+  
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models")
+  
 # microbiome only
 microbiome_results <- cv_predict_clr_xgb(ps, health_outcome, meta_cols = c("Age", "sex"), clr_mat = clr_mat)
+save(microbiome_results, file = paste(health_outcome, "_microbime_results.RData", sep = ""))
 
-top10micro <- microbiome_results$feature_importance %>% 
+top20micro <- microbiome_results$feature_importance %>% 
   arrange(desc(Importance)) |>
   pull(Feature)
 
-top10micro <- top10micro[1:10]
+top20micro <- top20micro[1:20]
 
 #get top 10 features from microbiome
 
 
 #Metabolome Only
 metabolome_results <- cv_predict_xgb_meta(ps, health_outcome, meta_cols = c("Age", "sex", colnames(metab)))
+save(metabolome_results, file = paste(health_outcome, "_metabolome_results.RData", sep = ""))
 
-top10metab <- metabolome_results$feature_importance %>% 
+top20metab <- metabolome_results$feature_importance %>% 
   arrange(desc(Importance)) |>
   pull(Feature)
 
-top10metab <- top10metab[1:10]
+top20metab <- top20metab[1:20]
 
 
 #Nutrients Only
 nutrients_results <- cv_predict_xgb_meta(ps, health_outcome, meta_cols = c("Age", "sex", colnames(nutr)))
+save(nutrients_results, file = paste(health_outcome, "_nutrient_results.RData", sep = ""))
 
-top10nutr <- nutrients_results$feature_importance %>% 
+top20nutr <- nutrients_results$feature_importance %>% 
   arrange(desc(Importance)) |>
   pull(Feature)
 
-top10nutr <- top10nutr[1:10]
+top20nutr <- top10nutr[1:20]
 
 
-#Full results with top 30 features
+#Full results with top 60 features
 
-clr_mat <- clr_mat[,which(colnames(clr_mat) %in% top10micro)]
+clr_mat <- clr_mat[,which(colnames(clr_mat) %in% top20micro)]
 
-full <- cv_predict_clr_xgb(ps, health_outcome, meta_cols = c("Age", "sex", top10metab, top10nutr), clr_mat = clr_mat)
+full <- cv_predict_clr_xgb(ps, health_outcome, meta_cols = c("Age", "sex", top20metab, top20nutr), clr_mat = clr_mat)
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models")
 save(full, file = paste(health_outcome, "_results.RData", sep = ""))
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Heatmaps")
 plot_top_feature_heatmap_clr(ps_obj = ps, model_results = full,
-                             n_top = 10, metadata_vars = c("Age", "sex", top10micro, top10metab, top10nutr), 
+                             n_top = 10, metadata_vars = c("Age", "sex", top20micro, top20metab, top20nutr), 
                              outcome_var = health_outcome, min_prevalence = 0.05, 
                              filename = paste(health_outcome, "_heatmap.png"), 
                              clr_mat = clr_mat)
@@ -564,7 +569,30 @@ setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Cu
 plot_roc_curve_gg(full, factor = health_outcome, filename = paste(health_outcome, "_ROC.png", sep = ""))
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Top 10 Importance")
-plot_top_importance(full, n_top = 10, factor = health_outcome, filename = paste(health_outcome, "_top10.png", sep = ""))
+plot_top_importance(full, n_top = 25, factor = health_outcome, filename = paste(health_outcome, "_top20.png", sep = ""))
+
+
+model_comps <- tibble(model = c("microbiome", "metabolome", "nutrients", "full"), 
+                      accuracy = c(microbiome_results[["confusion_matrix"]][["overall"]][["Accuracy"]], 
+                                   metabolome_results[["confusion_matrix"]][["overall"]][["Accuracy"]], 
+                                   nutrients_results[["confusion_matrix"]][["overall"]][["Accuracy"]], 
+                                   full[["confusion_matrix"]][["overall"]][["Accuracy"]]),
+                      no_info_rate = c(microbiome_results[["confusion_matrix"]][["overall"]][["AccuracyNull"]], 
+                                       metabolome_results[["confusion_matrix"]][["overall"]][["AccuracyNull"]], 
+                                       nutrients_results[["confusion_matrix"]][["overall"]][["AccuracyNull"]], 
+                                       full[["confusion_matrix"]][["overall"]][["AccuracyNull"]]),
+                      sensitivity = c(microbiome_results[["confusion_matrix"]][["byClass"]][["Sensitivity"]], 
+                                      metabolome_results[["confusion_matrix"]][["byClass"]][["Sensitivity"]], 
+                                      nutrients_results[["confusion_matrix"]][["byClass"]][["Sensitivity"]], 
+                                      full[["confusion_matrix"]][["byClass"]][["Sensitivity"]]), 
+                      specificity = c(microbiome_results[["confusion_matrix"]][["byClass"]][["Specificity"]], 
+                                      metabolome_results[["confusion_matrix"]][["byClass"]][["Specificity"]], 
+                                      nutrients_results[["confusion_matrix"]][["byClass"]][["Specificity"]], 
+                                      full[["confusion_matrix"]][["byClass"]][["Specificity"]]))
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Model Comparisons")
+write_csv(model_comps, file = paste(health_outcome, "_model_comparisons.csv", sep = ""))
+
 
 
 
