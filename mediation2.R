@@ -21,7 +21,7 @@ div <- estimate_richness(ps)
 
 food <- sam[,c(119:149, 210:212, 214)]
 
-health <- sam[,78:84]
+health <- sam[,c(79, 81, 82, 83)]
 
 tax <- data.frame(ps@tax_table@.Data)
 
@@ -688,7 +688,8 @@ model <- '
   ind_vitA_2 := a2*b2
   ind_vitA_3 := a3*b3
   ind_vitA_4 := a4*b4
-  total_ind_vitA := ind_vitA_1 + ind_vitA_2 + ind_vitA_3 + ind_vitA_4
+  ind_vitA_5 := a5*b5
+  total_ind_vitA := ind_vitA_1 + ind_vitA_2 + ind_vitA_3 + ind_vitA_4 + ind_vitA_4
   total_effect_vitA := c1 + total_ind_vitA
 
 '

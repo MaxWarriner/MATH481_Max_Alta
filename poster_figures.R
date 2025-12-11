@@ -26,7 +26,7 @@ library(pROC)
 #Diarrhea
 load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/diarrhea_metabolome_results.RData")
 diarrhea_metabolome_results <- metabolome_results
-load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/diarrhea_microbiome_results.RData")
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/diarrhea_microbime_results.RData")
 diarrhea_microbiome_results <- microbiome_results
 load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/diarrhea_nutrient_results.RData")
 diarrhea_nutrient_results <- nutrients_results
@@ -119,7 +119,7 @@ model_list <- list(microbiome_results, metabolome_results, nutrient_results, ful
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
 plot_roc_curve_gg_multi(
   model_list = model_list,
-  model_names = factor(c("Microbiome (0.924)", "Metabolome (0.558)", "Nutrients (0.808)", "Combined (0.901)"), levels = c("Microbiome (0.924)", "Metabolome (0.558)", "Nutrients (0.808)", "Combined (0.901)")),
+  model_names = factor(c("Microbiome (0.806)", "Metabolome (0.633)", "Nutrients (0.815)", "Combined (0.900)"), levels = c("Microbiome (0.806)", "Metabolome (0.633)", "Nutrients (0.815)", "Combined (0.900)")),
   factor = "Diarrhea",
   filename = "diarrhea_roc_overlay.png"
 )
