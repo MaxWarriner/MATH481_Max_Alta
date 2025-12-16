@@ -47,6 +47,10 @@ for(i in 1:34){
   
 }
 
+alpha_cors <- alpha_cors |>
+  mutate(Shannon_p = p.adjust(Shannon_p, method = "BH"), 
+         Chao1_p = p.adjust(Chao1_p, method = "BH"))
+
 sig_cors <- alpha_cors |>
   filter(Shannon_p <= 0.05 | Chao1_p <= 0.05) |>
   pull(nutrient)
@@ -56,55 +60,103 @@ sigs <- which(alpha_cors$nutrient %in% sig_cors)
 #Create Plots for Significant Nutrients
 
 library(patchwork)
+library(emmeans)
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Alpha Diversity/Microbiome")
 for(i in sigs){
   
   variable = alpha_cors$nutrient[i]
+
+  shannon_mod <- lm(as.formula(paste("Shannon ~ ", variable, " + calories + sex + age", sep = "")), data = data.frame(food))
+
   
-  plot_shannon <- ggplot(data = food, aes(x = !!sym(variable), y = Shannon, colour = calories)) + 
-    geom_point() + 
-    theme_bw() +
-    xlab(paste(gsub("_", " ", variable), "/week", sep = "")) + 
-    ylab("Shannon Diversity") + 
-    geom_smooth(method = "lm", se = FALSE) +
-    ggtitle(
-      bquote(.(gsub("_", " ", variable)) ~ "vs. Shannon Diversity:" ~
-               beta == .(round(alpha_cors$Shannon_beta[i], 3)) * "," ~
-               "p =" ~ .(round(alpha_cors$Shannon_p[i], 3)))
-    ) +
-    theme(
-      plot.title = element_text(size = 32),
-      axis.title = element_text(size = 28),
-      axis.text  = element_text(size = 26),
-      legend.title = element_text(size = 28),
-      legend.text  = element_text(size = 26)
-    )
+  var_seq <- seq(
+    min(food[[variable]], na.rm = TRUE),
+    max(food[[variable]], na.rm = TRUE),
+    length.out = 100
+  )
   
-  plot_chao <- ggplot(data = food, aes(x = !!sym(variable), y = Chao1, colour = calories)) + 
-    geom_point() +
-    theme_bw() +
-    xlab(paste(gsub("_", " ", variable), "/week", sep = "")) + 
-    ylab("Chao1 Diversity") + 
-    geom_smooth(method = "lm", se = FALSE) +
-    ggtitle(
-      bquote(.(gsub("_", " ", variable)) ~ "vs. Chao1 Diversity:" ~
-               beta == .(round(alpha_cors$Chao1_beta[i], 3)) * "," ~
-               "p =" ~ .(round(alpha_cors$Chao1_p[i], 3)))
+  at_list <- list(
+    calories = mean(food$calories, na.rm = TRUE),
+    age = mean(food$age, na.rm = TRUE)
+  )
+  
+  # add the variable sequence using the string name
+  at_list[[variable]] <- var_seq
+  
+  pred <- emmeans(
+    shannon_mod,
+    specs = as.formula(paste("~", variable)),
+    at = at_list,
+    weights = "proportional"
+  )
+  
+  pred_df <- as.data.frame(pred)
+  
+  
+  shannon_plot <- ggplot() +
+    geom_point(data = data.frame(food), aes(x = !!sym(variable), y = Shannon), alpha = 0.4) +
+    geom_line(
+      data = pred_df,
+      aes(x = !!sym(variable), y = emmean),
+      linewidth = 1.2
     ) +
-    theme(
-      plot.title = element_text(size = 32),
-      axis.title = element_text(size = 28),
-      axis.text  = element_text(size = 26),
-      legend.title = element_text(size = 28),
-      legend.text  = element_text(size = 26)
-    )
+    labs(
+      x = paste(variable, " (mg/week)", sep = ""),
+      y = "Shannon diversity",
+      title = paste(variable, "vs. Shannon diversity"),
+      subtitle = "Adjusted for calories and age; averaged over sex"
+    ) +
+    theme_bw()
+  
+  
+  chao1_mod <- lm(as.formula(paste("Chao1 ~ ", variable, " + calories + sex + age", sep = "")), data = data.frame(food))
+  
+  
+  var_seq <- seq(
+    min(food[[variable]], na.rm = TRUE),
+    max(food[[variable]], na.rm = TRUE),
+    length.out = 100
+  )
+  
+  at_list <- list(
+    calories = mean(food$calories, na.rm = TRUE),
+    age = mean(food$age, na.rm = TRUE)
+  )
+  
+  # add the variable sequence using the string name
+  at_list[[variable]] <- var_seq
+  
+  pred <- emmeans(
+    chao1_mod,
+    specs = as.formula(paste("~", variable)),
+    at = at_list,
+    weights = "proportional"
+  )
+  
+  pred_df <- as.data.frame(pred)
+  
+  
+chao1_plot <- ggplot() +
+    geom_point(data = data.frame(food), aes(x = !!sym(variable), y = Chao1), alpha = 0.4) +
+    geom_line(
+      data = pred_df,
+      aes(x = !!sym(variable), y = emmean),
+      linewidth = 1.2
+    ) +
+    labs(
+      x = paste(variable, " (mg/week)", sep = ""),
+      y = "Chao1 diversity",
+      title = paste(variable, "vs. Chao1 diversity"),
+      subtitle = "Adjusted for calories and age; averaged over sex"
+    ) +
+    theme_bw()
   
 
   
   
-  ggsave(plot_shannon, filename = paste(variable, "_shannon_alpha_diversity.png", sep = ""), width = 12, height = 6, dpi = 800)
-  ggsave(plot_chao, filename = paste(variable, "_chao1_alpha_diversity.png", sep = ""), width = 12, height = 6, dpi = 800)
+  ggsave(shannon_plot, filename = paste(variable, "_shannon_alpha_diversity.png", sep = ""), width = 12, height = 6, dpi = 800)
+  ggsave(chao1_plot, filename = paste(variable, "_chao1_alpha_diversity.png", sep = ""), width = 12, height = 6, dpi = 800)
   
 }
 
@@ -146,6 +198,9 @@ for(i in 1:34){
   
 }
 
+alpha_cors <- alpha_cors |>
+  mutate(Shannon_p = p.adjust(Shannon_p, method = "BH"), 
+         Simpson_p = p.adjust(Simpson_p, method = "BH"))
 
 sig_cors <- alpha_cors |>
   filter(Shannon_p <= 0.05 | Simpson_p <= 0.05) |>
@@ -153,57 +208,6 @@ sig_cors <- alpha_cors |>
 
 sigs <- which(alpha_cors$nutrient %in% sig_cors)
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Alpha Diversity/Metabolome")
-
-
-for(i in sigs){
-  
-  variable = alpha_cors$nutrient[i]
-  
-  plot_shannon <- ggplot(data = food, aes(x = !!sym(variable), y = shannon, colour = calories)) + 
-    geom_point() + 
-    theme_bw() +
-    xlab(paste(gsub("_", " ", variable), "/week", sep = "")) + 
-    ylab("Shannon Diversity") + 
-    geom_smooth(method = "lm", se = FALSE) +
-    ggtitle(
-      bquote(.(gsub("_", " ", variable)) ~ "vs. Shannon Diversity:" ~
-               beta == ~ .(round(alpha_cors$Shannon_beta, 5)) * "," ~
-               "p =" ~ .(round(alpha_cors$Shannon_p[i], 3)))
-    ) +
-    theme(
-      plot.title = element_text(size = 32),
-      axis.title = element_text(size = 28),
-      axis.text  = element_text(size = 26),
-      legend.title = element_text(size = 28),
-      legend.text  = element_text(size = 26)
-    )
-  
-  
-  plot_simpson <- ggplot(data = food, aes(x = !!sym(variable), y = simpson, colour = calories)) + 
-    geom_point() +
-    theme_bw() +
-    xlab(paste(gsub("_", " ", variable), "/week", sep = "")) + 
-    ylab("Simpson Diversity") + 
-    geom_smooth(method = "lm", se = FALSE) +
-    ggtitle(
-      bquote(.(gsub("_", " ", variable)) ~ "vs. Simpson Diversity:" ~
-               beta == ~ .(round(alpha_cors$Simpson_beta, 5)) * "," ~
-               "p =" ~ .(round(alpha_cors$Simpson_p[i], 3)))
-    ) +
-    theme(
-      plot.title = element_text(size = 32),
-      axis.title = element_text(size = 28),
-      axis.text  = element_text(size = 26),
-      legend.title = element_text(size = 28),
-      legend.text  = element_text(size = 26)
-    )
-  
-  
-  ggsave(plot_shannon, filename = paste(variable, "_shannon_alpha_diversity.png", sep = ""), width = 14, height = 6, dpi = 800)
-  ggsave(plot_simpson, filename = paste(variable, "_simpson_alpha_diversity.png", sep = ""), width = 14, height = 6, dpi = 800)
-  
-}
 
 calculate_sem <- function(x) {
   # Remove NA values if present
