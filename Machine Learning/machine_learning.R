@@ -171,16 +171,16 @@ cv_predict_clr_xgb <- function(
   #   min_child_weight = c(1, 3, 5, 7),         # leaf node complexity
   #   subsample = c(0.6, 0.8, 1.0)              # row sampling
   # )
-  
-  xgb_grid <- expand.grid(
-    nrounds = c(100, 300),          # fast, still shows learning behavior
-    max_depth = c(3, 6),            # shallow + moderate
-    eta = c(0.05, 0.1),             # reasonably fast learning
-    gamma = c(0, 0.1),              # mild reg range
-    colsample_bytree = c(0.8),      # fixed for speed
-    min_child_weight = c(1),        # fixed for speed
-    subsample = c(0.8)              # fixed for speed
-  )
+  # 
+  # xgb_grid <- expand.grid(
+  #   nrounds = c(100, 300),          # fast, still shows learning behavior
+  #   max_depth = c(3, 6),            # shallow + moderate
+  #   eta = c(0.05, 0.1),             # reasonably fast learning
+  #   gamma = c(0, 0.1),              # mild reg range
+  #   colsample_bytree = c(0.8),      # fixed for speed
+  #   min_child_weight = c(1),        # fixed for speed
+  #   subsample = c(0.8)              # fixed for speed
+  # )
   
   # xgb_grid <- expand.grid(
   #   nrounds = c(200, 400, 800),            # remove 1200 (longest runs)
@@ -191,6 +191,17 @@ cv_predict_clr_xgb <- function(
   #   min_child_weight = c(1, 3, 5),         # drop only 7
   #   subsample = c(0.6, 0.8, 1.0)           # unchanged
   # )
+  
+  # 
+  xgb_grid <- expand.grid(
+    nrounds = c(150, 300, 500),     # balanced; avoids very long 800
+    max_depth = c(3, 6, 9),         # drop depth 12 (slowest)
+    eta = c(0.05, 0.1, 0.2),        # drop very slow 0.01
+    gamma = c(0, 0.1, 0.5),         # keep useful regularization range
+    colsample_bytree = c(0.7, 1.0), # fewer values, still meaningful
+    min_child_weight = c(1, 3),     # collapse to two important values
+    subsample = c(0.7, 1.0)         # reduce but keep high-performance range
+  )
   
   fitControl <- caret::trainControl(
     method = "cv",
@@ -310,15 +321,15 @@ cv_predict_xgb_meta <- function(
   #   subsample = c(0.6, 0.8, 1.0)              # row sampling
   # )
   # 
-  xgb_grid <- expand.grid(
-    nrounds = c(100, 300),          # fast, still shows learning behavior
-    max_depth = c(3, 6),            # shallow + moderate
-    eta = c(0.05, 0.1),             # reasonably fast learning
-    gamma = c(0, 0.1),              # mild reg range
-    colsample_bytree = c(0.8),      # fixed for speed
-    min_child_weight = c(1),        # fixed for speed
-    subsample = c(0.8)              # fixed for speed
-  )
+  # xgb_grid <- expand.grid(
+  #   nrounds = c(100, 300),          # fast, still shows learning behavior
+  #   max_depth = c(3, 6),            # shallow + moderate
+  #   eta = c(0.05, 0.1),             # reasonably fast learning
+  #   gamma = c(0, 0.1),              # mild reg range
+  #   colsample_bytree = c(0.8),      # fixed for speed
+  #   min_child_weight = c(1),        # fixed for speed
+  #   subsample = c(0.8)              # fixed for speed
+  # )
   
   # xgb_grid <- expand.grid(
   #   nrounds = c(200, 400, 800),            # remove 1200 (longest runs)
@@ -329,7 +340,18 @@ cv_predict_xgb_meta <- function(
   #   min_child_weight = c(1, 3, 5),         # drop only 7
   #   subsample = c(0.6, 0.8, 1.0)           # unchanged
   # )
+
   
+
+  xgb_grid <- expand.grid(
+    nrounds = c(150, 300, 500),     # balanced; avoids very long 800
+    max_depth = c(3, 6, 9),         # drop depth 12 (slowest)
+    eta = c(0.05, 0.1, 0.2),        # drop very slow 0.01
+    gamma = c(0, 0.1, 0.5),         # keep useful regularization range
+    colsample_bytree = c(0.7, 1.0), # fewer values, still meaningful
+    min_child_weight = c(1, 3),     # collapse to two important values
+    subsample = c(0.7, 1.0)         # reduce but keep high-performance range
+  )
   
   
   fitControl <- caret::trainControl(
@@ -412,7 +434,7 @@ plot_roc_curve_gg <- function(model_results, positive_class = NULL, factor, file
   
 }
 
-plot_top_importance <- function(model_results, n_top = 20, bar_color = "#2c7bb6", factor, filename) {
+plot_top_importance <- function(model_results, n_top = 10, bar_color = "#2c7bb6", factor, filename) {
   
   varimp <- model_results$feature_importance %>% 
     arrange(desc(Importance)) %>%
@@ -510,7 +532,7 @@ plot_top_feature_heatmap_clr <- function(
   
 }
 
-for (health_outcome in colnames(health)[c(2, 4, 5, 6)]){
+for (health_outcome in colnames(health)[c(5, 6)]){
   
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models")
   
@@ -546,7 +568,7 @@ top20nutr <- nutrients_results$feature_importance %>%
   arrange(desc(Importance)) |>
   pull(Feature)
 
-top20nutr <- top10nutr[1:20]
+top20nutr <- top20nutr[1:20]
 
 
 #Full results with top 60 features
@@ -569,7 +591,7 @@ setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Cu
 plot_roc_curve_gg(full, factor = health_outcome, filename = paste(health_outcome, "_ROC.png", sep = ""))
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Top 10 Importance")
-plot_top_importance(full, n_top = 25, factor = health_outcome, filename = paste(health_outcome, "_top20.png", sep = ""))
+plot_top_importance(full, n_top = 10, factor = health_outcome, filename = paste(health_outcome, "_top20.png", sep = ""))
 
 
 model_comps <- tibble(model = c("microbiome", "metabolome", "nutrients", "full"), 
@@ -592,8 +614,6 @@ model_comps <- tibble(model = c("microbiome", "metabolome", "nutrients", "full")
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Model Comparisons")
 write_csv(model_comps, file = paste(health_outcome, "_model_comparisons.csv", sep = ""))
-
-
 
 
 }

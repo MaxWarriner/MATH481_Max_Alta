@@ -207,14 +207,13 @@ model <- '
   ## grain_portions
   ind_grain_1 := a1*b1
   total_ind_grain := ind_grain_1
-  total_effect_grain := c1 + total_ind_grain
+  total_effect_grain := c1
 
   ## vitaminC
   ind_vitC_1 := a2*b2
   ind_vitC_2 := a3*b3
   ind_vitC_3 := a4*b4
   total_ind_vitC := ind_vitC_1 + ind_vitC_2 + ind_vitC_3
-  total_effect_vitC := c2 + total_ind_vitC
 
 '
 

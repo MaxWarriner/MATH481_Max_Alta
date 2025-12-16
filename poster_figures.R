@@ -38,7 +38,8 @@ plot_roc_curve_gg_multi <- function(model_list,
                                     model_names = NULL,
                                     positive_class = NULL, 
                                     factor, 
-                                    filename) {
+                                    filename,
+                                    title) {
   
   if (is.null(model_names)) {
     model_names <- paste0("Model_", seq_along(model_list))
@@ -90,13 +91,13 @@ plot_roc_curve_gg_multi <- function(model_list,
     geom_line(size = 1.2) +
     geom_abline(linetype = "dashed", color = "gray50") +
     labs(
-      title = paste0(factor, ": ROC"),
+      title = title,
       x = "False Positive Rate (1 - Specificity)",
       y = "True Positive Rate (Sensitivity)",
       color = "Model (AUC)"
     ) +
-    theme_minimal(base_size = 14) +
-    theme(title = element_text(hjust = 0.5, size = 16))
+    theme_minimal(base_size = 10) +
+    theme(title = element_text(hjust = 0.5, size = 12))
   
   ggsave(filename = filename, plot = roc_plot, width = 6, height = 3.5, dpi = 500)
   
@@ -119,7 +120,7 @@ model_list <- list(microbiome_results, metabolome_results, nutrient_results, ful
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
 plot_roc_curve_gg_multi(
   model_list = model_list,
-  model_names = factor(c("Microbiome (0.806)", "Metabolome (0.633)", "Nutrients (0.815)", "Combined (0.900)"), levels = c("Microbiome (0.806)", "Metabolome (0.633)", "Nutrients (0.815)", "Combined (0.900)")),
+  model_names = factor(c("Microbiome (0.806)", "Metabolome (0.633)", "Diet (0.815)", "Combined (0.900)"), levels = c("Microbiome (0.806)", "Metabolome (0.633)", "Diet (0.815)", "Combined (0.900)")),
   factor = "Diarrhea",
   filename = "diarrhea_roc_overlay.png"
 )
@@ -131,7 +132,7 @@ plot_roc_curve_gg_multi(
 #Diarrhea
 load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/diarrhea_metabolome_results.RData")
 diarrhea_metabolome_results <- metabolome_results
-load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/diarrhea_microbiome_results.RData")
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/diarrhea_microbime_results.RData")
 diarrhea_microbiome_results <- microbiome_results
 load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/diarrhea_nutrient_results.RData")
 diarrhea_nutrient_results <- nutrients_results
@@ -152,18 +153,19 @@ full_results <- list(y_true = y_true_full, xgb_fit = diarrhea_full_results$xgb_f
 model_list <- list(microbiome_results, metabolome_results, nutrient_results, full_results)
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
-diarrhea <- plot_roc_curve_gg_multi(
+plot_roc_curve_gg_multi(
   model_list = model_list,
-  model_names = factor(c("Microbiome (0.924)", "Metabolome (0.558)", "Nutrients (0.808)", "Combined (0.901)"), levels = c("Microbiome (0.924)", "Metabolome (0.558)", "Nutrients (0.808)", "Combined (0.901)")),
+  model_names = factor(c("Microbiome (0.924)", "Metabolome (0.558)", "Dietary (0.808)", "Combined (0.901)"), levels = c("Microbiome (0.924)", "Metabolome (0.558)", "Dietary (0.808)", "Combined (0.901)")),
   factor = "Diarrhea",
-  filename = "diarrhea_roc_overlay.png"
+  filename = "diarrhea_roc_overlay.png", 
+  title = "Diarrhea: ROC"
 )
 
 
 #Abdominal Pain
 load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/abdominalpain_metabolome_results.RData")
 abdominalpain_metabolome_results <- metabolome_results
-load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/abdominalpain_microbiome_results.RData")
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/abdominalpain_microbime_results.RData")
 abdominalpain_microbiome_results <- microbiome_results
 load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/abdominalpain_nutrient_results.RData")
 abdominalpain_nutrient_results <- nutrients_results
@@ -185,18 +187,19 @@ model_list <- list(microbiome_results, metabolome_results, nutrient_results, ful
 
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
-abdominalpain <- plot_roc_curve_gg_multi(
+plot_roc_curve_gg_multi(
   model_list = model_list,
-  model_names = factor(c("Microbiome", "Metabolome", "Nutrients", "Combined"), levels = c("Microbiome", "Metabolome", "Nutrients", "Combined")),
+  model_names = factor(c("Microbiome (0.844)", "Metabolome (0.626)", "Dietary (0.568)", "Combined (0.839)"), levels = c("Microbiome (0.844)", "Metabolome (0.626)", "Dietary (0.568)", "Combined (0.839)")),
   factor = "abdominalpain",
-  filename = "abdominalpain_roc_overlay.png"
+  filename = "abdominalpain_roc_overlay.png", 
+  title = "Abdominal Pain: ROC"
 )
 
 
 # Lower Appetite
 load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/lower_appetite_metabolome_results.RData")
 lower_appetite_metabolome_results <- metabolome_results
-load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/lower_appetite_microbiome_results.RData")
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/lower_appetite_microbime_results.RData")
 lower_appetite_microbiome_results <- microbiome_results
 load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/lower_appetite_nutrient_results.RData")
 lower_appetite_nutrient_results <- nutrients_results
@@ -218,18 +221,19 @@ model_list <- list(microbiome_results, metabolome_results, nutrient_results, ful
 
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
-lower_appetite <- plot_roc_curve_gg_multi(
+plot_roc_curve_gg_multi(
   model_list = model_list,
-  model_names = factor(c("Microbiome", "Metabolome", "Nutrients", "Combined"), levels = c("Microbiome", "Metabolome", "Nutrients", "Combined")),
+  model_names = factor(c("Microbiome (0.775)", "Metabolome (0.628)", "Dietary (0.466)", "Combined (0.844)"), levels = c("Microbiome (0.775)", "Metabolome (0.628)", "Dietary (0.466)", "Combined (0.844)")),
   factor = "lower_appetite",
-  filename = "lower_appetite_roc_overlay.png"
+  filename = "lower_appetite_roc_overlay.png", 
+  title = "Loss of Appetite: ROC"
 )
 
 
 #Bloating
 load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/bloating_metabolome_results.RData")
 bloating_metabolome_results <- metabolome_results
-load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/bloating_microbiome_results.RData")
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/bloating_microbime_results.RData")
 bloating_microbiome_results <- microbiome_results
 load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/bloating_nutrient_results.RData")
 bloating_nutrient_results <- nutrients_results
@@ -253,11 +257,12 @@ model_list <- list(microbiome_results, metabolome_results, nutrient_results, ful
 
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
-bloating <- plot_roc_curve_gg_multi(
+plot_roc_curve_gg_multi(
   model_list = model_list,
-  model_names = factor(c("Microbiome", "Metabolome", "Nutrients", "Combined"), levels = c("Microbiome", "Metabolome", "Nutrients", "Combined")),
+  model_names = factor(c("Microbiome (0.665)", "Metabolome (0.600)", "Dietary (0.481)", "Combined (0.939)"), levels = c("Microbiome (0.665)", "Metabolome (0.600)", "Dietary (0.481)", "Combined (0.939)")),
   factor = "bloating",
-  filename = "bloating_roc_overlay.png"
+  filename = "bloating_roc_overlay.png", 
+  title = "Bloating: ROC"
 )
 
 
@@ -284,7 +289,7 @@ dev.off()
 # Top Features ------------------------------------------------------------
 
 
-plot_top_importance <- function(model_results, n_top = 10, bar_color = "#2c7bb6", factor, filename) {
+plot_top_importance <- function(model_results, n_top = 10, bar_color = "#2c7bb6", factor, filename, title) {
   
   varimp <- model_results$feature_importance %>% 
     arrange(desc(Importance)) %>%
@@ -294,7 +299,7 @@ plot_top_importance <- function(model_results, n_top = 10, bar_color = "#2c7bb6"
     geom_bar(stat = "identity", fill = bar_color) +
     coord_flip() +
     labs(
-      title = paste(factor, ": Top", n_top, "Feature Importance"),
+      title = title,
       x = "",
       y = "Importance"
     ) +
@@ -305,14 +310,53 @@ plot_top_importance <- function(model_results, n_top = 10, bar_color = "#2c7bb6"
   
 }
 
+#Diarrhea top importance
 
 load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/diarrhea_results.RData")
 
 full$feature_importance$Feature <- gsub(pattern = "G__", replacement = "", full$feature_importance$Feature)
+full$feature_importance$Feature <- gsub(pattern = "F__", replacement = "", full$feature_importance$Feature)
+full$feature_importance$Feature <- gsub(pattern = "_", replacement = " ", full$feature_importance$Feature)
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Top 10 Importance")
 
-plot_top_importance(full, factor = "Diarrhea", filename = "diarrhea_top10.png")
+plot_top_importance(full, factor = "Diarrhea", filename = "diarrhea_top10.png", title = "Diarrhea: Top 10 Feature Importance")
+
+#Abdominal Pain top importance
+
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/abdominalpain_results.RData")
+
+full$feature_importance$Feature <- gsub(pattern = "G__", replacement = "", full$feature_importance$Feature)
+full$feature_importance$Feature <- gsub(pattern = "F__", replacement = "", full$feature_importance$Feature)
+full$feature_importance$Feature <- gsub(pattern = "_", replacement = " ", full$feature_importance$Feature)
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Top 10 Importance")
+
+plot_top_importance(full, factor = "abdominalpain", filename = "abdominalpain_top10.png", title = "Abdominal Pain: Top 10 Feature Importance")
+
+#Bloating top importance
+
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/bloating_results.RData")
+
+full$feature_importance$Feature <- gsub(pattern = "G__", replacement = "", full$feature_importance$Feature)
+full$feature_importance$Feature <- gsub(pattern = "F__", replacement = "", full$feature_importance$Feature)
+full$feature_importance$Feature <- gsub(pattern = "_", replacement = " ", full$feature_importance$Feature)
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Top 10 Importance")
+
+plot_top_importance(full, factor = "bloating", filename = "bloating_top10.png", title = "Bloating: Top 10 Feature Importance")
+
+#Lower Appetite top importance
+
+load("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models/lower_appetite_results.RData")
+
+full$feature_importance$Feature <- gsub(pattern = "G__", replacement = "", full$feature_importance$Feature)
+full$feature_importance$Feature <- gsub(pattern = "F__", replacement = "", full$feature_importance$Feature)
+full$feature_importance$Feature <- gsub(pattern = "_", replacement = " ", full$feature_importance$Feature)
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Top 10 Importance")
+
+plot_top_importance(full, factor = "lower_appetite", filename = "lower_appetite_top10.png", title = "Loss of Appetite: Top 10 Feature Importance")
 
 
 # Nutrient Score Bar Plot-------------------------------------------------------
