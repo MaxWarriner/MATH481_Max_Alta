@@ -57,26 +57,19 @@
   \begin{tikzpicture}
   
   % Mediators
-    \node[mynode] (m1){\textbf{Atopostipes}};
-    \node[mynode, below = 1.5 of m1] (m2){\textbf{Oceanicella}};
-    \node[mynode, below = 1.5 of m2] (m3){\textbf{Subdoligranulum}};
+    \node[mynode] (m1){\textbf{Aniline}};
     
     % Treatments
-    \node[mynode, left = 3 of m2](a) {\textbf{Fruit Portions} \\ Direct Effect: (-) $p = 0.886$ \\ Indirect Effect: (+) $p = 0.016^{*}$ \\ Total Effect: (+) $p = 0.019^{*}$};
+    \node[mynode, left = 3 of m1](a) {\textbf{Fruit \& Vegetable Portions} \\ Direct Effect: (+) $p = 0.110$ \\ Indirect Effect: (+) $p = 0.135$ \\ Total Effect: (+) $p = 0.019^{*}$};
     
     % Health Outcomes
-    \node[mynode, right = 3 of m2](b) {\textbf{Bloating} \\ Comparative Fit $= 0.784$ \\ Tucker-Lewis $= 0.567$ \\ RMSEA $=0.17$ \\ SRMR $=0.11$};
+    \node[mynode, right = 3 of m1](b) {\textbf{Abdominal Pain} \\ Comparative Fit $= 1$ \\ Tucker-Lewis $= 1$ \\ RMSEA $=0$ \\ SRMR $=0$};
     
     % Fruit to mediators
-    \draw[-latex] (a.north) -- node[auto,font=\footnotesize] {(-) $p = 0.041^{*}$} (m1.west);
-    \draw[-latex] (a.east) -- node[auto,font=\footnotesize] {(-) $p = 0.075^{.}$} (m2.west);
-    \draw[-latex] (a.south) -- node[auto,font=\footnotesize] {(+) $p = 0.011^{*}$} (m3.west);
-    
+    \draw[-latex] (a.east) -- node[auto,font=\footnotesize] {(+) $p = 0.025^{*}$} (m1.west);
     
     % Mediators to outcome
-    \draw[-latex] (m1.east) -- node[auto,font=\footnotesize] {(-) $p < 0.001^{***}$} (b.north);
-    \draw[-latex] (m2.east) -- node[auto,font=\footnotesize] {(-) $p < 0.001^{***}$} (b.west);
-    \draw[-latex] (m3.east) -- node[auto,font=\footnotesize] {(+) $p = 0.004^{**}$} (b.south);
+    \draw[-latex] (m1.east) -- node[auto,font=\footnotesize] {(+) $p = 0.042^{*}$} (b.west);
     
     
 

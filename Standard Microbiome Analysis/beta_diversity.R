@@ -50,15 +50,16 @@ for (i in 1:34){
   
 }
 
+bdiv <- bdiv |>
+  mutate(bray_p = p.adjust(bray_p, method = "BH"), 
+         jaccard_p = p.adjust(jaccard_p, method = "BH"))
+
 sigtable <- bdiv |>
-  filter(bray_p <= 0.05 & jaccard_p <= 0.05)
+  filter(bray_p <= 0.05 | jaccard_p <= 0.05)
 
 sig <- sigtable |>
   pull(nutrient)
 
-
-bdiv$adjusted_bray <- p.adjust(bdiv$bray_p, method = "BH")
-bdiv$adjusted_jaccard <- p.adjust(bdiv$jaccard_p, method = "BH")
 
 ps@sam_data$nutrient_score <- ifelse(ps@sam_data$nutrient_score <= median(ps@sam_data$nutrient_score), "low", "high")
 ps@sam_data$fruit_or_vegetable <- ifelse(ps@sam_data$fruit_or_vegetable <= median(ps@sam_data$fruit_or_vegetable), "low", "high")
@@ -68,38 +69,17 @@ ps@sam_data$animal_product <- ifelse(ps@sam_data$animal_product <= median(ps@sam
 #Create PCOA plots for significant stuff
 
 bray <- phyloseq::distance(ps, method = "bray")
-jaccard <- phyloseq::distance(ps, method = "jaccard")
 
-jaccard_pcoa <- get_pcoa(obj = ps, distmethod = "jaccard", method = "hellinger")
 bray_pcoa <- get_pcoa(obj = ps, distmethod = "bray", method = "hellinger")
 
 sam <- ps@sam_data
 
-create_pcoa_plot <- function(variable, jaccard_dist, bray_dist, jaccard_pcoa, bray_pcoa, sam) {
+create_pcoa_plot <- function(variable, bray_dist, bray_pcoa, sam) {
   
-  pval_jaccard <- sigtable$jaccard_p[i]
   pval_bray <- sigtable$bray_p[i]
   
-  p_text_jaccard <- ifelse(pval_jaccard < 0.001, "p < 0.001",
-                           paste("p =", format(round(pval_jaccard, 3), nsmall = 3)))
   p_text_bray <- ifelse(pval_bray < 0.001, "p < 0.001",
                         paste("p =", format(round(pval_bray, 3), nsmall = 3)))
-  
-  pcoa_jaccard_plot <- ggordpoint(obj = jaccard_pcoa, biplot = FALSE, speciesannot = TRUE,
-                                  factorNames = c(variable), ellipse = TRUE, linesize = 1.5,
-                                  ellipse_linewd = 1, ellipse_lty = 2) +
-    ggtitle(paste(gsub("_", " ", variable), "(Jaccard)")) +
-    guides(color=guide_legend(title=gsub("_", " ", variable), override.aes = list(size = 4))) +
-    theme(legend.title = element_blank(), legend.text = element_text(size = 28)) +
-    annotate("text", x = Inf, y = Inf, label = p_text_jaccard,
-             hjust = 1.1, vjust = 1.5, size = 16, fontface = "bold") + 
-    theme(
-      plot.title = element_text(size = 32),
-      axis.title = element_text(size = 28),
-      axis.text  = element_text(size = 26),
-      legend.title = element_text(size = 28),
-      legend.text  = element_text(size = 26)
-    )
   
   pcoa_bray_plot <- ggordpoint(obj = bray_pcoa, biplot = FALSE, speciesannot = TRUE,
                                factorNames = c(variable), ellipse = TRUE, linesize = 1.5,
@@ -117,17 +97,8 @@ create_pcoa_plot <- function(variable, jaccard_dist, bray_dist, jaccard_pcoa, br
       legend.text  = element_text(size = 26)
     )
   
-  combined_plot <- pcoa_jaccard_plot + pcoa_bray_plot + 
-    plot_layout(guides = "collect") +
-    plot_annotation(title = "Microbiome Beta Diversity") &
-    theme(
-      plot.title = element_text(hjust = 0.5, size = 20),
-      legend.title = element_blank(),
-      legend.text  = element_text(size = 24)
-    )
-  
-  ggsave(combined_plot,
-         filename = paste(variable, "_pcoa_combined.png", sep = ""),
+  ggsave(pcoa_bray_plot,
+         filename = paste(variable, "_pcoa.png", sep = ""),
          device = "png",
          height = 6, width = 14, units = "in", 
          dpi = 800)
@@ -139,7 +110,7 @@ setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Beta Diversity/Microbio
 
 
 for (i in 1:length(sig)){
-  create_pcoa_plot(sig[i], jaccard, bray, jaccard_pcoa, bray_pcoa, sam)
+  create_pcoa_plot(sig[i], bray, bray_pcoa, sam)
 }
 
 
@@ -198,7 +169,7 @@ bdiv <- bdiv %>%
   )
 
 sig_vars <- bdiv %>%
-  filter(bray_p <= 0.1 | jaccard_p <= 0.1) %>%
+  filter(adjusted_bray <= 0.1 | adjusted_jaccard <= 0.1) %>%
   pull(variable)
 
 # -------------------------------------------------------------------------

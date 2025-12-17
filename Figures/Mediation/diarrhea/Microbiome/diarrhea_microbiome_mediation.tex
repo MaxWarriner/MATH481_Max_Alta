@@ -57,26 +57,31 @@
   \begin{tikzpicture}
   
   % Mediators
-    \node[mynode] (m1){\textbf{Hespellia}};
-    \node[mynode, below = 1.5 of m1] (m2){\textbf{Mobiluncus}};
-    \node[mynode, below = 1.5 of m2] (m3){\textbf{Papillibacter}};
+    \node[mynode] (m1){\textbf{Blautia}};
+    \node[mynode, below = 0.75 of m1] (m2){\textbf{Catenisphaera}};
+    \node[mynode, below = 0.75 of m2] (m3){\textbf{FamilyXIIIUCG001}};
+    \node[mynode, below = 0.75 of m3] (m4){\textbf{Isobaculum}};
     
     % Treatments
-    \node[mynode, left = 3 of m2](a) {\textbf{Fruit \& Vegetable Portions} \\ Direct Effect: (+) $p = 0.786$ \\ Indirect Effect: (+) $p = 0.044^{*}$ \\ Total Effect: (+) $p = 0.014^{*}$};
+    \node[mynode, left = 2 of m1](a) {\textbf{Grain Portions} \\ Direct Effect:(-)  $p = 0.156$ \\ Indirect Effect: (-) $p = 0.234$ \\ Total Effect: (-) $p = 0.051^{.}$};
+    \node[mynode,below = 0.75 of a](b) {\textbf{Vitamin C} \\ Direct Effect: (-) $p = 0.863$ \\ Indirect Effect: (+) $p = 0.017^{*}$ \\ Total Effect: (+) $p = 0.073^{.}$};
     
     % Health Outcomes
-    \node[mynode, right = 3 of m2](b) {\textbf{Abdominal Pain} \\ Comparative Fit $= 0.985$ \\ Tucker-Lewis $= 0.970$ \\ RMSEA $=0.029$ \\ SRMR $=0.067$};
+    \node[mynode, right = 9.5 of b](d) {\textbf{Diarrhea} \\ Comparative Fit $= 0.496$ \\ Tucker-Lewis $= 0.496$ \\ RMSEA $=0.19$ \\ SRMR $=0.16$};
     
-    % Fruit to mediators
-    \draw[-latex] (a.north) -- node[auto,font=\footnotesize] {(+) $p = 0.032^{*}$} (m1.west);
-    \draw[-latex] (a.east) -- node[auto,font=\footnotesize] {(+) $p = 0.024^{.}$} (m2.west);
-    \draw[-latex] (a.south) -- node[auto,font=\footnotesize] {(-) $p = 0.121$} (m3.west);
+    % Grains to mediators
+    \draw[-latex] (a.east) -- node[auto,font=\normalsize] {(-) .} (m1.west);
     
+    % Vitamin C to mediators
+    \draw[-latex] (b.east) -- node[auto,font=\normalsize] {(+)} (m2.west);
+    \draw[-latex] (b.east) -- node[auto,font=\normalsize] {(-) .} (m3.west);
+    \draw[-latex] (b.east) -- node[below,font=\normalsize] {(+)*} (m4.west);
     
     % Mediators to outcome
-    \draw[-latex] (m1.east) -- node[auto,font=\footnotesize] {(+) $p < 0.001^{***}$} (b.north);
-    \draw[-latex] (m2.east) -- node[auto,font=\footnotesize] {(-) $p = 0.077^{.}$} (b.west);
-    \draw[-latex] (m3.east) -- node[auto,font=\footnotesize] {(+) $p = 0.025^{*}$} (b.south);
+    \draw[-latex] (m1.east) -- node[auto,font=\normalsize] {(+) .} (d.north);
+    \draw[-latex] (m2.east) -- node[auto,font=\normalsize] {(-)***} (d.west);
+    \draw[-latex] (m3.east) -- node[below,font=\normalsize] {(+)***} (d.west);
+    \draw[-latex] (m4.east) -- node[below,font=\normalsize] {(+)*} (d.west);
     
     
 

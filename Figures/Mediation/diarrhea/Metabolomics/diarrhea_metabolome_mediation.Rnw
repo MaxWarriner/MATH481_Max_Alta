@@ -1,0 +1,41 @@
+\documentclass[tikz,border=4]{standalone}\usepackage{siunitx}
+\usetikzlibrary{positioning}
+\tikzset{mynode/.style={draw,text width=3 in,align=center}
+}
+\begin{document}
+  \begin{tikzpicture}
+  
+  % Mediators
+    \node[mynode] (m1){\textbf{X3.4.Dihydroxybenzoic.acid}};
+    \node[mynode, below = 0.75 of m1] (m2){\textbf{Hamamelitannin}};
+    \node[mynode, below = 0.75 of m2] (m3){\textbf{X6.Oxooctadecanoic.acid}};
+    \node[mynode, below = 0.75 of m3] (m4){\textbf{Diisopropyl.phosphate}};
+    \node[mynode, below = 0.75 of m4] (m5){\textbf{X1.Stearoyl.2.arachidonoyl.sn. \\ glycero.3.phospho..1..myo.inositol.}};
+    
+    % Treatments
+    \node[mynode, left = 2 of m2](a) {\textbf{Grain Portions} \\ Direct Effect: (+) $p = 0.684$ \\ Indirect Effect: (-) $p = 0.052^{.}$ \\ Total Effect: (-) $p = 0.054^{.}$};
+    \node[mynode,below = 1 of a](b) {\textbf{Vitamin C} \\ Direct Effect: (-) $p = 0.882$ \\ Indirect Effect: (+) $p = 0.059^{.}$ \\ Total Effect: (+) $p = 0.125$};
+    
+    % Health Outcomes
+    \node[mynode, right = 2 of m3](d) {\textbf{Diarrhea} \\ Comparative Fit $= 0.915$ \\ Tucker-Lewis $= 0.915$ \\ RMSEA $=0.139$ \\ SRMR $=0.219$};
+    
+    % Grains to mediators
+    \draw[-latex] (a.east) -- node[auto,font=\normalsize] {(-)**} (m1.west);
+    \draw[-latex] (a.east) -- node[auto,font=\normalsize] {(-)*} (m2.west);
+    \draw[-latex] (a.east) -- node[auto,font=\normalsize] {(-)*} (m3.west);   
+    
+    % Vitamin C to mediators
+    \draw[-latex] (b.east) -- node[auto,font=\normalsize] {(+) .} (m4.west);
+    \draw[-latex] (b.east) -- node[auto,font=\normalsize] {(+)} (m5.west);
+    
+    % Mediators to outcome
+    \draw[-latex] (m1.east) -- node[auto,font=\normalsize] {(+)**} (d.north);
+    \draw[-latex] (m2.east) -- node[auto,font=\normalsize] {(+)*} (d.west);
+    \draw[-latex] (m3.east) -- node[auto,font=\normalsize] {(+).} (d.west);
+    \draw[-latex] (m4.east) -- node[below,font=\normalsize] {(+)***} (d.west);
+    \draw[-latex] (m5.east) -- node[auto,font=\normalsize] {(+).} (d.south);
+    
+    
+
+  \end{tikzpicture}
+\end{document}
