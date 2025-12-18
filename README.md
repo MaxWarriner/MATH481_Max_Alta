@@ -35,3 +35,5 @@ mediation2: mediation analysis script that contains initial screening with linea
 pheatmap2: Script for hierarchical clustering heatmaps
 
 poster_figures: updated special functions for figures going on the poster and paper
+
+Figures: folders for all of the significant figures from the analyses scripts
