@@ -14,6 +14,7 @@ Data files:
 - clr_mat: found in the machine learning folder. Center log transformed genus abundance microbiome matrix used as input in the XGBoost models
 
 Scripts:
+
 Data Processing:
 - data_cleaning: data cleaning of the original phyloseq object, renaming columns, converting questionnaire answers to food volume, imputing data, etc.
 - food_groups: Summing columns to make food group variables
