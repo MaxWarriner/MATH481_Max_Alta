@@ -214,6 +214,7 @@ model <- '
   ind_vitC_2 := a3*b3
   ind_vitC_3 := a4*b4
   total_ind_vitC := ind_vitC_1 + ind_vitC_2 + ind_vitC_3
+  total_effect_grain := c2
 
 '
 
@@ -224,7 +225,7 @@ fit <- sem(
   estimator = "WLSMV"
 )
 
-summary(fit, standardized = TRUE, fit.measures = TRUE)
+summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)
 
 
 # Bloating Mediation

@@ -103,7 +103,7 @@ create_pcoa_plot <- function(variable, bray_dist, bray_pcoa, sam) {
          height = 6, width = 14, units = "in", 
          dpi = 800)
   
-  return(combined_plot)
+  return(pcoa_bray_plot)
 }
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Beta Diversity/Microbiome")

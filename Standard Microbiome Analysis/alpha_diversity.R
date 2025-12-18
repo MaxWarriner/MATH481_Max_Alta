@@ -63,7 +63,7 @@ library(patchwork)
 library(emmeans)
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Alpha Diversity/Microbiome")
-for(i in sigs){
+for(i in c(sigs, 31:34)){
   
   variable = alpha_cors$nutrient[i]
 
@@ -107,7 +107,15 @@ for(i in sigs){
       title = paste(variable, "vs. Shannon diversity"),
       subtitle = "Adjusted for calories and age; averaged over sex"
     ) +
-    theme_bw()
+    theme_bw() + 
+    theme(
+      axis.title = element_text(size = 14),
+      axis.text  = element_text(size = 12),
+      plot.title = element_text(size = 16, face = "bold"),
+      plot.subtitle = element_text(size = 13),
+      legend.text = element_text(size = 12),
+      legend.title = element_text(size = 13)
+    )
   
   
   chao1_mod <- lm(as.formula(paste("Chao1 ~ ", variable, " + calories + sex + age", sep = "")), data = data.frame(food))
@@ -150,13 +158,21 @@ chao1_plot <- ggplot() +
       title = paste(variable, "vs. Chao1 diversity"),
       subtitle = "Adjusted for calories and age; averaged over sex"
     ) +
-    theme_bw()
+    theme_bw() + 
+  theme(
+    axis.title = element_text(size = 14),
+    axis.text  = element_text(size = 12),
+    plot.title = element_text(size = 16, face = "bold"),
+    plot.subtitle = element_text(size = 13),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 13)
+  )
   
 
   
   
-  ggsave(shannon_plot, filename = paste(variable, "_shannon_alpha_diversity.png", sep = ""), width = 12, height = 6, dpi = 800)
-  ggsave(chao1_plot, filename = paste(variable, "_chao1_alpha_diversity.png", sep = ""), width = 12, height = 6, dpi = 800)
+  ggsave(shannon_plot, filename = paste(variable, "_shannon_alpha_diversity.png", sep = ""), width = 8, height = 4, dpi = 800)
+  ggsave(chao1_plot, filename = paste(variable, "_chao1_alpha_diversity.png", sep = ""), width = 8, height = 4, dpi = 800)
   
 }
 
