@@ -172,9 +172,7 @@ sig_vars <- bdiv %>%
   filter(adjusted_bray <= 0.1 | adjusted_jaccard <= 0.1) %>%
   pull(variable)
 
-# -------------------------------------------------------------------------
 # Ordinations
-# -------------------------------------------------------------------------
 bray_pcoa <- cmdscale(bray, eig = TRUE, k = 2)
 jaccard_pcoa <- cmdscale(jaccard, eig = TRUE, k = 2)
 
@@ -192,9 +190,6 @@ jaccard_scores <- extract_scores(jaccard_pcoa)
 bray_scores <- cbind(bray_scores, food)
 jaccard_scores <- cbind(jaccard_scores, food)
 
-# -------------------------------------------------------------------------
-# Function for plotting ordination with 95% ellipses
-# -------------------------------------------------------------------------
 create_pcoa_plot <- function(variable, bray_scores, jaccard_scores) {
   # Force factor for grouping
   bray_scores[[variable]] <- as.factor(bray_scores[[variable]])
@@ -280,9 +275,7 @@ create_pcoa_plot <- function(variable, bray_scores, jaccard_scores) {
   combined
 }
 
-# -------------------------------------------------------------------------
 # Run plots for significant variables
-# -------------------------------------------------------------------------
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Beta Diversity/Metabolome")
 
 for (var in sig_vars) {
