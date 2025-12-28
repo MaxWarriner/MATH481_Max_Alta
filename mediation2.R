@@ -70,7 +70,7 @@ combined$age <- sam$Age
 
 nutrients <- colnames(food)
 microbes <- colnames(genus_abundance)
-health_outcomes <- colnames(health)[c(-1, -3, -7)]
+health_outcomes <- colnames(health)
 
 
 #mediation package
