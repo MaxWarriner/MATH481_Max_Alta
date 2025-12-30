@@ -62,19 +62,19 @@
     \node[mynode, below = 1 of m2] (m3){\textbf{Papillibacter}};
     
     % Treatments
-    \node[mynode, left = 1.25 of m2](a) {\textbf{Fruit \& Vegetable Portions} \\ Direct Effect: (+) $p = 0.786$ \\ Indirect Effect: (+) $p = 0.044^{*}$ \\ Total Effect: (+) $p = 0.014^{*}$};
+    \node[mynode, left = 1.25 of m2](a) {\textbf{Fruit \& Vegetable Portions} \\ Direct Effect: (+) $p = 0.777$ \\ Indirect Effect: (+) $p = 0.039^{*}$ \\ Total Effect: (+) $p = 0.013^{*}$};
     
     % Health Outcomes
-    \node[mynode, right = 1.25 of m2](b) {\textbf{Abdominal Pain} \\ Comparative Fit $= 0.985$ \\ Tucker-Lewis $= 0.970$ \\ RMSEA $=0.029$ \\ SRMR $=0.067$};
+    \node[mynode, right = 1.25 of m2](b) {\textbf{Abdominal Pain} \\ Comparative Fit $= 1.000$ \\ Tucker-Lewis $= 0.126$ \\ RMSEA $<0.001$ \\ SRMR $=0.054$};
     
     % Fruit to mediators
     \draw[-latex] (a.north) -- node[auto,font=\normalsize] {(+)\textbf{*}} (m1.west);
-    \draw[-latex] (a.east) -- node[auto,font=\normalsize] {(+)\textbf{*}} (m2.west);
+    \draw[-latex] (a.east) -- node[auto,font=\normalsize] {(+)\textbf{**}} (m2.west);
     \draw[-latex] (a.south) -- node[below right = 0.1 of a,font=\normalsize] {(-)} (m3.west);
     
     
     % Mediators to outcome
-    \draw[-latex] (m1.east) -- node[auto,font=\normalsize] {(+)\textbf{***}} (b.north);
+    \draw[-latex] (m1.east) -- node[auto,font=\normalsize] {(+)\textbf{**}} (b.north);
     \draw[-latex] (m2.east) -- node[auto,font=\normalsize] {(-)\textbf{.}} (b.west);
     \draw[-latex] (m3.east) -- node[below,font=\normalsize] {(+)\textbf{*}} (b.south);
     

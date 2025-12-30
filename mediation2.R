@@ -323,7 +323,7 @@ fit <- sem(
   estimator = "WLSMV"
 )
 
-summary(fit, standardized = TRUE, fit.measures = TRUE)
+summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 4)
 
 
 
@@ -340,14 +340,12 @@ model <- '
   ###################################
   LachnospiraceaeUCG_001 ~ a1*vitaminC + age + sex + calories
   Papillibacter ~ a2*vitaminC + age + sex + calories
-  Yaniella ~ a3*vitaminC + age + sex + calories 
 
   ###################################
   # Outcome: lower_appetite
   ###################################
   lower_appetite ~ b1*LachnospiraceaeUCG_001 + 
              b2*Papillibacter +
-             b3*Yaniella +
              c1*vitaminC + 
              age + sex + calories
 
@@ -358,8 +356,7 @@ model <- '
   ## vitaminC → mediators → lower_appetite
   ind_VitC_1 := a1*b1
   ind_VitC_2 := a2*b2
-  ind_VitC_3 := a3*b3
-  total_ind_VitC := ind_VitC_1 + ind_VitC_2 + ind_VitC_3
+  total_ind_VitC := ind_VitC_1 + ind_VitC_2
   total_effect_VitC := c1 + total_ind_VitC
 
 '
@@ -371,7 +368,7 @@ fit <- sem(
   estimator = "WLSMV"
 )
 
-summary(fit, standardized = TRUE, fit.measures = TRUE)
+summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 4)
 
 
 # Metabolomics Mediation --------------------------------------------------
@@ -515,7 +512,6 @@ model <- '
   # Treatment 3: vitaminC
   ###################################
   Diisopropyl.phosphate  ~ a4*vitaminC + age + sex + calories
-  X1.Stearoyl.2.arachidonoyl.sn.glycero.3.phospho..1..myo.inositol. ~ a5*vitaminC + age + sex + calories
 
   ###################################
   # Outcome: diarrhea
@@ -524,7 +520,6 @@ model <- '
       b2*Hamamelitannin +
       b3*X6.Oxooctadecanoic.acid +
       b4*Diisopropyl.phosphate +
-      b5*X1.Stearoyl.2.arachidonoyl.sn.glycero.3.phospho..1..myo.inositol. + 
       c1*grain_portions +
       c3*vitaminC +
       age + sex + calories
@@ -542,8 +537,7 @@ model <- '
 
   ## vitaminC
   ind_vitC_1 := a4*b4
-  ind_vitC_2 := a5*b5
-  total_ind_vitC := ind_vitC_1 + ind_vitC_2
+  total_ind_vitC := ind_vitC_1
   total_effect_vitC := c3 + total_ind_vitC
 
 '

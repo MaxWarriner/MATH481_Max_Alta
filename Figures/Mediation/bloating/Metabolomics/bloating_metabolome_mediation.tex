@@ -63,15 +63,15 @@
     \node[mynode, below = 0.75 of m3] (m4){\textbf{X2.Keto.3.deoxyoctonic.acid}};
     
     % Treatments
-    \node[mynode, left = 2 of m2](a) {\textbf{Fruit Portions} \\ Direct Effect: (+) $p = 0.998$ \\ Indirect Effect: (+) $p = 0.030^{*}$ \\ Total Effect: (+) $p = 0.033^{*}$};
+    \node[mynode, left = 1.5 of m2](a) {\textbf{Fruit Portions} \\ Direct Effect: (+) $p = 0.866$ \\ Indirect Effect: (+) $p = 0.027^{*}$ \\ Total Effect: (+) $p = 0.044^{*}$};
     
     % Health Outcomes
-    \node[mynode, right = 2 of m2](b) {\textbf{Bloating} \\ Comparative Fit $= 0.227$ \\ Tucker-Lewis $= -0.289$ \\ RMSEA $=0.255$ \\ SRMR $=0.159$};
+    \node[mynode, right = 1.5 of m2](b) {\textbf{Bloating} \\ Comparative Fit $= 0.243$ \\ Tucker-Lewis $= -0.235$ \\ RMSEA $=0.256$ \\ SRMR $=0.158$};
     
     % Fruit to mediators
     \draw[-latex] (a.north) -- node[auto,font=\normalsize] {(+)*} (m1.west);
     \draw[-latex] (a.east) -- node[auto,font=\normalsize] {(+)*} (m2.west);
-    \draw[-latex] (a.east) -- node[auto,font=\normalsize] {(+)} (m3.west);
+    \draw[-latex] (a.east) -- node[below,font=\normalsize] {(+)} (m3.west);
     \draw[-latex] (a.south) -- node[auto,font=\normalsize] {(+) .} (m4.west);
     
     
@@ -79,7 +79,7 @@
     \draw[-latex] (m1.east) -- node[auto,font=\normalsize] {(+) .} (b.north);
     \draw[-latex] (m2.east) -- node[auto,font=\normalsize] {(+) .} (b.west);
     \draw[-latex] (m3.east) -- node[below=0.5,font=\normalsize] {(+) .} (b.west);
-    \draw[-latex] (m4.east) -- node[below=0.5,font=\normalsize] {(+) .} (b.south);
+    \draw[-latex] (m4.east) -- node[below=0.5,font=\normalsize] {(+) *} (b.south);
     
     
 

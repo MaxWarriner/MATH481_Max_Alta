@@ -63,11 +63,11 @@
     \node[mynode, below = 0.75 of m3] (m4){\textbf{Isobaculum}};
     
     % Treatments
-    \node[mynode, left = 2 of m1](a) {\textbf{Grain Portions} \\ Direct Effect:(-)  $p = 0.156$ \\ Indirect Effect: (-) $p = 0.234$ \\ Total Effect: (-) $p = 0.051^{.}$};
-    \node[mynode,below = 0.75 of a](b) {\textbf{Vitamin C} \\ Direct Effect: (-) $p = 0.863$ \\ Indirect Effect: (+) $p = 0.017^{*}$ \\ Total Effect: (+) $p = 0.073^{.}$};
+    \node[mynode, left = 2 of m1](a) {\textbf{Grain Portions} \\ Direct Effect:(-)  $p = 0.129$ \\ Indirect Effect: (-) $p = 0.247$ \\ Total Effect: (-) $p = 0.038^{*}$};
+    \node[mynode,below = 0.75 of a](b) {\textbf{Vitamin C} \\ Direct Effect: (-) $p = 0.928$ \\ Indirect Effect: (+) $p = 0.037^{*}$ \\ Total Effect: (+) $p = 0.080^{.}$};
     
     % Health Outcomes
-    \node[mynode, right = 9.5 of b](d) {\textbf{Diarrhea} \\ Comparative Fit $= 0.496$ \\ Tucker-Lewis $= 0.496$ \\ RMSEA $=0.19$ \\ SRMR $=0.16$};
+    \node[mynode, right = 9.5 of b](d) {\textbf{Diarrhea} \\ Comparative Fit $= 0.493$ \\ Tucker-Lewis $= 0.493$ \\ RMSEA $=0.204$ \\ SRMR $=0.158$};
     
     % Grains to mediators
     \draw[-latex] (a.east) -- node[auto,font=\normalsize] {(-) .} (m1.west);
@@ -78,7 +78,7 @@
     \draw[-latex] (b.east) -- node[below,font=\normalsize] {(+)*} (m4.west);
     
     % Mediators to outcome
-    \draw[-latex] (m1.east) -- node[auto,font=\normalsize] {(+) .} (d.north);
+    \draw[-latex] (m1.east) -- node[auto,font=\normalsize] {(+)} (d.north);
     \draw[-latex] (m2.east) -- node[auto,font=\normalsize] {(-)***} (d.west);
     \draw[-latex] (m3.east) -- node[below,font=\normalsize] {(+)***} (d.west);
     \draw[-latex] (m4.east) -- node[below,font=\normalsize] {(+)*} (d.west);

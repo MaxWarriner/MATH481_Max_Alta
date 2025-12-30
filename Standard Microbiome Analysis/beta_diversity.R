@@ -55,7 +55,7 @@ bdiv <- bdiv |>
          jaccard_p = p.adjust(jaccard_p, method = "BH"))
 
 sigtable <- bdiv |>
-  filter(bray_p <= 0.05 | jaccard_p <= 0.05)
+  filter(bray_p <= 0.1 | jaccard_p <= 0.1)
 
 sig <- sigtable |>
   pull(nutrient)
