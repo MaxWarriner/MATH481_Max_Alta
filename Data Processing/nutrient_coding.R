@@ -334,6 +334,8 @@ mean(sam$nutrient_score)
 
 view(lily_ps@sam_data)
 
+sam <- sam[,1:214]
+
 sample_data(ps) <- sam
 
 write_rds(ps, 'microbiome.RDS')

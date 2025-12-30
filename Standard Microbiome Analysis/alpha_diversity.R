@@ -52,7 +52,7 @@ alpha_cors <- alpha_cors |>
          Chao1_p = p.adjust(Chao1_p, method = "BH"))
 
 sig_cors <- alpha_cors |>
-  filter(Shannon_p <= 0.05 | Chao1_p <= 0.05) |>
+  filter(Shannon_p <= 0.1 | Chao1_p <= 0.1) |>
   pull(nutrient)
 
 sigs <- which(alpha_cors$nutrient %in% sig_cors)
