@@ -155,7 +155,7 @@ model_list <- list(microbiome_results, metabolome_results, nutrient_results, ful
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
 plot_roc_curve_gg_multi(
   model_list = model_list,
-  model_names = factor(c("Microbiome (0.924)", "Metabolome (0.558)", "Dietary (0.808)", "Combined (0.901)"), levels = c("Microbiome (0.924)", "Metabolome (0.558)", "Dietary (0.808)", "Combined (0.901)")),
+  model_names = factor(c("Microbiome (0.782)", "Metabolome (0.633)", "Dietary (0.794)", "Combined (0.859)"), levels = c("Microbiome (0.782)", "Metabolome (0.633)", "Dietary (0.794)", "Combined (0.859)")),
   factor = "Diarrhea",
   filename = "diarrhea_roc_overlay.png", 
   title = "Diarrhea: ROC"
@@ -189,7 +189,7 @@ model_list <- list(microbiome_results, metabolome_results, nutrient_results, ful
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
 plot_roc_curve_gg_multi(
   model_list = model_list,
-  model_names = factor(c("Microbiome (0.844)", "Metabolome (0.626)", "Dietary (0.568)", "Combined (0.839)"), levels = c("Microbiome (0.844)", "Metabolome (0.626)", "Dietary (0.568)", "Combined (0.839)")),
+  model_names = factor(c("Microbiome (0.795)", "Metabolome (0.551)", "Dietary (0.567)", "Combined (0.834)"), levels = c("Microbiome (0.795)", "Metabolome (0.551)", "Dietary (0.567)", "Combined (0.834)")),
   factor = "abdominalpain",
   filename = "abdominalpain_roc_overlay.png", 
   title = "Abdominal Pain: ROC"
@@ -223,7 +223,7 @@ model_list <- list(microbiome_results, metabolome_results, nutrient_results, ful
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
 plot_roc_curve_gg_multi(
   model_list = model_list,
-  model_names = factor(c("Microbiome (0.775)", "Metabolome (0.628)", "Dietary (0.466)", "Combined (0.844)"), levels = c("Microbiome (0.775)", "Metabolome (0.628)", "Dietary (0.466)", "Combined (0.844)")),
+  model_names = factor(c("Microbiome (0.710)", "Metabolome (0.673)", "Dietary (0.653)", "Combined (0.873)"), levels = c("Microbiome (0.710)", "Metabolome (0.673)", "Dietary (0.653)", "Combined (0.873)")),
   factor = "lower_appetite",
   filename = "lower_appetite_roc_overlay.png", 
   title = "Loss of Appetite: ROC"
@@ -259,7 +259,7 @@ model_list <- list(microbiome_results, metabolome_results, nutrient_results, ful
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
 plot_roc_curve_gg_multi(
   model_list = model_list,
-  model_names = factor(c("Microbiome (0.665)", "Metabolome (0.600)", "Dietary (0.481)", "Combined (0.939)"), levels = c("Microbiome (0.665)", "Metabolome (0.600)", "Dietary (0.481)", "Combined (0.939)")),
+  model_names = factor(c("Microbiome (0.665)", "Metabolome (0.600)", "Dietary (0.535)", "Combined (0.889)"), levels = c("Microbiome (0.665)", "Metabolome (0.600)", "Dietary (0.535)", "Combined (0.889)")),
   factor = "bloating",
   filename = "bloating_roc_overlay.png", 
   title = "Bloating: ROC"
@@ -306,7 +306,7 @@ plot_top_importance <- function(model_results, n_top = 10, bar_color = "#2c7bb6"
     theme_minimal(base_size = 22) +
     theme(legend.position = "none")
   
-  ggsave(filename = filename, plot = plot, width = 12, height = 5)
+  ggsave(filename = filename, plot = plot, width = 14, height = 5)
   
 }
 

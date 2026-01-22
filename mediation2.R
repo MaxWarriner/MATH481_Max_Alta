@@ -258,7 +258,7 @@ model <- '
   # Indirect effects
   ###################################
 
-  ## fruit_portions → mediators → diarrhea
+  ## fruit_portions → mediators → bloating
   ind_fruit_1 := a1*b1
   ind_fruit_2 := a2*b2
   ind_fruit_3 := a3*b3
@@ -274,7 +274,7 @@ fit <- sem(
   estimator = "WLSMV"
 )
 
-summary(fit, standardized = TRUE, fit.measures = TRUE)
+summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 6)
 
 
 # Abdominal Pain Mediation
@@ -323,7 +323,7 @@ fit <- sem(
   estimator = "WLSMV"
 )
 
-summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 4)
+summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)
 
 
 
@@ -368,7 +368,7 @@ fit <- sem(
   estimator = "WLSMV"
 )
 
-summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 4)
+summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)
 
 
 # Metabolomics Mediation --------------------------------------------------
@@ -549,7 +549,7 @@ fit <- sem(
   estimator = "WLSMV"
 )
 
-summary(fit, standardized = TRUE, fit.measures = TRUE)
+summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)
 
 
 
@@ -601,7 +601,7 @@ fit <- sem(
   estimator = "WLSMV"
 )
 
-summary(fit, standardized = TRUE, fit.measures = TRUE)
+summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 4)
 
 
 # abdominalpain Mediation

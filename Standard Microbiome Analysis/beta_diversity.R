@@ -17,9 +17,8 @@ sam <- data.frame(sam) |>
   mutate(calories_group = ifelse(calories <= median(sam$calories), "low", "high"), 
          meat_portions_group = ifelse(meat_portions <= median(sam$meat_portions), "low", "high"))
 
-food <- sam[,c(180:209, 213, 215)]
+food <- sam[,c(180:209, 213, 215, 216)]
 
-food$nutrient_score <- ifelse(sam$nutrient_score <= median(sam$nutrient_score), "low", "high")
 food$fruit_or_vegetable <- ifelse(sam$fruit_or_vegetable <= median(sam$fruit_or_vegetable), "low", "high")
 food$animal_product <- ifelse(sam$animal_product <= median(sam$animal_product), "low", "high")
 
@@ -27,7 +26,7 @@ food$age <- sam$Age
 food$sex <- sam$sex
 
 
-bdiv <- tibble(nutrient = colnames(food)[c(-32, -36, -37)], 
+bdiv <- tibble(nutrient = colnames(food)[c(-33, -36, -37)], 
                jaccard_p = rep(NA, 34), 
                bray_p = rep(NA, 34))
 
@@ -128,9 +127,17 @@ setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Standard Microbiome Analysis")
 
 ps <- readRDS('microbiome.RDS')
 
-sam <- ps@sam_data
+ps@sam_data$nutrient_score <- ifelse(ps@sam_data$nutrient_score <= median(ps@sam_data$nutrient_score), "low", "high")
+ps@sam_data$fruit_or_vegetable <- ifelse(ps@sam_data$fruit_or_vegetable <= median(ps@sam_data$fruit_or_vegetable), "low", "high")
+ps@sam_data$animal_product <- ifelse(ps@sam_data$animal_product <= median(ps@sam_data$animal_product), "low", "high")
 
-food <- data.frame(sam[,c(180:209, 213, 215)])
+sam <- data.frame(ps@sam_data)
+
+sam <- data.frame(sam) |>
+  mutate(calories_group = ifelse(calories <= median(sam$calories), "low", "high"), 
+         meat_portions_group = ifelse(meat_portions <= median(sam$meat_portions), "low", "high"))
+
+food <- sam[,c(180:209,211, 212 ,213, 215, 216)]
 food$sex <- sam$sex
 food$age <- sam$Age
 
@@ -142,12 +149,12 @@ jaccard <- vegan::vegdist(metabolite_data, method = "jaccard")
 
 # PERMANOVA for each metadata variable
 bdiv <- tibble(
-  variable = colnames(food)[c(-32, -33, -34)],
+  variable = colnames(food)[c(-35, -36, -37)],
   jaccard_p = NA_real_,
   bray_p = NA_real_
 )
 
-for (i in seq_along(colnames(food)[c(-32, -33, -34)])) {
+for (i in seq_along(colnames(food)[c(-35, -36, -37)])) {
   variable = bdiv$variable[i]
   
   bray_formula <- as.formula(paste("bray ~ calories_group + sex + age + ", variable, sep = ""))

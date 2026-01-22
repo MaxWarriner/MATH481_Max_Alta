@@ -330,7 +330,7 @@ cv_predict_xgb_meta <- function(
   #   min_child_weight = c(1),        # fixed for speed
   #   subsample = c(0.8)              # fixed for speed
   # )
-  
+
   # xgb_grid <- expand.grid(
   #   nrounds = c(200, 400, 800),            # remove 1200 (longest runs)
   #   max_depth = c(3, 6, 9, 12),            # keep almost all, drop 15
@@ -343,15 +343,15 @@ cv_predict_xgb_meta <- function(
 
   
 
-  xgb_grid <- expand.grid(
-    nrounds = c(150, 300, 500),     # balanced; avoids very long 800
-    max_depth = c(3, 6, 9),         # drop depth 12 (slowest)
-    eta = c(0.05, 0.1, 0.2),        # drop very slow 0.01
-    gamma = c(0, 0.1, 0.5),         # keep useful regularization range
-    colsample_bytree = c(0.7, 1.0), # fewer values, still meaningful
-    min_child_weight = c(1, 3),     # collapse to two important values
-    subsample = c(0.7, 1.0)         # reduce but keep high-performance range
-  )
+xgb_grid <- expand.grid(
+  nrounds = c(150, 300, 500),     # balanced; avoids very long 800
+  max_depth = c(3, 6, 9),         # drop depth 12 (slowest)
+  eta = c(0.05, 0.1, 0.2),        # drop very slow 0.01
+  gamma = c(0, 0.1, 0.5),         # keep useful regularization range
+  colsample_bytree = c(0.7, 1.0), # fewer values, still meaningful
+  min_child_weight = c(1, 3),     # collapse to two important values
+  subsample = c(0.7, 1.0)         # reduce but keep high-performance range
+)
   
   
   fitControl <- caret::trainControl(
@@ -532,7 +532,7 @@ plot_top_feature_heatmap_clr <- function(
   
 }
 
-for (health_outcome in colnames(health)[c(5, 6)]){
+for (health_outcome in colnames(health)[c(4)]){
   
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models")
   

@@ -2,8 +2,7 @@
 sam <- read_csv('sample_data.csv')[,-1]
 ps <- read_rds('microbiome.RDS')
 
-sam <- sam |>
-  mutate(infection = ifelse(Ascaris == 1 | Trichuris == 1 | Hookworm == 1 | Schistosoma == 1, 'yes', 'no'))
+sam <- data.frame(ps@sam_data)
 
 sam <- sam[,c(1:135, 181, 136:180, 182:183)]
 
@@ -37,11 +36,12 @@ sam$phosphorus_group <- rep(NA, 57)
 sam$iron_group <- rep(NA, 57)
 sam$zinc_group <- rep(NA, 57)
 sam$fermented_portions_group <- rep(NA, 57)
+sam$nutrient_score_group <- rep(NA, 57)
 
-sam <- sam[,c(1:90,183,91:182,184:213)]
+sam <- sam[,c(1:90,183,91:182,184:215)]
 
 
-for (i in 154:183){
+for (i in 154:184){
   median <- median(unlist(sam[,i]))
   for (j in 1:57){
     sam[j,i+30] <- ifelse(sam[j,i] >= median, 'high', 'low')
