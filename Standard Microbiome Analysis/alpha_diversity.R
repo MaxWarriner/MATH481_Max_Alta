@@ -160,10 +160,10 @@ chao1_plot <- ggplot() +
     ) +
     theme_bw() + 
   theme(
-    axis.title = element_text(size = 14),
-    axis.text  = element_text(size = 12),
-    plot.title = element_text(size = 16, face = "bold"),
-    plot.subtitle = element_text(size = 13),
+    axis.title = element_text(size = 28),
+    axis.text  = element_text(size = 26),
+    plot.title = element_text(size = 0, face = "bold"),
+    plot.subtitle = element_text(size = 0),
     legend.text = element_text(size = 12),
     legend.title = element_text(size = 13)
   )

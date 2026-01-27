@@ -227,6 +227,16 @@ fit <- sem(
 
 summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)
 
+#Power calculation for diarrhea microbiome
+
+library(semPower)
+full_model_power <- semPower.postHoc(effect = 0.204345,
+                                effect.measure = 'RMSEA',
+                                alpha = .05,
+                                N = 57,
+                                df = 10)
+
+summary(full_model_power)
 
 # Bloating Mediation
 # Model 1: 
@@ -275,6 +285,17 @@ fit <- sem(
 )
 
 summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 6)
+
+fitMeasures(fit, "fmin")
+
+
+full_model_power <- semPower.postHoc(effect = 0.079,
+                                     effect.measure = 'F0',
+                                     alpha = .05,
+                                     N = 57,
+                                     df = 6)
+
+summary(full_model_power)
 
 
 # Abdominal Pain Mediation
@@ -325,6 +346,17 @@ fit <- sem(
 
 summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)
 
+fitMeasures(fit, "fmin")
+
+full_model_power <- semPower.postHoc(
+  effect.measure = "F0",
+  effect = 0.022,
+  df = 6,
+  alpha = .05, 
+  N = 57
+)
+
+summary(full_model_power)
 
 
 # lower appetite Mediation
@@ -369,6 +401,16 @@ fit <- sem(
 )
 
 summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)
+
+fitMeasures(fit, "fmin")
+
+full_model_power <- semPower.postHoc(effect = 0.001,
+                                     effect.measure = 'F0',
+                                     alpha = .05,
+                                     N = 57,
+                                     df = 3)
+
+summary(full_model_power)
 
 
 # Metabolomics Mediation --------------------------------------------------
@@ -551,7 +593,15 @@ fit <- sem(
 
 summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)
 
+fitMeasures(fit, "fmin")
 
+full_model_power <- semPower.postHoc(effect = 0.227,
+                                     effect.measure = 'F0',
+                                     alpha = .05,
+                                     N = 57,
+                                     df = 10)
+
+summary(full_model_power)
 
 # bloating Mediation
 # Treatment 1: fruit_portions
@@ -571,7 +621,7 @@ model <- '
   X2.Keto.3.deoxyoctonic.acid  ~ a4*fruit_portions + age + sex + calories
 
   ###################################
-  # Outcome: diarrhea
+  # Outcome: bloating
   ###################################
   bloating ~ b1*L.Threonine +
       b2*X4.Hydroxy.4.methyl.2.pentanone +
@@ -603,6 +653,15 @@ fit <- sem(
 
 summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 4)
 
+fitMeasures(fit, "fmin")
+
+full_model_power <- semPower.postHoc(effect = 0.261,
+                                     effect.measure = 'F0',
+                                     alpha = .05,
+                                     N = 57,
+                                     df = 10)
+
+summary(full_model_power)
 
 # abdominalpain Mediation
 # Treatment 1: fruit_or_vegetable
@@ -646,6 +705,15 @@ fit <- sem(
 summary(fit, standardized = TRUE, fit.measures = TRUE)
 
 
+fitMeasures(fit, "fmin")
+
+full_model_power <- semPower.postHoc(effect = ,
+                                     effect.measure = 'F0',
+                                     alpha = .05,
+                                     N = 57,
+                                     df = 3)
+
+summary(full_model_power)
 
 # lower_appetite Mediation
 # Treatment 1: vitaminA
@@ -698,6 +766,14 @@ fit <- sem(
 summary(fit, standardized = TRUE, fit.measures = TRUE)
 
 
+fitMeasures(fit, "fmin")
 
+full_model_power <- semPower.postHoc(effect = ,
+                                     effect.measure = 'F0',
+                                     alpha = .05,
+                                     N = 57,
+                                     df = 3)
+
+summary(full_model_power)
 
 

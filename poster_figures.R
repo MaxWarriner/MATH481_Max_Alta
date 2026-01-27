@@ -94,10 +94,12 @@ plot_roc_curve_gg_multi <- function(model_list,
       title = title,
       x = "False Positive Rate (1 - Specificity)",
       y = "True Positive Rate (Sensitivity)",
-      color = "Model (AUC)"
+      color = "Model"
     ) +
-    theme_minimal(base_size = 10) +
-    theme(title = element_text(hjust = 0.5, size = 12))
+    theme_minimal() + 
+    theme(plot.title = element_text(hjust = 0.5, size = 18), 
+          legend.text = element_text(size = 16), 
+          legend.title = element_text(size = 16))
   
   ggsave(filename = filename, plot = roc_plot, width = 6, height = 3.5, dpi = 500)
   
@@ -153,12 +155,12 @@ full_results <- list(y_true = y_true_full, xgb_fit = diarrhea_full_results$xgb_f
 model_list <- list(microbiome_results, metabolome_results, nutrient_results, full_results)
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
-plot_roc_curve_gg_multi(
+diarrhea_roc <- plot_roc_curve_gg_multi(
   model_list = model_list,
-  model_names = factor(c("Microbiome (0.782)", "Metabolome (0.633)", "Dietary (0.794)", "Combined (0.859)"), levels = c("Microbiome (0.782)", "Metabolome (0.633)", "Dietary (0.794)", "Combined (0.859)")),
+  model_names = factor(c("Microbiome", "Metabolome", "Dietary", "Combined"), levels = c("Microbiome", "Metabolome", "Dietary", "Combined")),
   factor = "Diarrhea",
   filename = "diarrhea_roc_overlay.png", 
-  title = "Diarrhea: ROC"
+  title = "(C) Diarrhea"
 )
 
 
@@ -187,12 +189,12 @@ model_list <- list(microbiome_results, metabolome_results, nutrient_results, ful
 
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
-plot_roc_curve_gg_multi(
+abdominal_roc <- plot_roc_curve_gg_multi(
   model_list = model_list,
-  model_names = factor(c("Microbiome (0.795)", "Metabolome (0.551)", "Dietary (0.567)", "Combined (0.834)"), levels = c("Microbiome (0.795)", "Metabolome (0.551)", "Dietary (0.567)", "Combined (0.834)")),
+  model_names = factor(c("Microbiome", "Metabolome", "Dietary", "Combined"), levels = c("Microbiome", "Metabolome", "Dietary", "Combined")),
   factor = "abdominalpain",
   filename = "abdominalpain_roc_overlay.png", 
-  title = "Abdominal Pain: ROC"
+  title = "(A) Abdominal Pain"
 )
 
 
@@ -221,12 +223,12 @@ model_list <- list(microbiome_results, metabolome_results, nutrient_results, ful
 
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
-plot_roc_curve_gg_multi(
+appetite_roc <- plot_roc_curve_gg_multi(
   model_list = model_list,
-  model_names = factor(c("Microbiome (0.710)", "Metabolome (0.673)", "Dietary (0.653)", "Combined (0.873)"), levels = c("Microbiome (0.710)", "Metabolome (0.673)", "Dietary (0.653)", "Combined (0.873)")),
+  model_names = factor(c("Microbiome", "Metabolome", "Dietary", "Combined"), levels = c("Microbiome", "Metabolome", "Dietary", "Combined")),
   factor = "lower_appetite",
   filename = "lower_appetite_roc_overlay.png", 
-  title = "Loss of Appetite: ROC"
+  title = "(D) Loss of Appetite"
 )
 
 
@@ -257,14 +259,21 @@ model_list <- list(microbiome_results, metabolome_results, nutrient_results, ful
 
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
-plot_roc_curve_gg_multi(
+bloating_roc <- plot_roc_curve_gg_multi(
   model_list = model_list,
-  model_names = factor(c("Microbiome (0.665)", "Metabolome (0.600)", "Dietary (0.535)", "Combined (0.889)"), levels = c("Microbiome (0.665)", "Metabolome (0.600)", "Dietary (0.535)", "Combined (0.889)")),
+  model_names = factor(c("Microbiome", "Metabolome", "Dietary", "Combined"), levels = c("Microbiome", "Metabolome", "Dietary", "Combined")),
   factor = "bloating",
   filename = "bloating_roc_overlay.png", 
-  title = "Bloating: ROC"
+  title = "(B) Bloating"
 )
 
+library(patchwork)
+
+combined_roc <- (abdominal_roc$plot + bloating_roc$plot) / (diarrhea_roc$plot + appetite_roc$plot) + 
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+
+ggsave(plot = combined_roc, filename = "combined_roc.png", width = 8, height = 6, dpi = 1000)
 
 heatmapdat <- tibble(`Abdominal Pain` = abdominalpain$auc, 
                      Bloating = bloating$auc, 

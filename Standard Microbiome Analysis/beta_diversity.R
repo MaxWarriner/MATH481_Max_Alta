@@ -94,7 +94,8 @@ create_pcoa_plot <- function(variable, bray_dist, bray_pcoa, sam) {
       axis.text  = element_text(size = 26),
       legend.title = element_text(size = 28),
       legend.text  = element_text(size = 26)
-    )
+    ) + 
+    scale_y_continuous(breaks = c(-0.2, 0, 0.2))
   
   ggsave(pcoa_bray_plot,
          filename = paste(variable, "_pcoa.png", sep = ""),

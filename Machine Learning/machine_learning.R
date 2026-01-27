@@ -532,13 +532,31 @@ plot_top_feature_heatmap_clr <- function(
   
 }
 
-for (health_outcome in colnames(health)[c(4)]){
+rerun_stats_full <- tibble(run = rep(c(1, 2, 3)), 
+                      accuracy = rep(NA, 3), 
+                      AUC = rep(NA, 3))
+
+rerun_stats_microbiome <- tibble(run = rep(c(1, 2, 3)), 
+                           accuracy = rep(NA, 3), 
+                           AUC = rep(NA, 3))
+
+rerun_stats_metabolome <- tibble(run = rep(c(1, 2, 3)), 
+                           accuracy = rep(NA, 3), 
+                           AUC = rep(NA, 3))
+
+rerun_stats_diet <- tibble(run = rep(c(1, 2, 3)), 
+                           accuracy = rep(NA, 3), 
+                           AUC = rep(NA, 3))
+
+for (j in 1:3){
+
+for (health_outcome in colnames(health)[2]){
   
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models")
   
 # microbiome only
 microbiome_results <- cv_predict_clr_xgb(ps, health_outcome, meta_cols = c("Age", "sex"), clr_mat = clr_mat)
-save(microbiome_results, file = paste(health_outcome, "_microbime_results.RData", sep = ""))
+# save(microbiome_results, file = paste(health_outcome, "_microbime_results.RData", sep = ""))
 
 top20micro <- microbiome_results$feature_importance %>% 
   arrange(desc(Importance)) |>
@@ -551,7 +569,7 @@ top20micro <- top20micro[1:20]
 
 #Metabolome Only
 metabolome_results <- cv_predict_xgb_meta(ps, health_outcome, meta_cols = c("Age", "sex", colnames(metab)))
-save(metabolome_results, file = paste(health_outcome, "_metabolome_results.RData", sep = ""))
+# save(metabolome_results, file = paste(health_outcome, "_metabolome_results.RData", sep = ""))
 
 top20metab <- metabolome_results$feature_importance %>% 
   arrange(desc(Importance)) |>
@@ -562,7 +580,7 @@ top20metab <- top20metab[1:20]
 
 #Nutrients Only
 nutrients_results <- cv_predict_xgb_meta(ps, health_outcome, meta_cols = c("Age", "sex", colnames(nutr)))
-save(nutrients_results, file = paste(health_outcome, "_nutrient_results.RData", sep = ""))
+# save(nutrients_results, file = paste(health_outcome, "_nutrient_results.RData", sep = ""))
 
 top20nutr <- nutrients_results$feature_importance %>% 
   arrange(desc(Importance)) |>
@@ -577,44 +595,122 @@ clr_mat <- clr_mat[,which(colnames(clr_mat) %in% top20micro)]
 
 full <- cv_predict_clr_xgb(ps, health_outcome, meta_cols = c("Age", "sex", top20metab, top20nutr), clr_mat = clr_mat)
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models")
-save(full, file = paste(health_outcome, "_results.RData", sep = ""))
+# setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models")
+# save(full, file = paste(health_outcome, "_results.RData", sep = ""))
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Heatmaps")
-plot_top_feature_heatmap_clr(ps_obj = ps, model_results = full,
-                             n_top = 10, metadata_vars = c("Age", "sex", top20micro, top20metab, top20nutr), 
-                             outcome_var = health_outcome, min_prevalence = 0.05, 
-                             filename = paste(health_outcome, "_heatmap.png"), 
-                             clr_mat = clr_mat)
+# setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Heatmaps")
+# plot_top_feature_heatmap_clr(ps_obj = ps, model_results = full,
+#                              n_top = 10, metadata_vars = c("Age", "sex", top20micro, top20metab, top20nutr), 
+#                              outcome_var = health_outcome, min_prevalence = 0.05, 
+#                              filename = paste(health_outcome, "_heatmap.png"), 
+#                              clr_mat = clr_mat)
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
-plot_roc_curve_gg(full, factor = health_outcome, filename = paste(health_outcome, "_ROC.png", sep = ""))
+# setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/ROC Curves")
+# plot_roc_curve_gg(full, factor = health_outcome, filename = paste(health_outcome, "_ROC.png", sep = ""))
 
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Top 10 Importance")
-plot_top_importance(full, n_top = 10, factor = health_outcome, filename = paste(health_outcome, "_top20.png", sep = ""))
+# setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Top 10 Importance")
+# plot_top_importance(full, n_top = 10, factor = health_outcome, filename = paste(health_outcome, "_top20.png", sep = ""))
+# 
+# 
+# model_comps <- tibble(model = c("microbiome", "metabolome", "nutrients", "full"), 
+#                       accuracy = c(microbiome_results[["confusion_matrix"]][["overall"]][["Accuracy"]], 
+#                                    metabolome_results[["confusion_matrix"]][["overall"]][["Accuracy"]], 
+#                                    nutrients_results[["confusion_matrix"]][["overall"]][["Accuracy"]], 
+#                                    full[["confusion_matrix"]][["overall"]][["Accuracy"]]),
+#                       no_info_rate = c(microbiome_results[["confusion_matrix"]][["overall"]][["AccuracyNull"]], 
+#                                        metabolome_results[["confusion_matrix"]][["overall"]][["AccuracyNull"]], 
+#                                        nutrients_results[["confusion_matrix"]][["overall"]][["AccuracyNull"]], 
+#                                        full[["confusion_matrix"]][["overall"]][["AccuracyNull"]]),
+#                       sensitivity = c(microbiome_results[["confusion_matrix"]][["byClass"]][["Sensitivity"]], 
+#                                       metabolome_results[["confusion_matrix"]][["byClass"]][["Sensitivity"]], 
+#                                       nutrients_results[["confusion_matrix"]][["byClass"]][["Sensitivity"]], 
+#                                       full[["confusion_matrix"]][["byClass"]][["Sensitivity"]]), 
+#                       specificity = c(microbiome_results[["confusion_matrix"]][["byClass"]][["Specificity"]], 
+#                                       metabolome_results[["confusion_matrix"]][["byClass"]][["Specificity"]], 
+#                                       nutrients_results[["confusion_matrix"]][["byClass"]][["Specificity"]], 
+#                                       full[["confusion_matrix"]][["byClass"]][["Specificity"]]))
+# 
+# setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Model Comparisons")
+# write_csv(model_comps, file = paste(health_outcome, "_model_comparisons.csv", sep = ""))
 
 
-model_comps <- tibble(model = c("microbiome", "metabolome", "nutrients", "full"), 
-                      accuracy = c(microbiome_results[["confusion_matrix"]][["overall"]][["Accuracy"]], 
-                                   metabolome_results[["confusion_matrix"]][["overall"]][["Accuracy"]], 
-                                   nutrients_results[["confusion_matrix"]][["overall"]][["Accuracy"]], 
-                                   full[["confusion_matrix"]][["overall"]][["Accuracy"]]),
-                      no_info_rate = c(microbiome_results[["confusion_matrix"]][["overall"]][["AccuracyNull"]], 
-                                       metabolome_results[["confusion_matrix"]][["overall"]][["AccuracyNull"]], 
-                                       nutrients_results[["confusion_matrix"]][["overall"]][["AccuracyNull"]], 
-                                       full[["confusion_matrix"]][["overall"]][["AccuracyNull"]]),
-                      sensitivity = c(microbiome_results[["confusion_matrix"]][["byClass"]][["Sensitivity"]], 
-                                      metabolome_results[["confusion_matrix"]][["byClass"]][["Sensitivity"]], 
-                                      nutrients_results[["confusion_matrix"]][["byClass"]][["Sensitivity"]], 
-                                      full[["confusion_matrix"]][["byClass"]][["Sensitivity"]]), 
-                      specificity = c(microbiome_results[["confusion_matrix"]][["byClass"]][["Specificity"]], 
-                                      metabolome_results[["confusion_matrix"]][["byClass"]][["Specificity"]], 
-                                      nutrients_results[["confusion_matrix"]][["byClass"]][["Specificity"]], 
-                                      full[["confusion_matrix"]][["byClass"]][["Specificity"]]))
-
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Machine Learning/Model Comparisons")
-write_csv(model_comps, file = paste(health_outcome, "_model_comparisons.csv", sep = ""))
-
-
+}
+  
+  #Store full results
+  
+  positive_class <- NULL
+  
+  y_true <- full$y_true
+  if (is.null(positive_class)) {
+    positive_class <- levels(y_true)[1]
+  }
+  pred_prob <- full$xgb_fit$pred %>%
+    filter(obs %in% levels(y_true)) %>%
+    arrange(rowIndex) %>%
+    pull(!!as.name(positive_class))
+  
+  roc_obj <- roc(y_true, pred_prob, levels = rev(levels(y_true)), direction = "<")
+  auc_value <- auc(roc_obj)
+  
+  rerun_stats_full$accuracy[j] <- full[["confusion_matrix"]][["overall"]][["Accuracy"]]
+  rerun_stats_full$AUC[j] <- auc_value
+  
+  #Store microbiome results
+  
+  positive_class <- NULL
+  
+  y_true <- microbiome_results$y_true
+  if (is.null(positive_class)) {
+    positive_class <- levels(y_true)[1]
+  }
+  pred_prob <- microbiome_results$xgb_fit$pred %>%
+    filter(obs %in% levels(y_true)) %>%
+    arrange(rowIndex) %>%
+    pull(!!as.name(positive_class))
+  
+  roc_obj <- roc(y_true, pred_prob, levels = rev(levels(y_true)), direction = "<")
+  auc_value <- auc(roc_obj)
+  
+  rerun_stats_microbiome$accuracy[j] <- microbiome_results[["confusion_matrix"]][["overall"]][["Accuracy"]]
+  rerun_stats_microbiome$AUC[j] <- auc_value
+  
+  #Store metabolome results
+  
+  positive_class <- NULL
+  
+  y_true <- metabolome_results$y_true
+  if (is.null(positive_class)) {
+    positive_class <- levels(y_true)[1]
+  }
+  pred_prob <- metabolome_results$xgb_fit$pred %>%
+    filter(obs %in% levels(y_true)) %>%
+    arrange(rowIndex) %>%
+    pull(!!as.name(positive_class))
+  
+  roc_obj <- roc(y_true, pred_prob, levels = rev(levels(y_true)), direction = "<")
+  auc_value <- auc(roc_obj)
+  
+  rerun_stats_metabolome$accuracy[j] <- metabolome_results[["confusion_matrix"]][["overall"]][["Accuracy"]]
+  rerun_stats_metabolome$AUC[j] <- auc_value
+  
+  #Store diet results
+  
+  positive_class <- NULL
+  
+  y_true <- nutrients_results$y_true
+  if (is.null(positive_class)) {
+    positive_class <- levels(y_true)[1]
+  }
+  pred_prob <- nutrients_results$xgb_fit$pred %>%
+    filter(obs %in% levels(y_true)) %>%
+    arrange(rowIndex) %>%
+    pull(!!as.name(positive_class))
+  
+  roc_obj <- roc(y_true, pred_prob, levels = rev(levels(y_true)), direction = "<")
+  auc_value <- auc(roc_obj)
+  
+  rerun_stats_diet$accuracy[j] <- nutrients_results[["confusion_matrix"]][["overall"]][["Accuracy"]]
+  rerun_stats_diet$AUC[j] <- auc_value
+  
 }
 
