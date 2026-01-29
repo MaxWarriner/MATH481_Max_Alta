@@ -8,6 +8,7 @@ library(vroom)
 library(philr)
 library(phyloseq)
 library(mediation)
+library(semPower)
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta")
 ps <- read_rds('microbiome.RDS')
@@ -227,6 +228,10 @@ fit <- sem(
 
 summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)
 
+sum <- summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)$pe
+
+sum$adj <- round(p.adjust(sum$pvalue, method = "BH"), 3)
+
 #Power calculation for diarrhea microbiome
 
 library(semPower)
@@ -297,6 +302,10 @@ full_model_power <- semPower.postHoc(effect = 0.079,
 
 summary(full_model_power)
 
+sum <- summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)$pe
+
+sum$adj <- round(p.adjust(sum$pvalue, method = "BH"), 3)
+
 
 # Abdominal Pain Mediation
 # Model 1: 
@@ -345,6 +354,11 @@ fit <- sem(
 )
 
 summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)
+
+sum <- summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)$pe
+
+sum$adj <- round(p.adjust(sum$pvalue, method = "BH"), 3)
+
 
 fitMeasures(fit, "fmin")
 
@@ -401,6 +415,11 @@ fit <- sem(
 )
 
 summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)
+
+sum <- summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)$pe
+
+sum$adj <- round(p.adjust(sum$pvalue, method = "BH"), 3)
+
 
 fitMeasures(fit, "fmin")
 
@@ -593,12 +612,17 @@ fit <- sem(
 
 summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)
 
+sum <- summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)$pe
+
+sum$adj <- round(p.adjust(sum$pvalue, method = "BH"),3)
+
+
 fitMeasures(fit, "fmin")
 
 full_model_power <- semPower.postHoc(effect = 0.227,
                                      effect.measure = 'F0',
                                      alpha = .05,
-                                     N = 57,
+                                     N = 54,
                                      df = 10)
 
 summary(full_model_power)
@@ -653,12 +677,16 @@ fit <- sem(
 
 summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 4)
 
+sum <- summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)$pe
+
+sum$adj <- round(p.adjust(sum$pvalue, method = "BH"),3)
+
 fitMeasures(fit, "fmin")
 
 full_model_power <- semPower.postHoc(effect = 0.261,
                                      effect.measure = 'F0',
                                      alpha = .05,
-                                     N = 57,
+                                     N = 54,
                                      df = 10)
 
 summary(full_model_power)
@@ -702,18 +730,28 @@ fit <- sem(
   estimator = "WLSMV"
 )
 
-summary(fit, standardized = TRUE, fit.measures = TRUE)
+summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 4)
 
+sum <- summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)$pe
 
-fitMeasures(fit, "fmin")
+sum$adj <- round(p.adjust(sum$pvalue, method = "BH"),3)
 
-full_model_power <- semPower.postHoc(effect = ,
-                                     effect.measure = 'F0',
-                                     alpha = .05,
-                                     N = 57,
-                                     df = 3)
+#unable to do SEM power with 0 df
+#pivot to linear and logistic power
 
-summary(full_model_power)
+library(pwr)
+#aniline ~ fruits/veg + calories + sex + age
+power <- pwr.f2.test(
+  u = 4,        # number of predictors
+  v = 54 - 4 - 1,  # denominator df = n - u - 1
+  f2 = summary(lm(Aniline  ~ fruit_or_vegetable + age + sex + calories, data = data.frame(combined)))$r.squared,
+  sig.level = 0.05
+)$power
+
+#abdominal pain ~ fruits/veg + aniline + calories + sex + age
+
+#TRYING TO FIGURE OUT
+
 
 # lower_appetite Mediation
 # Treatment 1: vitaminA
@@ -763,16 +801,20 @@ fit <- sem(
   estimator = "WLSMV"
 )
 
-summary(fit, standardized = TRUE, fit.measures = TRUE)
+summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)
+
+sum <- summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)$pe
+
+sum$adj <- round(p.adjust(sum$pvalue, method = "BH"),4)
 
 
 fitMeasures(fit, "fmin")
 
-full_model_power <- semPower.postHoc(effect = ,
+full_model_power <- semPower.postHoc(effect = 0.704,
                                      effect.measure = 'F0',
                                      alpha = .05,
-                                     N = 57,
-                                     df = 3)
+                                     N = 54,
+                                     df = 15)
 
 summary(full_model_power)
 

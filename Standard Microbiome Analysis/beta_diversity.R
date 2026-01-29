@@ -73,7 +73,7 @@ bray_pcoa <- get_pcoa(obj = ps, distmethod = "bray", method = "hellinger")
 
 sam <- ps@sam_data
 
-create_pcoa_plot <- function(variable, bray_dist, bray_pcoa, sam) {
+create_pcoa_plot <- function(variable, bray_dist, bray_pcoa, sam, title) {
   
   pval_bray <- sigtable$bray_p[i]
   
@@ -83,25 +83,24 @@ create_pcoa_plot <- function(variable, bray_dist, bray_pcoa, sam) {
   pcoa_bray_plot <- ggordpoint(obj = bray_pcoa, biplot = FALSE, speciesannot = TRUE,
                                factorNames = c(variable), ellipse = TRUE, linesize = 1.5,
                                ellipse_linewd = 1, ellipse_lty = 2) +
-    ggtitle(paste(gsub("_", " ", variable), "(Bray-Curtis)")) +
-    guides(color=guide_legend(title=gsub("_", " ", variable), override.aes = list(size = 4))) +
+    ggtitle(title) +
     theme(legend.title = element_blank(), legend.text = element_text(size = 28)) +
     annotate("text", x = Inf, y = Inf, label = p_text_bray,
-             hjust = 1.1, vjust = 1.5, size = 16, fontface = "bold") +
+             hjust = 1.1, vjust = 1.5, size = 16, fontface = "plain") +
     theme(
-      plot.title = element_text(size = 32),
+      plot.title = element_text(size = 32, face = "plain"),
       axis.title = element_text(size = 28),
       axis.text  = element_text(size = 26),
-      legend.title = element_text(size = 28),
+      legend.title = element_text(size = 0),
       legend.text  = element_text(size = 26)
     ) + 
     scale_y_continuous(breaks = c(-0.2, 0, 0.2))
   
-  ggsave(pcoa_bray_plot,
-         filename = paste(variable, "_pcoa.png", sep = ""),
-         device = "png",
-         height = 6, width = 14, units = "in", 
-         dpi = 800)
+  # ggsave(pcoa_bray_plot,
+  #        filename = paste(variable, "_pcoa.png", sep = ""),
+  #        device = "png",
+  #        height = 6, width = 14, units = "in", 
+  #        dpi = 800)
   
   return(pcoa_bray_plot)
 }
@@ -113,6 +112,35 @@ for (i in 1:length(sig)){
   create_pcoa_plot(sig[i], bray, bray_pcoa, sam)
 }
 
+
+# Specific plots for paper
+i = 5
+fermented_plot <- create_pcoa_plot(sig[i], bray, bray_pcoa, sam, title = "(C) Fermented Foods")
+
+i = 2
+sodium_plot <- create_pcoa_plot(sig[i], bray, bray_pcoa, sam, title = "(D) Sodium")
+
+i = 3
+vitaminA_plot <- create_pcoa_plot(sig[i], bray, bray_pcoa, sam, title = "(E) Vitamin A")
+
+i = 4
+vitaminB2_plot <- create_pcoa_plot(sig[i], bray, bray_pcoa, sam, title = "(F) Vitamin B2")
+
+i = 1
+fat_plot <- create_pcoa_plot(sig[i], bray, bray_pcoa, sam, title = "(G) Fat")
+
+#Combined plot (uses plots from alpha diversity script)
+
+beta_diversity <- ((fermented_plot + sodium_plot) / (vitaminA_plot + vitaminB2_plot) / (fat_plot + plot_spacer())) + 
+  plot_layout(guides = "collect") & 
+  theme(legend.position = "bottom", 
+        legend.text = element_text(size = 0))
+
+diversity <- (alpha_diversity / beta_diversity) + 
+  plot_layout(heights = c(1, 3.5))
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures")
+ggsave(diversity, filename = 'combined_diversity_plot.png', dpi = 600, width = 18, height = 22)
 
 #Metabolite Analysis
 

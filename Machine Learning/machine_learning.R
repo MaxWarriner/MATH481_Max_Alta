@@ -161,27 +161,19 @@ cv_predict_clr_xgb <- function(
   if (any(table(y) < 2)) {
     stop("Some outcome levels have fewer than 2 samples; CV cannot proceed.")
   }
+
+  # #Low depth
+  #   xgb_grid <- expand.grid(
+  #     nrounds = c(100, 300),          # fast, still shows learning behavior
+  #     max_depth = c(3, 6),            # shallow + moderate
+  #     eta = c(0.05, 0.1),             # reasonably fast learning
+  #     gamma = c(0, 0.1),              # mild reg range
+  #     colsample_bytree = c(0.8),      # fixed for speed
+  #     min_child_weight = c(1),        # fixed for speed
+  #     subsample = c(0.8)              # fixed for speed
+  #   )
   
-  # xgb_grid <- expand.grid(
-  #   nrounds = c(200, 400, 800, 1200),         # more boosting rounds for convergence
-  #   max_depth = c(3, 6, 9, 12, 15),           # allow deeper trees for complex patterns
-  #   eta = c(0.005, 0.01, 0.05, 0.1, 0.2),     # very fine learning rate control
-  #   gamma = c(0, 0.1, 0.5, 1),                # regularization strength
-  #   colsample_bytree = c(0.6, 0.8, 1.0),      # feature sampling
-  #   min_child_weight = c(1, 3, 5, 7),         # leaf node complexity
-  #   subsample = c(0.6, 0.8, 1.0)              # row sampling
-  # )
-  # 
-  # xgb_grid <- expand.grid(
-  #   nrounds = c(100, 300),          # fast, still shows learning behavior
-  #   max_depth = c(3, 6),            # shallow + moderate
-  #   eta = c(0.05, 0.1),             # reasonably fast learning
-  #   gamma = c(0, 0.1),              # mild reg range
-  #   colsample_bytree = c(0.8),      # fixed for speed
-  #   min_child_weight = c(1),        # fixed for speed
-  #   subsample = c(0.8)              # fixed for speed
-  # )
-  
+  #High Depth
   # xgb_grid <- expand.grid(
   #   nrounds = c(200, 400, 800),            # remove 1200 (longest runs)
   #   max_depth = c(3, 6, 9, 12),            # keep almost all, drop 15
@@ -192,7 +184,7 @@ cv_predict_clr_xgb <- function(
   #   subsample = c(0.6, 0.8, 1.0)           # unchanged
   # )
   
-  # 
+  #Medium Depth
   xgb_grid <- expand.grid(
     nrounds = c(150, 300, 500),     # balanced; avoids very long 800
     max_depth = c(3, 6, 9),         # drop depth 12 (slowest)
@@ -310,49 +302,39 @@ cv_predict_xgb_meta <- function(
   # --- Remove near-zero variance predictors ---
   nzv <- caret::nearZeroVar(X_full)
   if (length(nzv) > 0) X_full <- X_full[, -nzv, drop = FALSE]
-  
-  # xgb_grid <- expand.grid(
-  #   nrounds = c(200, 400, 800, 1200),         # more boosting rounds for convergence
-  #   max_depth = c(3, 6, 9, 12, 15),           # allow deeper trees for complex patterns
-  #   eta = c(0.005, 0.01, 0.05, 0.1, 0.2),     # very fine learning rate control
-  #   gamma = c(0, 0.1, 0.5, 1),                # regularization strength
-  #   colsample_bytree = c(0.6, 0.8, 1.0),      # feature sampling
-  #   min_child_weight = c(1, 3, 5, 7),         # leaf node complexity
-  #   subsample = c(0.6, 0.8, 1.0)              # row sampling
-  # )
   # 
-  # xgb_grid <- expand.grid(
-  #   nrounds = c(100, 300),          # fast, still shows learning behavior
-  #   max_depth = c(3, 6),            # shallow + moderate
-  #   eta = c(0.05, 0.1),             # reasonably fast learning
-  #   gamma = c(0, 0.1),              # mild reg range
-  #   colsample_bytree = c(0.8),      # fixed for speed
-  #   min_child_weight = c(1),        # fixed for speed
-  #   subsample = c(0.8)              # fixed for speed
-  # )
+  # #Low depth
+  #   xgb_grid <- expand.grid(
+  #     nrounds = c(100, 300),          # fast, still shows learning behavior
+  #     max_depth = c(3, 6),            # shallow + moderate
+  #     eta = c(0.05, 0.1),             # reasonably fast learning
+  #     gamma = c(0, 0.1),              # mild reg range
+  #     colsample_bytree = c(0.8),      # fixed for speed
+  #     min_child_weight = c(1),        # fixed for speed
+  #     subsample = c(0.8)              # fixed for speed
+  #   )
+    
+    #High Depth
+    # xgb_grid <- expand.grid(
+    #   nrounds = c(200, 400, 800),            # remove 1200 (longest runs)
+    #   max_depth = c(3, 6, 9, 12),            # keep almost all, drop 15
+    #   eta = c(0.01, 0.05, 0.1, 0.2),         # drop only the extremely slow 0.005
+    #   gamma = c(0, 0.1, 0.5, 1),             # keep full range
+    #   colsample_bytree = c(0.6, 0.8, 1.0),   # unchanged
+    #   min_child_weight = c(1, 3, 5),         # drop only 7
+    #   subsample = c(0.6, 0.8, 1.0)           # unchanged
+    # )
 
-  # xgb_grid <- expand.grid(
-  #   nrounds = c(200, 400, 800),            # remove 1200 (longest runs)
-  #   max_depth = c(3, 6, 9, 12),            # keep almost all, drop 15
-  #   eta = c(0.01, 0.05, 0.1, 0.2),         # drop only the extremely slow 0.005
-  #   gamma = c(0, 0.1, 0.5, 1),             # keep full range
-  #   colsample_bytree = c(0.6, 0.8, 1.0),   # unchanged
-  #   min_child_weight = c(1, 3, 5),         # drop only 7
-  #   subsample = c(0.6, 0.8, 1.0)           # unchanged
-  # )
-
-  
-
-xgb_grid <- expand.grid(
-  nrounds = c(150, 300, 500),     # balanced; avoids very long 800
-  max_depth = c(3, 6, 9),         # drop depth 12 (slowest)
-  eta = c(0.05, 0.1, 0.2),        # drop very slow 0.01
-  gamma = c(0, 0.1, 0.5),         # keep useful regularization range
-  colsample_bytree = c(0.7, 1.0), # fewer values, still meaningful
-  min_child_weight = c(1, 3),     # collapse to two important values
-  subsample = c(0.7, 1.0)         # reduce but keep high-performance range
-)
-  
+    #Medium Depth
+    xgb_grid <- expand.grid(
+      nrounds = c(150, 300, 500),     # balanced; avoids very long 800
+      max_depth = c(3, 6, 9),         # drop depth 12 (slowest)
+      eta = c(0.05, 0.1, 0.2),        # drop very slow 0.01
+      gamma = c(0, 0.1, 0.5),         # keep useful regularization range
+      colsample_bytree = c(0.7, 1.0), # fewer values, still meaningful
+      min_child_weight = c(1, 3),     # collapse to two important values
+      subsample = c(0.7, 1.0)         # reduce but keep high-performance range
+    )
   
   fitControl <- caret::trainControl(
     method = "cv",
@@ -532,19 +514,19 @@ plot_top_feature_heatmap_clr <- function(
   
 }
 
-rerun_stats_full <- tibble(run = rep(c(1, 2, 3)), 
+rerun_stats_full <- tibble(depth = rep(c("low", "high", "medium")), 
                       accuracy = rep(NA, 3), 
                       AUC = rep(NA, 3))
 
-rerun_stats_microbiome <- tibble(run = rep(c(1, 2, 3)), 
-                           accuracy = rep(NA, 3), 
-                           AUC = rep(NA, 3))
+rerun_stats_microbiome <- tibble(depth = rep(c("low", "high", "medium")), 
+                                 accuracy = rep(NA, 3), 
+                                 AUC = rep(NA, 3))
 
-rerun_stats_metabolome <- tibble(run = rep(c(1, 2, 3)), 
-                           accuracy = rep(NA, 3), 
-                           AUC = rep(NA, 3))
+rerun_stats_metabolome <- tibble(depth = rep(c("low", "high", "medium")), 
+                                 accuracy = rep(NA, 3), 
+                                 AUC = rep(NA, 3))
 
-rerun_stats_diet <- tibble(run = rep(c(1, 2, 3)), 
+rerun_stats_diet <- tibble(depth = rep(c("low", "high", "medium")), 
                            accuracy = rep(NA, 3), 
                            AUC = rep(NA, 3))
 
@@ -555,7 +537,7 @@ for (health_outcome in colnames(health)[2]){
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models")
   
 # microbiome only
-microbiome_results <- cv_predict_clr_xgb(ps, health_outcome, meta_cols = c("Age", "sex"), clr_mat = clr_mat)
+microbiome_results <- cv_predict_clr_xgb(ps, health_outcome, meta_cols = c("Age", "sex"), clr_mat = clr_mat, seed = sample(1000000, 1))
 # save(microbiome_results, file = paste(health_outcome, "_microbime_results.RData", sep = ""))
 
 top20micro <- microbiome_results$feature_importance %>% 
@@ -568,7 +550,7 @@ top20micro <- top20micro[1:20]
 
 
 #Metabolome Only
-metabolome_results <- cv_predict_xgb_meta(ps, health_outcome, meta_cols = c("Age", "sex", colnames(metab)))
+metabolome_results <- cv_predict_xgb_meta(ps, health_outcome, meta_cols = c("Age", "sex", colnames(metab)), seed = sample(1000000, 1))
 # save(metabolome_results, file = paste(health_outcome, "_metabolome_results.RData", sep = ""))
 
 top20metab <- metabolome_results$feature_importance %>% 
@@ -579,7 +561,7 @@ top20metab <- top20metab[1:20]
 
 
 #Nutrients Only
-nutrients_results <- cv_predict_xgb_meta(ps, health_outcome, meta_cols = c("Age", "sex", colnames(nutr)))
+nutrients_results <- cv_predict_xgb_meta(ps, health_outcome, meta_cols = c("Age", "sex", colnames(nutr)), seed = sample(1000000, 1))
 # save(nutrients_results, file = paste(health_outcome, "_nutrient_results.RData", sep = ""))
 
 top20nutr <- nutrients_results$feature_importance %>% 
@@ -593,7 +575,7 @@ top20nutr <- top20nutr[1:20]
 
 clr_mat <- clr_mat[,which(colnames(clr_mat) %in% top20micro)]
 
-full <- cv_predict_clr_xgb(ps, health_outcome, meta_cols = c("Age", "sex", top20metab, top20nutr), clr_mat = clr_mat)
+full <- cv_predict_clr_xgb(ps, health_outcome, meta_cols = c("Age", "sex", top20metab, top20nutr), clr_mat = clr_mat, seed = sample(1000000, 1))
 
 # setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning/Machine Learning Models")
 # save(full, file = paste(health_outcome, "_results.RData", sep = ""))

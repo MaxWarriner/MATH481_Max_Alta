@@ -24,9 +24,12 @@ food$sex <- sam$sex
 alpha_cors <- tibble(nutrient = colnames(food)[c(-1, -36, -37, -38, -39)], 
                      Shannon_beta = rep(NA, 34),
                      Shannon_p = rep(NA, 34),
+                     Shannon_power = rep(NA, 34),
                      Chao1_beta = rep(NA, 34), 
-                     Chao1_p = rep(NA, 34))
+                     Chao1_p = rep(NA, 34), 
+                     Chao1_power = rep(NA, 34))
 
+library(pwr)
 
 #Test out nutrients against alpha diversity
 for(i in 1:34){
@@ -39,11 +42,26 @@ for(i in 1:34){
   alpha_cors$Shannon_beta[i] <- shannon_mod$Estimate[2]
   alpha_cors$Shannon_p[i] <- shannon_mod$Pr...t..[2]
   
+  alpha_cors$Shannon_power[i] <- pwr.f2.test(
+    u = 4,        # number of predictors
+    v = 57 - 4 - 1,  # denominator df = n - u - 1
+    f2 = summary(lm(shannon_formula, data = data.frame(food)))$r.squared,
+    sig.level = 0.05
+  )$power
+
+  
   Chao1_formula <- as.formula(paste("Chao1 ~ ", variable, " + calories + sex + age", sep = ""))
   
   Chao1_mod <- data.frame(summary(lm(Chao1_formula, data = data.frame(food)))$coefficients)
   alpha_cors$Chao1_beta[i] <- Chao1_mod$Estimate[2]
   alpha_cors$Chao1_p[i] <- Chao1_mod$Pr...t..[2]
+  
+  alpha_cors$Chao1_power[i] <- pwr.f2.test(
+    u = 4,        # number of predictors
+    v = 57 - 4 - 1,  # denominator df = n - u - 1
+    f2 = summary(lm(Chao1_formula, data = data.frame(food)))$r.squared,
+    sig.level = 0.05
+  )$power
   
 }
 
@@ -176,6 +194,113 @@ chao1_plot <- ggplot() +
   
 }
 
+#Combined figure for paper
+
+zinc_mod <- lm(as.formula(paste("Chao1 ~ ", 'zinc', " + calories + sex + age", sep = "")), data = data.frame(food))
+
+
+var_seq <- seq(
+  min(food[["zinc"]], na.rm = TRUE),
+  max(food[["zinc"]], na.rm = TRUE),
+  length.out = 100
+)
+
+at_list <- list(
+  calories = mean(food$calories, na.rm = TRUE),
+  age = mean(food$age, na.rm = TRUE)
+)
+
+# add the variable sequence using the string name
+at_list[['zinc']] <- var_seq
+
+pred <- emmeans(
+  zinc_mod,
+  specs = as.formula(paste("~", 'zinc')),
+  at = at_list,
+  weights = "proportional"
+)
+
+pred_df <- as.data.frame(pred)
+
+zinc_plot <- ggplot() +
+  geom_point(data = data.frame(food), aes(x = zinc, y = Chao1), alpha = 0.4) +
+  geom_line(
+    data = pred_df,
+    aes(x = zinc, y = emmean),
+    linewidth = 1.2
+  ) +
+  labs(
+    x = paste('zinc', " (mg/week)", sep = ""),
+    y = "Chao1 diversity",
+    title ='(A) Zinc'
+  ) +
+  theme_bw() + 
+  theme(
+    plot.title = element_text(size = 32, hjust = 0.5, face = "plain"),
+    axis.title = element_text(size = 28),
+    axis.text  = element_text(size = 26),
+    legend.title = element_text(size = 28),
+    legend.text  = element_text(size = 26)
+  ) + 
+  annotate("text", x = Inf, y = Inf, label = "ß = 18.210, p = 0.056",
+           hjust = 1, vjust = 8.5, size = 16, fontface = "plain") + 
+  scale_y_continuous(breaks=c(1500, 2500, 3500))
+
+
+
+
+iron_mod <- lm(as.formula(paste("Chao1 ~ ", 'iron', " + calories + sex + age", sep = "")), data = data.frame(food))
+
+
+var_seq <- seq(
+  min(food[["iron"]], na.rm = TRUE),
+  max(food[["iron"]], na.rm = TRUE),
+  length.out = 100
+)
+
+at_list <- list(
+  calories = mean(food$calories, na.rm = TRUE),
+  age = mean(food$age, na.rm = TRUE)
+)
+
+# add the variable sequence using the string name
+at_list[['iron']] <- var_seq
+
+pred <- emmeans(
+  iron_mod,
+  specs = as.formula(paste("~", 'iron')),
+  at = at_list,
+  weights = "proportional"
+)
+
+pred_df <- as.data.frame(pred)
+
+iron_plot <- ggplot() +
+  geom_point(data = data.frame(food), aes(x = iron, y = Chao1), alpha = 0.4) +
+  geom_line(
+    data = pred_df,
+    aes(x = iron, y = emmean),
+    linewidth = 1.2
+  ) +
+  labs(
+    x = paste('iron', " (mg/week)", sep = ""),
+    y = "Chao1 diversity",
+    title = '(B) Iron'
+  ) +
+  theme_bw() + 
+  theme(
+    plot.title = element_text(size = 32, hjust = 0.5, face = "plain"),
+    axis.title = element_text(size = 28),
+    axis.text  = element_text(size = 26),
+    legend.title = element_text(size = 28),
+    legend.text  = element_text(size = 26)
+  ) + 
+  annotate("text", x = Inf, y = Inf, label = "ß = 0.730, p = 0.056",
+           hjust = 1, vjust = 8.5, size = 16, fontface = "plain") + 
+  scale_y_continuous(breaks=c(1500, 2500, 3500))
+
+alpha_diversity <- zinc_plot + iron_plot
+
 
 # Metabolite Diversity
 
@@ -191,8 +316,10 @@ food$simpson <- diversity(metabolites, index = "simpson")
 alpha_cors <- tibble(nutrient = colnames(food)[c(-1, -36, -37, -38, -39, -40, -41)], 
                      Shannon_beta = rep(NA, 34),
                      Shannon_p = rep(NA, 34),
+                     Shannon_power = rep(NA, 34),
                      Simpson_beta = rep(NA, 34), 
-                     Simpson_p = rep(NA, 34))
+                     Simpson_p = rep(NA, 34), 
+                     Simpson_power = rep(NA, 34))
 
 
 #Test out nutrients against alpha diversity
@@ -206,11 +333,26 @@ for(i in 1:34){
   alpha_cors$Shannon_beta[i] <- shannon_mod$Estimate[2]
   alpha_cors$Shannon_p[i] <- shannon_mod$Pr...t..[2]
   
+  alpha_cors$Shannon_power[i] <- pwr.f2.test(
+    u = 4,        # number of predictors
+    v = 57 - 4 - 1,  # denominator df = n - u - 1
+    f2 = summary(lm(shannon_formula, data = data.frame(food)))$r.squared,
+    sig.level = 0.05
+  )$power
+  
+  
   simpson_formula <- as.formula(paste("simpson ~ ", variable, " + calories + sex + age", sep = ""))
   
   simpson_mod <- data.frame(summary(lm(simpson_formula, data = data.frame(food)))$coefficients)
   alpha_cors$Simpson_beta[i] <- simpson_mod$Estimate[2]
   alpha_cors$Simpson_p[i] <- simpson_mod$Pr...t..[2]
+  
+  alpha_cors$Simpson_power[i] <- pwr.f2.test(
+    u = 4,        # number of predictors
+    v = 57 - 4 - 1,  # denominator df = n - u - 1
+    f2 = summary(lm(simpson_formula, data = data.frame(food)))$r.squared,
+    sig.level = 0.05
+  )$power
   
 }
 

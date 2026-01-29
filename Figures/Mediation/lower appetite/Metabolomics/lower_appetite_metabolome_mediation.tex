@@ -58,30 +58,30 @@
   
   % Mediators
     \node[mynode] (m1){\textbf{Decanoylcarnitine}};
-    \node[mynode, below = 1.5 of m1] (m2){\textbf{Phe.Val}};
-    \node[mynode, below = 1.5 of m2] (m3){\textbf{Ala.Val}};
-    \node[mynode, below = 1.5 of m3] (m4){\textbf{X15.Ketoprostaglandin.F2.alpha.}};
-    \node[mynode, below = 1.5 of m4] (m5){\textbf{Thr.Leu}};
+    \node[mynode, below = 0.5 of m1] (m2){\textbf{Phe.Val}};
+    \node[mynode, below = 0.5 of m2] (m3){\textbf{Ala.Val}};
+    \node[mynode, below = 0.5 of m3] (m4){\textbf{X15.Ketoprostaglandin.F2.alpha.}};
+    \node[mynode, below = 0.5 of m4] (m5){\textbf{Thr.Leu}};
     
     % Treatments
-    \node[mynode, left = 4 of m3](a) {\textbf{Vitamin A} \\ Direct Effect: (-) $p = 0.912$ \\ Indirect Effect: (+) $p = 0.072^{.}$ \\ Total Effect: (+) $p = 0.103$};
+    \node[mynode, left = 3 of m3](a) {\textbf{Vitamin A} \\ Direct Effect: (-) $p = 0.868$ \\ Indirect Effect: (+) $p = 0.098^{.}$ \\ Total Effect: (+) $p = 0.052^{.}$};
     
     % Health Outcomes
-    \node[mynode, right = 4 of m3](b) {\textbf{Low Appetite} \\ Comparative Fit $= 0.153$ \\ Tucker-Lewis $= -0.271$ \\ RMSEA $=0.351$ \\ SRMR $=0.285$};
+    \node[mynode, right = 3 of m3](b) {\textbf{Low Appetite} \\ Comparative Fit $= 0.158$ \\ Tucker-Lewis $= -0.264$ \\ RMSEA $=0.304$ \\ SRMR $=0.284$};
     
     % Vitamin A to mediators
-    \draw[-latex] (a.north) -- node[auto,font=\footnotesize] {(-) $p = 0.064^{.}$} (m1.west);
-    \draw[-latex] (a.east) -- node[auto,font=\footnotesize] {(-) $p = 0.052^{.}$} (m2.west);
-    \draw[-latex] (a.east) -- node[auto,font=\footnotesize] {(-) $p = 0.048^{*}$} (m3.west);
-    \draw[-latex] (a.east) -- node[auto,font=\footnotesize] {(-) $p = 0.121$} (m4.west);
-    \draw[-latex] (a.south) -- node[auto,font=\footnotesize] {(-) $p = 0.025^{*}$} (m5.west);
+    \draw[-latex] (a.north) -- node[auto,font=\footnotesize] {$(-)^{.}$} (m1.west);
+    \draw[-latex] (a.east) -- node[auto,font=\footnotesize] {$(-)^{.}$} (m2.west);
+    \draw[-latex] (a.east) -- node[auto,font=\footnotesize] {$(-)^{*}$} (m3.west);
+    \draw[-latex] (a.east) -- node[below,font=\footnotesize] {$(-)$} (m4.west);
+    \draw[-latex] (a.south) -- node[auto,font=\footnotesize] {$(-)^{*}$} (m5.west);
     
     % Mediators to outcome
-    \draw[-latex] (m1.east) -- node[auto,font=\footnotesize] {(-) $p = 0.108$} (b.north);
-    \draw[-latex] (m2.east) -- node[auto,font=\footnotesize] {(-) $p = 0.136$} (b.west);
-    \draw[-latex] (m3.east) -- node[auto,font=\footnotesize] {(-) $p = 0.056^{.}$} (b.west);
-    \draw[-latex] (m4.east) -- node[auto,font=\footnotesize] {(-) $p < 0.001^{***}$} (b.west);
-    \draw[-latex] (m5.east) -- node[auto,font=\footnotesize] {(-) $p = 0.058^{.}$} (b.south);
+    \draw[-latex] (m1.east) -- node[auto,font=\footnotesize] {$(-)^{.}$} (b.north);
+    \draw[-latex] (m2.east) -- node[auto,font=\footnotesize] {$(-)$} (b.west);
+    \draw[-latex] (m3.east) -- node[auto,font=\footnotesize] {$(-)^{.}$} (b.west);
+    \draw[-latex] (m4.east) -- node[below,font=\footnotesize] {$(-)^{***}$} (b.west);
+    \draw[-latex] (m5.east) -- node[auto,font=\footnotesize] {$(-)^{.}$} (b.south);
     
 
   \end{tikzpicture}
