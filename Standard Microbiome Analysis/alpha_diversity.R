@@ -213,6 +213,7 @@ at_list <- list(
 # add the variable sequence using the string name
 at_list[['zinc']] <- var_seq
 
+library(emmeans)
 pred <- emmeans(
   zinc_mod,
   specs = as.formula(paste("~", 'zinc')),
@@ -243,7 +244,7 @@ zinc_plot <- ggplot() +
     legend.text  = element_text(size = 26)
   ) + 
   annotate("text", x = Inf, y = Inf, label = "ß = 18.210, p = 0.056",
-           hjust = 1, vjust = 8.5, size = 16, fontface = "plain") + 
+           hjust = 1, vjust = 6.5, size = 16, fontface = "plain") + 
   scale_y_continuous(breaks=c(1500, 2500, 3500))
 
 
@@ -296,7 +297,7 @@ iron_plot <- ggplot() +
     legend.text  = element_text(size = 26)
   ) + 
   annotate("text", x = Inf, y = Inf, label = "ß = 0.730, p = 0.056",
-           hjust = 1, vjust = 8.5, size = 16, fontface = "plain") + 
+           hjust = 1, vjust = 6.5, size = 16, fontface = "plain") + 
   scale_y_continuous(breaks=c(1500, 2500, 3500))
 
 alpha_diversity <- zinc_plot + iron_plot

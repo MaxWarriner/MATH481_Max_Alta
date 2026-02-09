@@ -92,16 +92,30 @@ plot_roc_curve_gg_multi <- function(model_list,
     geom_abline(linetype = "dashed", color = "gray50") +
     labs(
       title = title,
-      x = "False Positive Rate (1 - Specificity)",
-      y = "True Positive Rate (Sensitivity)",
+      x = "FPR",
+      y = "TPR",
       color = "Model"
     ) +
-    theme_minimal() + 
-    theme(plot.title = element_text(hjust = 0.5, size = 18), 
-          legend.text = element_text(size = 16), 
-          legend.title = element_text(size = 16))
+    theme_classic() + 
+    theme(
+      plot.title = element_text(size = 32, hjust = 0.5, face = "plain"),
+      axis.title = element_text(size = 28),
+      axis.text  = element_text(size = 26),
+      legend.title = element_text(size = 0),
+      legend.text  = element_text(size = 0), 
+      legend.position = "none"
+    ) + 
+    guides(color = FALSE) + 
+    scale_y_continuous(
+      limits = c(0, 1),
+      breaks = c(0, 1),
+    ) + 
+    scale_x_continuous(
+      limits = c(0, 1),
+      breaks = c(0, 1),
+    )
   
-  ggsave(filename = filename, plot = roc_plot, width = 6, height = 3.5, dpi = 500)
+  # ggsave(filename = filename, plot = roc_plot, width = 6, height = 3.5, dpi = 500)
   
   return(list(auc = auc_values, plot = roc_plot))
 }
@@ -267,13 +281,6 @@ bloating_roc <- plot_roc_curve_gg_multi(
   title = "(B) Bloating"
 )
 
-library(patchwork)
-
-combined_roc <- (abdominal_roc$plot + bloating_roc$plot) / (diarrhea_roc$plot + appetite_roc$plot) + 
-  plot_layout(guides = "collect") &
-  theme(legend.position = "bottom")
-
-ggsave(plot = combined_roc, filename = "combined_roc.png", width = 8, height = 6, dpi = 1000)
 
 heatmapdat <- tibble(`Abdominal Pain` = abdominalpain$auc, 
                      Bloating = bloating$auc, 
@@ -414,7 +421,66 @@ ggsave(consump, filename = "Food_Consumption_Score_Summary.png", width = 6, heig
 
 
 
+# Machine Leaning Accuracy Forest Plot ------------------------------------
 
+
+range_dat <- tibble(health_outcome = rep(c("Abdominal Pain", "Bloating", "Diarrhea", "Loss of Appetite"), each = 4), 
+                    model = rep(c("Microbiome", "Metabolome", "Dietary", "Combined"), 4), 
+                    low_accuracy = c(0.6481, 0.5926, 0.5926, 0.7222, 
+                                     0.6481, 0.6111, 0.5370, 0.7407, 
+                                     0.7407, 0.6852, 0.7593, 0.796296296, 
+                                     0.7222, 0.7407, 0.6667, 0.8148), 
+                    high_accuracy = c(0.8148, 0.6667, 0.6667, 0.8333, 
+                                      0.8333, 0.7222, 0.6111, 0.8704,
+                                      0.9074, 0.7222, 0.8519, 0.8518, 
+                                      0.8889, 0.7778, 0.7222, 0.8519), 
+                    mean_accuracy = c(0.7593, 0.6389, 0.6204, 0.7870, 
+                                      0.7361, 0.6528, 0.5602, 0.7870, 
+                                      0.8380, 0.7037, 0.8009, 0.8333, 
+                                      0.8194, 0.7593, 0.6898, 0.8333))
+
+range_dat$health_outcome = factor(range_dat$health_outcome, levels = c("Abdominal Pain", "Bloating", "Diarrhea", "Loss of Appetite")) 
+range_dat$model = factor(range_dat$model, levels = c("Microbiome", "Metabolome", "Dietary", "Combined"))
+                    
+range_plot <- ggplot(data = range_dat, aes(x = health_outcome, color = model)) + 
+  geom_errorbar(aes(ymin = low_accuracy, ymax = high_accuracy), 
+                position = position_dodge2(width = 0.25, padding = 0.4), 
+                width = 0.25,
+                linewidth = 1) + 
+  geom_point(aes(x = health_outcome, y = mean_accuracy), 
+             position = position_dodge2(width = 0.25, padding = 0.4), 
+             size = 3) + 
+  theme_classic() + 
+  ylab("Accuracy") + 
+  xlab("") + 
+  ggtitle("(E)") + 
+  labs(color = "Model Features") +
+  theme(
+    plot.title = element_text(size = 32, hjust = 0.5, face = "plain"),
+    axis.title = element_text(size = 28),
+    axis.text  = element_text(size = 26),
+    legend.title = element_text(size = 28),
+    legend.text  = element_text(size = 26, margin = margin(t = 10)), 
+    legend.spacing.y = unit(1, "in")) + 
+  scale_y_continuous(
+    limits = c(0.5, 1),
+    breaks = c(0.5, 0.75, 1),
+    minor_breaks = NULL,
+    expand = c(0, 0)
+  )
+
+
+#Combined with AUC Curves 
+
+
+library(patchwork)
+
+combined_ml <- (abdominal_roc$plot + bloating_roc$plot) / (diarrhea_roc$plot + appetite_roc$plot) / (range_plot) + 
+  plot_layout(guides = "collect") &
+  theme(legend.position = "right")
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures")
+ggsave(plot = combined_ml, filename = "combined_ml.png", width = 14, height = 12, dpi = 600)
 
 
 

@@ -752,6 +752,53 @@ power <- pwr.f2.test(
 
 #TRYING TO FIGURE OUT
 
+posthoc_power_logistic <- function(
+    formula,
+    data,
+    focal_var,
+    B = 10000,
+    alpha = 0.05,
+    seed = NULL
+) {
+  if (!is.null(seed)) set.seed(seed)
+  
+  # Fit original model
+  fit <- glm(formula, data = data, family = binomial)
+  
+  # Predicted probabilities
+  p_hat <- fitted(fit)
+  
+  reject <- logical(B)
+  
+  for (b in seq_len(B)) {
+    # Simulate outcome
+    y_star <- rbinom(length(p_hat), size = 1, prob = p_hat)
+    
+    # Replace outcome in data
+    data_star <- data
+    outcome_name <- all.vars(formula)[1]
+    data_star[[outcome_name]] <- y_star
+    
+    # Refit model
+    fit_star <- glm(formula, data = data_star, family = binomial)
+    
+    # Extract p-value for focal variable
+    p_val <- summary(fit_star)$coefficients[focal_var, "Pr(>|z|)"]
+    
+    reject[b] <- p_val < alpha
+  }
+  
+  list(
+    power = round(mean(reject),3),
+    B = B,
+    alpha = alpha
+  )
+}
+
+
+posthoc_power_logistic(abdominalpain ~ Aniline + fruit_or_vegetable + age + sex + calories, data = combined, focal_var = "Aniline")
+
+
 
 # lower_appetite Mediation
 # Treatment 1: vitaminA
