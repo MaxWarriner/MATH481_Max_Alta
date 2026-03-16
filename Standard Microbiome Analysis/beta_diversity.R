@@ -19,67 +19,57 @@ ps <- readRDS('microbiome.RDS')
 
 sam <- ps@sam_data
 
-sam <- data.frame(sam) |>
-  mutate(calories_group = ifelse(calories <= median(sam$calories), "low", "high"), 
-         meat_portions_group = ifelse(meat_portions <= median(sam$meat_portions), "low", "high"))
+# sam <- data.frame(sam) |>
+#   mutate(calories_group = ifelse(calories <= median(sam$calories), "low", "high"), 
+#          meat_portions_group = ifelse(meat_portions <= median(sam$meat_portions), "low", "high"))
 
-ps@sam_data$calories_group = sam$calories_group
+# ps@sam_data$calories_group = sam$calories_group
 
-food <- sam[,c(180:209, 213, 215, 216)]
-
-food$fruit_or_vegetable <- ifelse(sam$fruit_or_vegetable <= median(sam$fruit_or_vegetable), "low", "high")
-food$animal_product <- ifelse(sam$animal_product <= median(sam$animal_product), "low", "high")
+food <- sam[,c(119:149, 79, 81:83)]
 
 food$age <- sam$Age
 food$sex <- sam$sex
 
 
-bdiv <- tibble(nutrient = colnames(food)[c(-33, -36, -37)],
+bdiv <- tibble(nutrient = colnames(food)[c(-1, -36, -37)],
                bray_p = rep(NA, 34), 
-               bray_power = rep(NA, 34))
+               bray_power = rep(NA, 34),
+               bray_power_adjusted = rep(NA, 34))
 
 bray <- phyloseq::distance(ps, method = "bray")
 
-posthoc_permanova_power <- function(physeq, factor_var, confounders = c("calories_group", "sex", "Age"), 
+posthoc_permanova_power <- function(physeq, factor_var, confounders = c("calories", "sex", "Age"), 
                                     distance_method = "bray", n_perm = 999, n_sim = 1000, alpha = 0.05) {
   # Combine factor_var and confounders
   all_vars <- c(factor_var, confounders)
   
-  # Check all variables exist
   missing_vars <- setdiff(all_vars, colnames(sample_data(physeq)))
   if (length(missing_vars) > 0) {
     stop(paste("Variables not found in sample_data(physeq):", paste(missing_vars, collapse = ", ")))
   }
   
-  # Extract distance matrix
   dist_mat <- phyloseq::distance(physeq, method = distance_method)
   
-  # Extract variables
   sample_df <- data.frame(sample_data(physeq))[ , all_vars, drop = FALSE]
   
-  # Convert all to factors where appropriate
   sample_df <- sample_df %>% mutate(across(all_of(all_vars), ~if(is.character(.)) as.factor(.) else .))
   
-  # Construct formula for PERMANOVA
   formula_str <- paste("dist_mat ~", paste(all_vars, collapse = " + "))
   permanova_formula <- as.formula(formula_str)
   
-  # Run PERMANOVA
   permanova_res <- adonis2(permanova_formula, data = sample_df, permutations = n_perm, by = "margin")
   
-  # Extract effect size and p-value for primary factor
   factor_r2 <- permanova_res$R2[1]
   factor_F <- permanova_res$F[1]
   factor_p <- permanova_res$`Pr(>F)`[1]
   
-  # Post hoc power analysis (simulate permuting only the primary factor while keeping confounders fixed)
+  message(paste("p for", factor_var, ":", round(factor_p, 3)))
+  
   n <- nrow(sample_df)
   sig_count <- 0
   for (i in 1:n_sim) {
-    permuted <- sample_df[[factor_var]]  # permute primary factor
-    permuted <- sample(permuted)
-    sim_df <- sample_df
-    sim_df[[factor_var]] <- permuted
+    boot_rows <- sample(nrow(sample_df), replace = T)
+    sim_df <- sample_df[boot_rows, ]
     sim_res <- adonis2(dist_mat ~ ., data = sim_df, permutations = n_perm, by = "margin")
     if (sim_res$`Pr(>F)`[1] < alpha) {
       sig_count <- sig_count + 1
@@ -93,20 +83,26 @@ posthoc_permanova_power <- function(physeq, factor_var, confounders = c("calorie
 }
 
 for (i in 1:34){
-  
+  set.seed(1313)
   variable = bdiv$nutrient[i]
   
-  bray_formula <- as.formula(paste("bray ~ calories_group + sex + age + ", variable, sep = ""))
+  bray_formula <- as.formula(paste("bray ~ calories + sex + age + ", variable, sep = ""))
   
-  permanova_bray <- vegan::adonis2(bray_formula, data = food, by = "margin")
+  permanova_bray <- vegan::adonis2(bray_formula, data = data.frame(food), by = "margin")
   bdiv$bray_p[i] <- permanova_bray$`Pr(>F)`[4]
   
-  # bdiv$bray_power[i] <- posthoc_permanova_power(ps, variable, alpha = 0.006)
+  bdiv$bray_power[i] <- posthoc_permanova_power(ps, variable, alpha = 0.05)
+  set.seed(1313)
+  bdiv$bray_power_adjusted[i] <- posthoc_permanova_power(ps, variable, alpha = 0.05/34)
   
 }
 
 bdiv <- bdiv |>
   mutate(adj_bray_p = p.adjust(bray_p, method = "BH"))
+
+write_csv(bdiv, 'microbiome_bdiv.csv')
+
+bdiv[, 2:4] <- round(bdiv[,2:4], 3)
 
 sigtable <- bdiv |>
   filter(adj_bray_p <= 0.1)
@@ -115,9 +111,9 @@ sig <- sigtable |>
   pull(nutrient)
 
 
-ps@sam_data$nutrient_score <- ifelse(ps@sam_data$nutrient_score <= median(ps@sam_data$nutrient_score), "low", "high")
-ps@sam_data$fruit_or_vegetable <- ifelse(ps@sam_data$fruit_or_vegetable <= median(ps@sam_data$fruit_or_vegetable), "low", "high")
-ps@sam_data$animal_product <- ifelse(ps@sam_data$animal_product <= median(ps@sam_data$animal_product), "low", "high")
+# ps@sam_data$nutrient_score <- ifelse(ps@sam_data$nutrient_score <= median(ps@sam_data$nutrient_score), "low", "high")
+# ps@sam_data$fruit_or_vegetable <- ifelse(ps@sam_data$fruit_or_vegetable <= median(ps@sam_data$fruit_or_vegetable), "low", "high")
+# ps@sam_data$animal_product <- ifelse(ps@sam_data$animal_product <= median(ps@sam_data$animal_product), "low", "high")
 
 
 #Create PCOA plots for significant stuff
@@ -130,10 +126,10 @@ sam <- ps@sam_data
 
 create_pcoa_plot <- function(variable, bray_dist, bray_pcoa, sam, title) {
   set.seed(1313)
-  pval_bray <- sigtable$adj_bray_p[i]
+  adj_pval_bray <- round(sigtable$adj_bray_p[i], 3)
+  pval_bray <- round(sigtable$bray_p[i], 3)
   
-  p_text_bray <- ifelse(pval_bray < 0.001, "p < 0.001",
-                        paste("p =", format(round(pval_bray, 3), nsmall = 3)))
+  p_text_bray <- paste("p = ", pval_bray, ", q = ", adj_pval_bray, sep = "")
   
   pcoa_bray_plot <- ggordpoint(obj = bray_pcoa, biplot = FALSE, speciesannot = TRUE,
                                factorNames = c(variable), ellipse = TRUE, linesize = 1.5,
@@ -141,7 +137,7 @@ create_pcoa_plot <- function(variable, bray_dist, bray_pcoa, sam, title) {
     ggtitle(title) +
     theme(legend.title = element_blank(), legend.text = element_text(size = 28)) +
     annotate("text", x = Inf, y = Inf, label = p_text_bray,
-             hjust = 1.1, vjust = 1.5, size = 16, fontface = "plain") +
+             hjust = 1.1, vjust = 1.5, size = 12, fontface = "plain") +
     theme(
       plot.title = element_text(size = 32, face = "plain"),
       axis.title = element_text(size = 28),
@@ -191,11 +187,13 @@ beta_diversity <- ((fermented_plot + sodium_plot) / (vitaminA_plot + vitaminB2_p
   theme(legend.position = "bottom", 
         legend.text = element_text(size = 0))
 
-diversity <- (alpha_diversity / beta_diversity) + 
-  plot_layout(heights = c(1, 3.5))
+diversity <- (alpha_diversity) / (beta_diversity) +
+  plot_layout(heights = c(1, 4.5)) & 
+  theme(plot.margin = margin(0.25, 0.25, 0.25, 0.25, 
+                             unit = "in"))
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures")
-ggsave(diversity, filename = 'combined_diversity_plot.png', dpi = 600, width = 15.5, height = 18)
+ggsave(diversity, filename = 'combined_diversity_plot.png', dpi = 600, width = 15.5, height = 21)
 
 
 #Metabolite Analysis
@@ -214,17 +212,17 @@ setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Standard Microbiome Analysis")
 
 ps <- readRDS('microbiome.RDS')
 
-ps@sam_data$nutrient_score <- ifelse(ps@sam_data$nutrient_score <= median(ps@sam_data$nutrient_score), "low", "high")
-ps@sam_data$fruit_or_vegetable <- ifelse(ps@sam_data$fruit_or_vegetable <= median(ps@sam_data$fruit_or_vegetable), "low", "high")
-ps@sam_data$animal_product <- ifelse(ps@sam_data$animal_product <= median(ps@sam_data$animal_product), "low", "high")
+# ps@sam_data$nutrient_score <- ifelse(ps@sam_data$nutrient_score <= median(ps@sam_data$nutrient_score), "low", "high")
+# ps@sam_data$fruit_or_vegetable <- ifelse(ps@sam_data$fruit_or_vegetable <= median(ps@sam_data$fruit_or_vegetable), "low", "high")
+# ps@sam_data$animal_product <- ifelse(ps@sam_data$animal_product <= median(ps@sam_data$animal_product), "low", "high")
 
 sam <- data.frame(ps@sam_data)
 
-sam <- data.frame(sam) |>
-  mutate(calories_group = ifelse(calories <= median(sam$calories), "low", "high"), 
-         meat_portions_group = ifelse(meat_portions <= median(sam$meat_portions), "low", "high"))
+# sam <- data.frame(sam) |>
+#   mutate(calories_group = ifelse(calories <= median(sam$calories), "low", "high"), 
+#          meat_portions_group = ifelse(meat_portions <= median(sam$meat_portions), "low", "high"))
 
-food <- sam[,c(180:209,211, 212 ,213, 215, 216)]
+food <- sam[,c(119:149, 79, 81:83)]
 food$sex <- sam$sex
 food$age <- sam$Age
 
@@ -345,22 +343,25 @@ posthoc_permanova_power_dist <- function(
 
 # PERMANOVA for each metadata variable
 bdiv <- tibble(
-  variable = colnames(food)[c(-35, -36, -37)],
+  variable = colnames(food)[c(-1, -36, -37)],
   bray_p = NA_real_, 
-  bray_power = NA_real_
+  bray_power = NA_real_, 
+  bray_power_adjusted = NA_real_
 )
 
 
 
 
-for (i in seq_along(colnames(food)[c(-35, -36, -37)])) {
+for (i in seq_along(bdiv$variable)) {
   variable = bdiv$variable[i]
   
-  bray_formula <- as.formula(paste("bray ~ calories_group + sex + age + ", variable, sep = ""))
+  bray_formula <- as.formula(paste("bray ~ calories + sex + age + ", variable, sep = ""))
   
   permanova_bray <- vegan::adonis2(bray_formula, data = food, by = "margin")
   bdiv$bray_p[i] <- permanova_bray$`Pr(>F)`[4]
+  
   # bdiv$bray_power[i] <- posthoc_permanova_power_dist(bray, food, variable)$power
+  # bdiv$bray_power_adjusted[i] <- posthoc_permanova_power_dist(bray, food, variable, alpha = 0.05/38)$power
   
 }
 
@@ -370,8 +371,12 @@ bdiv <- bdiv %>%
     adjusted_bray = p.adjust(bray_p, method = "BH")
   )
 
+bdiv[, 2:4] <- round(bdiv[,2:4], 3)
+
 sig_table <- bdiv %>%
   filter(adjusted_bray <= 0.1)
+
+
 
 sig_vars <- bdiv %>%
   filter(adjusted_bray <= 0.1) %>%
@@ -397,7 +402,7 @@ ps_metab <- phyloseq(OTU_metab, SAM)
 metab_pcoa <- get_pcoa(ps_metab, distmethod = "bray", method = "hellinger")
 
 # Now ggordpoint works exactly like before
-create_pcoa_plot <- function(pcoa_obj, variable, pval, title) {
+create_pcoa_plot <- function(pcoa_obj, variable, i, title) {
   ggordpoint(
     obj = pcoa_obj,
     biplot = FALSE,
@@ -410,8 +415,8 @@ create_pcoa_plot <- function(pcoa_obj, variable, pval, title) {
   ) +
     ggtitle(title) +
     annotate("text", x = Inf, y = Inf,
-             label = ifelse(pval < 0.001, "p < 0.001", paste("p =", round(pval,3))),
-             hjust = 1.1, vjust = 1.5, size = 16, fontface = "plain") +
+             label = paste("p = ", round(sigtable$bray_p[i], 3), ", q = ", round(sigtable$adj_bray_p[i], 3), sep = ""),
+             hjust = 1.1, vjust = 1.5, size = 12, fontface = "plain") +
     theme(
       plot.title = element_text(size = 32, face = "plain"),
       axis.title = element_text(size = 28),
@@ -423,20 +428,22 @@ create_pcoa_plot <- function(pcoa_obj, variable, pval, title) {
 }
 
 
-sodium_metab <- create_pcoa_plot(metab_pcoa, "sodium_group", sig_table$adjusted_bray[1], "(A) Sodium")    
+sodium_metab <- create_pcoa_plot(metab_pcoa, "sodium_group", i = 1, "(B) Sodium")    
 
-magnesium_metab <- create_pcoa_plot(metab_pcoa, "magnesium_group", sig_table$adjusted_bray[1], "(B) Magnesium")         
+magnesium_metab <- create_pcoa_plot(metab_pcoa, "magnesium_group", i = 2 , "(C) Magnesium")         
 
-fermented_metab <- create_pcoa_plot(metab_pcoa, "fermented_portions_group", sig_table$adjusted_bray[1], "(C) Fermented Foods") 
+fermented_metab <- create_pcoa_plot(metab_pcoa, "fermented_portions_group", i = 3, "(D) Fermented Foods") 
 
-beta_diversity <- ((sodium_metab + magnesium_metab) / (fermented_metab + plot_spacer())) + 
+beta_diversity <- ((injera_plot + sodium_metab) / (magnesium_metab + fermented_metab)) + 
   plot_layout(guides = "collect") & 
   theme(legend.position = "bottom", 
-        legend.text = element_text(size = 0))
+        legend.text = element_text(size = 0)) &
+  theme(plot.margin = margin(0.25, 0.25, 0.25, 0.25, 
+                             unit = "in"))
 
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures")
-ggsave(beta_diversity, filename = 'combined_metabolome_diversity_plot.png', dpi = 600, width = 12, height = 10)
+ggsave(beta_diversity, filename = 'combined_metabolome_diversity_plot.png', dpi = 600, width = 15, height = 12)
 
 
 

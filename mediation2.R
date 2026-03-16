@@ -243,6 +243,16 @@ full_model_power <- semPower.postHoc(effect = 0.204345,
 
 summary(full_model_power)
 
+tests <- sum(!is.na(sum$adj))
+
+full_model_power <- semPower.postHoc(effect = 0.204345,
+                                     effect.measure = 'RMSEA',
+                                     alpha = .05/tests,
+                                     N = 57,
+                                     df = 10)
+
+summary(full_model_power)
+
 # Bloating Mediation
 # Model 1: 
 # Treatment 1: fruit_portions 
@@ -305,6 +315,17 @@ summary(full_model_power)
 sum <- summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)$pe
 
 sum$adj <- round(p.adjust(sum$pvalue, method = "BH"), 3)
+
+
+tests <- sum(!is.na(sum$adj))
+
+full_model_power <- semPower.postHoc(effect = 0.079,
+                                     effect.measure = 'F0',
+                                     alpha = .05/tests,
+                                     N = 57,
+                                     df = 6)
+
+summary(full_model_power)
 
 
 # Abdominal Pain Mediation
@@ -372,6 +393,18 @@ full_model_power <- semPower.postHoc(
 
 summary(full_model_power)
 
+tests <- sum(!is.na(sum$adj))
+
+full_model_power <- semPower.postHoc(
+  effect.measure = "F0",
+  effect = 0.022,
+  df = 6,
+  alpha = .05/tests, 
+  N = 57
+)
+
+summary(full_model_power)
+
 
 # lower appetite Mediation
 # Treatment 2: vitaminC  
@@ -426,6 +459,17 @@ fitMeasures(fit, "fmin")
 full_model_power <- semPower.postHoc(effect = 0.001,
                                      effect.measure = 'F0',
                                      alpha = .05,
+                                     N = 57,
+                                     df = 3)
+
+summary(full_model_power)
+
+
+tests <- sum(!is.na(sum$adj))
+
+full_model_power <- semPower.postHoc(effect = 0.001,
+                                     effect.measure = 'F0',
+                                     alpha = .05/tests,
                                      N = 57,
                                      df = 3)
 
@@ -627,6 +671,17 @@ full_model_power <- semPower.postHoc(effect = 0.227,
 
 summary(full_model_power)
 
+tests <- sum(!is.na(sum$adj))
+
+full_model_power <- semPower.postHoc(effect = 0.227,
+                                     effect.measure = 'F0',
+                                     alpha = .05/tests,
+                                     N = 54,
+                                     df = 10)
+
+summary(full_model_power)
+
+
 # bloating Mediation
 # Treatment 1: fruit_portions
 # Mediators: L.Threonine, X4.Hydroxy.4.methyl.2.pentanone, Aniline, X2.Keto.3.deoxyoctonic.acid
@@ -691,6 +746,16 @@ full_model_power <- semPower.postHoc(effect = 0.261,
 
 summary(full_model_power)
 
+tests <- sum(!is.na(sum$adj))
+
+full_model_power <- semPower.postHoc(effect = 0.261,
+                                     effect.measure = 'F0',
+                                     alpha = .05/tests,
+                                     N = 54,
+                                     df = 10)
+
+summary(full_model_power)
+
 # abdominalpain Mediation
 # Treatment 1: fruit_or_vegetable
 # Mediators: Aniline
@@ -736,6 +801,8 @@ sum <- summary(fit, standardized = TRUE, fit.measures = TRUE, nd = 5)$pe
 
 sum$adj <- round(p.adjust(sum$pvalue, method = "BH"),3)
 
+tests <- sum(!is.na(sum$adj))
+
 #unable to do SEM power with 0 df
 #pivot to linear and logistic power
 
@@ -748,9 +815,15 @@ power <- pwr.f2.test(
   sig.level = 0.05
 )$power
 
+power <- pwr.f2.test(
+  u = 4,        # number of predictors
+  v = 54 - 4 - 1,  # denominator df = n - u - 1
+  f2 = summary(lm(Aniline  ~ fruit_or_vegetable + age + sex + calories, data = data.frame(combined)))$r.squared,
+  sig.level = 0.05/tests
+)$power
+
 #abdominal pain ~ fruits/veg + aniline + calories + sex + age
 
-#TRYING TO FIGURE OUT
 
 posthoc_power_logistic <- function(
     formula,
@@ -798,6 +871,7 @@ posthoc_power_logistic <- function(
 
 posthoc_power_logistic(abdominalpain ~ Aniline + fruit_or_vegetable + age + sex + calories, data = combined, focal_var = "Aniline")
 
+posthoc_power_logistic(abdominalpain ~ Aniline + fruit_or_vegetable + age + sex + calories, data = combined, focal_var = "Aniline", alpha = 0.05/tests)
 
 
 # lower_appetite Mediation
@@ -865,4 +939,13 @@ full_model_power <- semPower.postHoc(effect = 0.704,
 
 summary(full_model_power)
 
+tests <- sum(!is.na(sum$adj))
+
+full_model_power <- semPower.postHoc(effect = 0.704,
+                                     effect.measure = 'F0',
+                                     alpha = .05/tests,
+                                     N = 54,
+                                     df = 15)
+
+summary(full_model_power)
 

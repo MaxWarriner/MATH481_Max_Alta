@@ -174,7 +174,7 @@ diarrhea_roc <- plot_roc_curve_gg_multi(
   model_names = factor(c("Microbiome", "Metabolome", "Dietary", "Combined"), levels = c("Microbiome", "Metabolome", "Dietary", "Combined")),
   factor = "Diarrhea",
   filename = "diarrhea_roc_overlay.png", 
-  title = "(C) Diarrhea"
+  title = "(A)"
 )
 
 
@@ -242,7 +242,7 @@ appetite_roc <- plot_roc_curve_gg_multi(
   model_names = factor(c("Microbiome", "Metabolome", "Dietary", "Combined"), levels = c("Microbiome", "Metabolome", "Dietary", "Combined")),
   factor = "lower_appetite",
   filename = "lower_appetite_roc_overlay.png", 
-  title = "(D) Loss of Appetite"
+  title = "(C) Loss of Appetite"
 )
 
 
@@ -430,11 +430,11 @@ range_dat <- tibble(health_outcome = rep(c("Abdominal Pain", "Bloating", "Diarrh
                                      0.6481, 0.6111, 0.5370, 0.7407, 
                                      0.7407, 0.6852, 0.7593, 0.796296296, 
                                      0.7222, 0.7407, 0.6667, 0.8148), 
-                    high_accuracy = c(0.8148, 0.6667, 0.6667, 0.8333, 
+                    high_accuracy = c(0.8148, 0.6667, 0.6296, 0.8333, 
                                       0.8333, 0.7222, 0.6111, 0.8704,
                                       0.9074, 0.7222, 0.8519, 0.8518, 
                                       0.8889, 0.7778, 0.7222, 0.8519), 
-                    mean_accuracy = c(0.7593, 0.6389, 0.6204, 0.7870, 
+                    mean_accuracy = c(0.7593, 0.6389, 0.6111, 0.7870, 
                                       0.7361, 0.6528, 0.5602, 0.7870, 
                                       0.8380, 0.7037, 0.8009, 0.8333, 
                                       0.8194, 0.7593, 0.6898, 0.8333))
@@ -442,18 +442,47 @@ range_dat <- tibble(health_outcome = rep(c("Abdominal Pain", "Bloating", "Diarrh
 range_dat$health_outcome = factor(range_dat$health_outcome, levels = c("Abdominal Pain", "Bloating", "Diarrhea", "Loss of Appetite")) 
 range_dat$model = factor(range_dat$model, levels = c("Microbiome", "Metabolome", "Dietary", "Combined"))
                     
-range_plot <- ggplot(data = range_dat, aes(x = health_outcome, color = model)) + 
+range_plot_diarrhea <- ggplot(data = range_dat |> filter(health_outcome == "Diarrhea"), aes(x = health_outcome, color = model)) + 
   geom_errorbar(aes(ymin = low_accuracy, ymax = high_accuracy), 
-                position = position_dodge2(width = 0.25, padding = 0.4), 
-                width = 0.25,
+                position = position_dodge(width = 0.25), 
+                width = 0.1,
                 linewidth = 1) + 
   geom_point(aes(x = health_outcome, y = mean_accuracy), 
-             position = position_dodge2(width = 0.25, padding = 0.4), 
+             position = position_dodge(width = 0.25), 
              size = 3) + 
   theme_classic() + 
   ylab("Accuracy") + 
   xlab("") + 
-  ggtitle("(E)") + 
+  ggtitle("(B)") + 
+  labs(color = "Model Features") +
+  theme(
+    plot.title = element_text(size = 32, hjust = 0.5, face = "plain"),
+    axis.title = element_text(size = 28),
+    axis.text.x = element_text(size = 0),
+    axis.text.y  = element_text(size = 26),
+    legend.title = element_text(size = 28),
+    legend.text  = element_text(size = 26, margin = margin(t = 10)), 
+    legend.spacing.y = unit(1, "in")) + 
+  scale_y_continuous(
+    limits = c(0.5, 1),
+    breaks = c(0.5, 0.75, 1),
+    minor_breaks = NULL,
+    expand = c(0, 0)
+  )
+
+range_plot_other <- ggplot(data = range_dat |> filter(health_outcome != "Diarrhea"), 
+                           aes(x = health_outcome, color = model, group = model)) + 
+  geom_errorbar(aes(ymin = low_accuracy, ymax = high_accuracy, y = mean_accuracy), 
+                position = position_dodge2(width = 0.5, padding = 0.5), 
+                width = 0.5,
+                linewidth = 1) + 
+  geom_point(aes(x = health_outcome, y = mean_accuracy), 
+             position = position_dodge2(width = 0.5, padding = 0.5), 
+             size = 3) + 
+  theme_classic() + 
+  ylab("Accuracy") + 
+  xlab("") + 
+  ggtitle("(D)") + 
   labs(color = "Model Features") +
   theme(
     plot.title = element_text(size = 32, hjust = 0.5, face = "plain"),
@@ -475,12 +504,21 @@ range_plot <- ggplot(data = range_dat, aes(x = health_outcome, color = model)) +
 
 library(patchwork)
 
-combined_ml <- (abdominal_roc$plot + bloating_roc$plot) / (diarrhea_roc$plot + appetite_roc$plot) / (range_plot) + 
+diarrhea_combined <- diarrhea_roc$plot + range_plot_diarrhea &
+  plot_layout(widths = c(2.5, 1)) &
+  plot_annotation(title = "Diarrhea") & 
+  theme(plot.title = element_text(size = 32, hjust = 0.5, face = "plain"))
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures")
+ggsave(plot = diarrhea_combined, filename = "diarrhea_combined_ml.png", width = 18, height = 6, dpi = 600)
+  
+
+
+other_combined <- (abdominal_roc$plot + bloating_roc$plot) / (appetite_roc$plot + range_plot_other) + 
   plot_layout(guides = "collect") &
   theme(legend.position = "right")
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures")
-ggsave(plot = combined_ml, filename = "combined_ml.png", width = 14, height = 12, dpi = 600)
+ggsave(plot = other_combined, filename = "combined_ml.png", width = 20, height = 12, dpi = 600)
 
 
 

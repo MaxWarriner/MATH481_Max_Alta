@@ -1,6 +1,12 @@
+
+# Microbiome Differential Abundance ---------------------------------------
+
+
 library(tidyverse)
 library(phyloseq)
 library(vegan)
+library(maaslin3)
+library(ggrepel)
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Standard Microbiome Analysis")
 
@@ -8,25 +14,15 @@ ps <- readRDS('microbiome.RDS')
 
 sam <- ps@sam_data
 
-sam <- sam[,c(1:212, 214, 213)]
+sam <- data.frame(sam[,c(1:212, 214, 213)]) |>
+  mutate(diarrhea = ifelse(diarrhea == 1, 'yes', 'no'), 
+         bloating = ifelse(bloating == 1, 'yes', 'no'), 
+         abdominalpain = ifelse(abdominalpain == 1, 'yes', 'no'), 
+         lower_appetite = ifelse(lower_appetite == 1, 'yes', 'no'))
 
-health <- sam[,78:84]
+sample_data(ps) <- sam
 
-div <- estimate_richness(ps, measures = c("Shannon", "Chao1"))
-
-sam$shannon <- div$Shannon
-sam$chao1 <- div$Chao1
-
-t.test(formula = chao1 ~ illness, data = data.frame(sam))
-t.test(formula = chao1 ~ diarrhea, data = data.frame(sam))
-t.test(formula = chao1 ~ cough, data = data.frame(sam))
-t.test(formula = chao1 ~ bloating, data = data.frame(sam))
-t.test(formula = chao1 ~ abdominalpain, data = data.frame(sam))
-t.test(formula = chao1 ~ lower_appetite, data = data.frame(sam))
-t.test(formula = chao1 ~ nausea, data = data.frame(sam))
-
-ggplot(data = sam, aes(x = as.factor(abdominalpain), y = chao1)) + 
-  geom_boxplot()
+colnames(phyloseq::tax_table(ps)) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
 
 run_maaslin2_and_plot <- function(
     ps_obj, 
@@ -46,7 +42,7 @@ run_maaslin2_and_plot <- function(
   if (!taxa_are_rows(ps_obj)) otumat <- data.frame(t(otumat))
   
   # Aggregate at desired taxonomic level
-  taxmat <- as.data.frame(tax_table(ps_obj))
+  taxmat <- as.data.frame(phyloseq::tax_table(ps_obj))
   if (!(taxlevel %in% colnames(taxmat))) stop("taxlevel not in taxonomy table!")
   
   # Assign "Unassigned" to missing genus
@@ -90,7 +86,7 @@ run_maaslin2_and_plot <- function(
   fixed_effects <- fixed_effects[fixed_effects %in% colnames(meta)]
   
   # Run MaAsLin2 
-  fit_data <- Maaslin2(
+  fit_data <- maaslin3(
     input_data = as.data.frame(t(feature_table)),
     input_metadata = meta,
     output = tempdir(),   
@@ -100,15 +96,15 @@ run_maaslin2_and_plot <- function(
   )
   
   # Results
-  results <- fit_data$results
+  results <- fit_data$fit_data_abundance$results
   results_var <- results[results$metadata == variable, ]
   results_var <- results_var %>%
-    dplyr::mutate(sig = ifelse(qval < qval_sig_max, "Significant", "NS"))
+    dplyr::mutate(sig = ifelse(qval_joint < qval_sig_max, "Significant", "NS"))
   
   # Only keep one result per genus
   results_var_unique <- results_var %>%
     group_by(feature) %>%
-    slice_min(order_by = qval, n = 1, with_ties = FALSE) %>%
+    slice_min(order_by = qval_joint, n = 1, with_ties = FALSE) %>%
     ungroup()
   
   # Prevalence and abundance calculation (add to output)
@@ -141,7 +137,7 @@ run_maaslin2_and_plot <- function(
       )
     )
   
-  p <- ggplot(results_var_unique, aes(x = coef, y = -log10(qval), color = sig)) +
+  p <- ggplot(results_var_unique, aes(x = coef, y = -log10(qval_joint), color = sig)) +
     geom_point() +
     geom_text_repel(
       aes(label = label_flag),
@@ -158,7 +154,14 @@ run_maaslin2_and_plot <- function(
       title = title_name
     ) +
     theme_minimal() +
-    theme(legend.position = "none")
+    theme(legend.position = "none") + 
+    theme(
+      plot.title = element_text(size = 32, hjust = 0.5, face = "plain"),
+      axis.title = element_text(size = 28),
+      axis.text  = element_text(size = 26),
+      legend.title = element_text(size = 28),
+      legend.text  = element_text(size = 26, margin = margin(t = 10)), 
+      legend.spacing.y = unit(1, "in"))
   
   ggsave(filename = paste(variable, "_maslin_volcano.png", sep = ""), plot = p, width = 8, height = 6)
   
@@ -173,7 +176,7 @@ run_maaslin2_and_plot <- function(
 plot_all_significant_boxplots <- function(
     ps_obj, 
     maaslin2_table, 
-    variable = "FoodSecure_vs_FoodInsecure", 
+    variable, 
     variable_name = variable,
     taxlevel = "Genus"
 ) {
@@ -244,10 +247,12 @@ plot_all_significant_boxplots <- function(
       ) +
       theme_minimal() +
       theme(
-        legend.position = "none", 
-        plot.title = element_text(hjust = 0.5), 
-        axis.text.x = element_text(size = 14)
-      ) + 
+        plot.title = element_text(size = 32, hjust = 0.5, face = "plain"),
+        axis.title = element_text(size = 28),
+        axis.text  = element_text(size = 26),
+        legend.title = element_text(size = 28),
+        legend.text  = element_text(size = 26, margin = margin(t = 10)), 
+        legend.spacing.y = unit(1, "in")) + 
       geom_hline(yintercept = 0)
   }
   
@@ -266,21 +271,193 @@ plot_all_significant_boxplots <- function(
   
   print(plot_patch)
   
-  if (length(plot_list) > 0) {
-    ggsave(filename = paste0(variable, "_maaslin_boxplots.png"), plot = plot_patch, width = 14, height = 8)
-  }
+  return(plot_patch)
+  
+  # if (length(plot_list) > 0) {
+  #   ggsave(filename = paste0(variable, "_maaslin_boxplots.png"), plot = plot_patch, width = 14, height = 8)
+  # }
 }
 
 metadata <- as.data.frame(sample_data(ps))
 SVs <- as.data.frame(otu_table(ps))
 
-kitchen_floor_maaslin2 <- run_maaslin2_and_plot(ps, "Kitchen_Material", qval_sig_max = 0.1)
 
-kitchen_floor_boxplots <- plot_all_significant_boxplots(
-  ps_obj = ps,
-  maaslin2_table = kitchen_floor_maaslin2$table,
-  variable = "Kitchen_Material",
-  variable_name = "Kitchen_Material"
-)
+diarrhea_maaslin2 <- run_maaslin2_and_plot(ps, "diarrhea", qval_sig_max = 0.1, title_name = "(A) Genus Abundance")$p
+
+diarrhea_maaslin2 <- diarrhea_maaslin2 + 
+  geom_hline(yintercept = 0) 
+
+# diarrhea_maaslin2 <- run_maaslin2_and_plot(ps, "diarrhea", qval_sig_max = 0.1, taxlevel = "Phylum")
+
+
+abdominalpain_maaslin2 <- run_maaslin2_and_plot(ps, "abdominalpain", qval_sig_max = 0.1, title_name = "(A) Genus Abundance")$p + 
+  geom_hline(yintercept = 0)
+
+# abdominalpain_maaslin2 <- run_maaslin2_and_plot(ps, "abdominalpain", qval_sig_max = 0.1, taxlevel = "Phylum")
+
+bloating_maaslin2 <- run_maaslin2_and_plot(ps, "bloating", qval_sig_max = 0.1, title_name = "(A) Genus Abundance")$p + 
+  geom_hline(yintercept = 0)
+#bloating_maaslin2 <- run_maaslin2_and_plot(ps, "bloating", qval_sig_max = 0.1, taxlevel = "Phylum")
+
+
+low_appetite_maaslin2 <- run_maaslin2_and_plot(ps, "lower_appetite", qval_sig_max = 0.1, title_name = "(A) Genus Abundance")$p + 
+  geom_hline(yintercept = 0)
+#low_appetite_maaslin2 <- run_maaslin2_and_plot(ps, "lower_appetite", qval_sig_max = 0.1, taxlevel = "Phylum")
+
+
+# Metabolome Differential Abundance ---------------------------------------
+
+library(tidyverse)
+library(phyloseq)
+library(vegan)
+library(maaslin3)
+library(ggrepel)
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Standard Microbiome Analysis")
+
+ps <- readRDS('microbiome.RDS')
+
+sam <- ps@sam_data
+
+sam <- data.frame(sam[,c(1:212, 214, 213)]) |>
+  mutate(diarrhea = ifelse(diarrhea == 1, 'yes', 'no'), 
+         bloating = ifelse(bloating == 1, 'yes', 'no'), 
+         abdominalpain = ifelse(abdominalpain == 1, 'yes', 'no'), 
+         lower_appetite = ifelse(lower_appetite == 1, 'yes', 'no'))
+
+
+norm_dat <- tibble(metab = colnames(metabolite_data), p = rep(NA, ncol(metabolite_data)))
+
+for (i in 1:ncol(metabolite_data)){
+  model <- lm(paste(colnames((metabolite_data))[i], " ~ diarrhea + Age + sex"), data = sam)
+  res <- model$residuals
+  norm_dat$p[i] <- shapiro.test(res)$p.value
+}
+
+mean(norm_dat$p<0.05)
+
+log_dat <- tibble(metab = colnames(metabolite_data), p = rep(NA, ncol(metabolite_data)))
+
+for (i in 1:ncol(metabolite_data)){
+  model <- lm(paste("log(",colnames((metabolite_data))[i],"+ 1) ~ diarrhea + Age + sex", sep = ""), data = sam)
+  res <- model$residuals
+  log_dat$p[i] <- shapiro.test(res)$p.value
+}
+
+mean(log_dat$p<0.001)
+
+metabolite_data <- read_csv('metabolites_transposed.csv') |>
+  column_to_rownames('...1')
+
+keep_samples <- intersect(rownames(metabolite_data), rownames(sam))
+sam <- sam[keep_samples,]
+metabolite_data <- metabolite_data[keep_samples,]
+
+sam <- cbind(sam, metabolite_data)
+
+#function for diff abundance (FROM SCRATCH)
+# who said I couldn't code??
+
+
+
+metabolite_differential_abundance <- function(data = sam, metabolite_data = metabolite_data, variable, q_thresh = 0.1, title_name = gsub(pattern = "_", replacement = " ", x = variable)){
+  
+  testing_data <- tibble(metabolite = colnames(metabolite_data), 
+                         beta = rep(NA, length(colnames(metabolite_data))), 
+                         p = rep(NA, length(colnames(metabolite_data))), 
+                         q = rep(NA, length(colnames(metabolite_data))))
+  
+  
+  for (i in 1:length(colnames(metabolite_data))){
+    
+    model_formula <- paste("log(", colnames(metabolite_data)[i], " + 1) ~ ", variable, " + Age + sex", sep = "")
+    
+    lm_mod <- lm(model_formula, data = data.frame(data))
+    
+    coefs <- data.frame(summary(lm_mod)$coefficients)
+    
+    testing_data$beta[i] <- coefs$Estimate[2]
+    testing_data$p[i] <- coefs$Pr...t..[2]
+    
+  }
+  
+  
+  testing_data$q <- p.adjust(testing_data$p, method = "BH")
+  
+  testing_data <- testing_data |>
+    mutate(sig = ifelse(q < q_thresh, "Significant", "N.S."),
+           effect_size_label = ifelse(q < q_thresh, paste0("(β = ", round(beta, 3), ", p = ", round(p, 3), ", q = ", round(q, 3), ")"), ""))
+
+  
+  p <- ggplot(testing_data, aes(x = beta, y = -log10(q), color = sig)) +
+    geom_point() +
+    geom_text_repel(
+      aes(label = effect_size_label),
+      size = 3,
+      max.overlaps = 12,
+      color = "red",
+      force = 2,
+      box.padding = 0.5
+    ) +
+    scale_color_manual(values = c("Significant" = "red", "N.S." = "black")) +
+    labs(
+      x = "Effect Size (β coefficient)",
+      y = "-log10(FDR)",
+      title = title_name
+    ) +
+    theme_minimal() +
+    theme(legend.position = "none", 
+      plot.title = element_text(size = 32, hjust = 0.5, face = "plain"),
+      axis.title = element_text(size = 28),
+      axis.text  = element_text(size = 26),
+      legend.title = element_text(size = 28),
+      legend.text  = element_text(size = 26, margin = margin(t = 10)), 
+      legend.spacing.y = unit(1, "in")) + 
+    geom_hline(yintercept = 0)
+  
+  print(p)
+  
+  return(list(p = p, testing_data = testing_data))
+  
+}
+
+diarrhea_metab <- metabolite_differential_abundance(data = sam, metabolite_data = metabolite_data, variable = "diarrhea", title_name = "(B) Metabolite Abundance")$p 
+
+abdominalpain_metab <- metabolite_differential_abundance(data = sam, metabolite_data = metabolite_data, variable = "abdominalpain", title_name = "(B) Metabolite Abundance")$p
+
+lower_appetite_metab <- metabolite_differential_abundance(data = sam, metabolite_data = metabolite_data, variable = "lower_appetite", title_name = "(B) Metabolite Abundance")$p
+
+bloating_metab <- metabolite_differential_abundance(data = sam, metabolite_data = metabolite_data, variable = "bloating", title_name = "(B) Metabolite Abundance")$p
+
+
+
+#Combined Plots
+library(patchwork)
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures")
+
+diarrhea <- diarrhea_maaslin2 + diarrhea_metab &
+  theme(plot.margin = margin(0.25, 0.25, 0.25, 0.25, 
+                             unit = "in"))
+ggsave(filename = "diarrhea_volcanoes.png", plot = diarrhea, dpi = 600, width = 14, height = 6)
+
+
+abdominalpain <- abdominalpain_maaslin2 + abdominalpain_metab &
+  theme(plot.margin = margin(0.25, 0.25, 0.25, 0.25, 
+                             unit = "in"))
+ggsave(filename = "abdominalpain_volcanoes.png", plot = abdominalpain, dpi = 600, width = 14, height = 6)
+
+
+bloating <- bloating_maaslin2 + bloating_metab &
+  theme(plot.margin = margin(0.25, 0.25, 0.25, 0.25, 
+                             unit = "in"))
+ggsave(filename = "bloating_volcanoes.png", plot = bloating, dpi = 600, width = 14, height = 6)
+
+
+low_appetite <- low_appetite_maaslin2 + lower_appetite_metab &
+  theme(plot.margin = margin(0.25, 0.25, 0.25, 0.25, 
+                             unit = "in"))
+ggsave(filename = "low_appetite_volcanoes.png", plot = diarrhea, dpi = 600, width = 14, height = 6)
+
+
 
 

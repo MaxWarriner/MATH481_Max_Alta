@@ -10,7 +10,7 @@ sam <- ps@sam_data
 
 sam <- sam[,c(1:212, 214, 213)]
 
-food <- sam[,c(119:149, 210:213)]
+food <- sam[,c(119:149, 210:213, 79, 81:83)]
 
 #Microbiome diversity
 
@@ -21,18 +21,20 @@ food$Chao1 <- diversity$Chao1
 food$age <- sam$Age
 food$sex <- sam$sex
 
-alpha_cors <- tibble(nutrient = colnames(food)[c(-1, -36, -37, -38, -39)], 
-                     Shannon_beta = rep(NA, 34),
-                     Shannon_p = rep(NA, 34),
-                     Shannon_power = rep(NA, 34),
-                     Chao1_beta = rep(NA, 34), 
-                     Chao1_p = rep(NA, 34), 
-                     Chao1_power = rep(NA, 34))
+alpha_cors <- tibble(nutrient = colnames(food)[c(-1, -40:-43)], 
+                     Shannon_beta = rep(NA, 38),
+                     Shannon_p = rep(NA, 38),
+                     Shannon_power = rep(NA, 38),
+                     Shannon_power_adjusted = rep(NA, 38),
+                     Chao1_beta = rep(NA, 38), 
+                     Chao1_p = rep(NA, 38), 
+                     Chao1_power = rep(NA, 38), 
+                     Chao1_power_adjusted = rep(NA, 38))
 
 library(pwr)
 
 #Test out nutrients against alpha diversity
-for(i in 1:34){
+for(i in 1:38){
   
   variable = alpha_cors$nutrient[i]
   
@@ -47,6 +49,13 @@ for(i in 1:34){
     v = 57 - 4 - 1,  # denominator df = n - u - 1
     f2 = summary(lm(shannon_formula, data = data.frame(food)))$r.squared,
     sig.level = 0.05
+  )$power
+  
+  alpha_cors$Shannon_power_adjusted[i] <- pwr.f2.test(
+    u = 4,        # number of predictors
+    v = 57 - 4 - 1,  # denominator df = n - u - 1
+    f2 = summary(lm(shannon_formula, data = data.frame(food)))$r.squared,
+    sig.level = 0.05/38
   )$power
 
   
@@ -63,14 +72,23 @@ for(i in 1:34){
     sig.level = 0.05
   )$power
   
+  alpha_cors$Chao1_power_adjusted[i] <- pwr.f2.test(
+    u = 4,        # number of predictors
+    v = 57 - 4 - 1,  # denominator df = n - u - 1
+    f2 = summary(lm(Chao1_formula, data = data.frame(food)))$r.squared,
+    sig.level = 0.05/38
+  )$power
+  
 }
 
 alpha_cors <- alpha_cors |>
-  mutate(Shannon_p = p.adjust(Shannon_p, method = "BH"), 
-         Chao1_p = p.adjust(Chao1_p, method = "BH"))
+  mutate(Shannon_adj_p = p.adjust(Shannon_p, method = "BH"), 
+         Chao1_adj_p = p.adjust(Chao1_p, method = "BH"))
+
+alpha_cors[, 2:9] <- round(alpha_cors[, 2:9], 3)
 
 sig_cors <- alpha_cors |>
-  filter(Shannon_p <= 0.1 | Chao1_p <= 0.1) |>
+  filter(Shannon_adj_p <= 0.1 | Chao1_adj_p <= 0.1) |>
   pull(nutrient)
 
 sigs <- which(alpha_cors$nutrient %in% sig_cors)
@@ -243,8 +261,8 @@ zinc_plot <- ggplot() +
     legend.title = element_text(size = 28),
     legend.text  = element_text(size = 26)
   ) + 
-  annotate("text", x = Inf, y = Inf, label = "ß = 18.210, p = 0.056",
-           hjust = 1, vjust = 6.5, size = 16, fontface = "plain") + 
+  annotate("text", x = Inf, y = Inf, label = "p = 0.003, q = 0.063",
+           hjust = 1.01, vjust = 8, size = 12, fontface = "plain") + 
   scale_y_continuous(breaks=c(1500, 2500, 3500))
 
 
@@ -296,11 +314,17 @@ iron_plot <- ggplot() +
     legend.title = element_text(size = 28),
     legend.text  = element_text(size = 26)
   ) + 
-  annotate("text", x = Inf, y = Inf, label = "ß = 0.730, p = 0.056",
-           hjust = 1, vjust = 6.5, size = 16, fontface = "plain") + 
+  annotate("text", x = Inf, y = Inf, label = "p = 0.002, q = 0.063",
+           hjust = 1.01, vjust = 8, size = 12, fontface = "plain") + 
   scale_y_continuous(breaks=c(1500, 2500, 3500))
 
-alpha_diversity <- zinc_plot + iron_plot
+library(patchwork)
+alpha_diversity <- (zinc_plot + iron_plot) &
+  theme(plot.margin = margin(0.25, 0.25, 0.25, 0.25, 
+                             unit = "in"))
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures")
+ggsave(alpha_diversity, filename = 'alpha_diversity_plot.png', dpi = 600, width = 15.5, height = 5.25)
 
 
 # Metabolite Diversity
@@ -309,22 +333,29 @@ setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Standard Microbiome Analysis")
 metabolites <- read_csv('metabolites_transposed.csv') |>
   column_to_rownames('...1')
 
+common_samples <- intersect(rownames(metabolites), rownames(food))
+
+metabolites <- metabolites[common_samples,]
+food <- food[common_samples]
+
 
 food$shannon <- diversity(metabolites, index = "shannon")
 food$simpson <- diversity(metabolites, index = "simpson")
 
 
-alpha_cors <- tibble(nutrient = colnames(food)[c(-1, -36, -37, -38, -39, -40, -41)], 
-                     Shannon_beta = rep(NA, 34),
-                     Shannon_p = rep(NA, 34),
-                     Shannon_power = rep(NA, 34),
-                     Simpson_beta = rep(NA, 34), 
-                     Simpson_p = rep(NA, 34), 
-                     Simpson_power = rep(NA, 34))
+alpha_cors <- tibble(nutrient = colnames(food)[c(-1, -40:-45)], 
+                     Shannon_beta = rep(NA, 38),
+                     Shannon_p = rep(NA, 38),
+                     Shannon_power = rep(NA, 38),
+                     Shannon_power_adjusted = rep(NA, 38),
+                     Simpson_beta = rep(NA, 38), 
+                     Simpson_p = rep(NA, 38), 
+                     Simpson_power = rep(NA, 38), 
+                     Simpson_power_adjusted = rep(NA, 38))
 
 
 #Test out nutrients against alpha diversity
-for(i in 1:34){
+for(i in 1:38){
   
   variable = alpha_cors$nutrient[i]
   
@@ -336,9 +367,16 @@ for(i in 1:34){
   
   alpha_cors$Shannon_power[i] <- pwr.f2.test(
     u = 4,        # number of predictors
-    v = 57 - 4 - 1,  # denominator df = n - u - 1
+    v = 54 - 4 - 1,  # denominator df = n - u - 1
     f2 = summary(lm(shannon_formula, data = data.frame(food)))$r.squared,
     sig.level = 0.05
+  )$power
+  
+  alpha_cors$Shannon_power_adjusted[i] <- pwr.f2.test(
+    u = 4,        # number of predictors
+    v = 54 - 4 - 1,  # denominator df = n - u - 1
+    f2 = summary(lm(shannon_formula, data = data.frame(food)))$r.squared,
+    sig.level = 0.05/38
   )$power
   
   
@@ -350,22 +388,90 @@ for(i in 1:34){
   
   alpha_cors$Simpson_power[i] <- pwr.f2.test(
     u = 4,        # number of predictors
-    v = 57 - 4 - 1,  # denominator df = n - u - 1
+    v = 54 - 4 - 1,  # denominator df = n - u - 1
     f2 = summary(lm(simpson_formula, data = data.frame(food)))$r.squared,
     sig.level = 0.05
+  )$power
+  
+  alpha_cors$Simpson_power_adjusted[i] <- pwr.f2.test(
+    u = 4,        # number of predictors
+    v = 54 - 4 - 1,  # denominator df = n - u - 1
+    f2 = summary(lm(simpson_formula, data = data.frame(food)))$r.squared,
+    sig.level = 0.05/38
   )$power
   
 }
 
 alpha_cors <- alpha_cors |>
-  mutate(Shannon_p = p.adjust(Shannon_p, method = "BH"), 
-         Simpson_p = p.adjust(Simpson_p, method = "BH"))
+  mutate(Shannon_adj_p = p.adjust(Shannon_p, method = "BH"), 
+         Simpson_adj_p = p.adjust(Simpson_p, method = "BH"))
+
+alpha_cors[, 2:9] <- round(alpha_cors[, 2:9], 3)
 
 sig_cors <- alpha_cors |>
-  filter(Shannon_p <= 0.05 | Simpson_p <= 0.05) |>
+  filter(Shannon_adj_p <= 0.1 | Simpson_adj_p <= 0.1) |>
   pull(nutrient)
 
 sigs <- which(alpha_cors$nutrient %in% sig_cors)
+
+
+
+injera_mod <- lm(as.formula(paste("shannon ~ ", 'injera_sum', " + calories + sex + age", sep = "")), data = data.frame(food))
+
+
+var_seq <- seq(
+  min(food[["injera_sum"]], na.rm = TRUE),
+  max(food[["injera_sum"]], na.rm = TRUE),
+  length.out = 100
+)
+
+at_list <- list(
+  calories = mean(food$calories, na.rm = TRUE),
+  age = mean(food$age, na.rm = TRUE)
+)
+
+# add the variable sequence using the string name
+at_list[['injera_sum']] <- var_seq
+
+library(emmeans)
+pred <- emmeans(
+  injera_mod,
+  specs = as.formula(paste("~", 'injera_sum')),
+  at = at_list,
+  weights = "proportional"
+)
+
+pred_df <- as.data.frame(pred)
+
+injera_plot <- ggplot() +
+  geom_point(data = data.frame(food), aes(x = injera_sum, y = shannon), alpha = 0.4) +
+  geom_line(
+    data = pred_df,
+    aes(x = injera_sum, y = emmean),
+    linewidth = 1.2
+  ) +
+  labs(
+    x = paste('Injera', " (portions/week)", sep = ""),
+    y = "Shannon diversity",
+    title =''
+  ) +
+  theme_bw() + 
+  theme(
+    plot.title = element_text(size = 32, hjust = 0.5, face = "plain"),
+    axis.title = element_text(size = 28),
+    axis.text  = element_text(size = 26),
+    legend.title = element_text(size = 28),
+    legend.text  = element_text(size = 26)
+  ) + 
+  annotate("text", x = Inf, y = Inf, label = "p = 0.001, q = 0.032",
+           hjust = 1, vjust = 10.5, size = 12, fontface = "plain") + 
+  scale_y_continuous(breaks=c(4.2, 4.4, 4.6)) & 
+  theme(plot.margin = margin(0.25, 0.25, 0.25, 0.25, 
+                             unit = "in"))
+
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures")
+ggsave(injera_plot, filename = "injera_metabolome_diversity.png", dpi = 600, width = 9, height = 5.5)
 
 
 calculate_sem <- function(x) {
