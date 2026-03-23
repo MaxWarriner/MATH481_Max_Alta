@@ -319,35 +319,15 @@ ps <- readRDS('microbiome.RDS')
 
 sam <- ps@sam_data
 
+metabolite_data <- read_csv('metabolites_transposed.csv') |>
+  column_to_rownames('...1')
+
+
 sam <- data.frame(sam[,c(1:212, 214, 213)]) |>
   mutate(diarrhea = ifelse(diarrhea == 1, 'yes', 'no'), 
          bloating = ifelse(bloating == 1, 'yes', 'no'), 
          abdominalpain = ifelse(abdominalpain == 1, 'yes', 'no'), 
          lower_appetite = ifelse(lower_appetite == 1, 'yes', 'no'))
-
-
-norm_dat <- tibble(metab = colnames(metabolite_data), p = rep(NA, ncol(metabolite_data)))
-
-for (i in 1:ncol(metabolite_data)){
-  model <- lm(paste(colnames((metabolite_data))[i], " ~ diarrhea + Age + sex"), data = sam)
-  res <- model$residuals
-  norm_dat$p[i] <- shapiro.test(res)$p.value
-}
-
-mean(norm_dat$p<0.05)
-
-log_dat <- tibble(metab = colnames(metabolite_data), p = rep(NA, ncol(metabolite_data)))
-
-for (i in 1:ncol(metabolite_data)){
-  model <- lm(paste("log(",colnames((metabolite_data))[i],"+ 1) ~ diarrhea + Age + sex", sep = ""), data = sam)
-  res <- model$residuals
-  log_dat$p[i] <- shapiro.test(res)$p.value
-}
-
-mean(log_dat$p<0.001)
-
-metabolite_data <- read_csv('metabolites_transposed.csv') |>
-  column_to_rownames('...1')
 
 keep_samples <- intersect(rownames(metabolite_data), rownames(sam))
 sam <- sam[keep_samples,]
@@ -370,7 +350,7 @@ metabolite_differential_abundance <- function(data = sam, metabolite_data = meta
   
   for (i in 1:length(colnames(metabolite_data))){
     
-    model_formula <- paste("log(", colnames(metabolite_data)[i], " + 1) ~ ", variable, " + Age + sex", sep = "")
+    model_formula <- paste("log(", colnames(metabolite_data)[i], " + 1) ~ ", variable, sep = "")
     
     lm_mod <- lm(model_formula, data = data.frame(data))
     

@@ -505,7 +505,7 @@ range_plot_other <- ggplot(data = range_dat |> filter(health_outcome != "Diarrhe
 library(patchwork)
 
 diarrhea_combined <- diarrhea_roc$plot + range_plot_diarrhea &
-  plot_layout(widths = c(2.5, 1)) &
+  plot_layout(widths = c(3, 1.5)) &
   plot_annotation(title = "Diarrhea") & 
   theme(plot.title = element_text(size = 32, hjust = 0.5, face = "plain"))
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures")

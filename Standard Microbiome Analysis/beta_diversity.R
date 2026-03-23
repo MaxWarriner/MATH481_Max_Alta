@@ -25,16 +25,16 @@ sam <- ps@sam_data
 
 # ps@sam_data$calories_group = sam$calories_group
 
-food <- sam[,c(119:149, 79, 81:83)]
+food <- sam[,c(119:149, 210:213, 79, 81:83)]
 
 food$age <- sam$Age
 food$sex <- sam$sex
 
 
-bdiv <- tibble(nutrient = colnames(food)[c(-1, -36, -37)],
-               bray_p = rep(NA, 34), 
-               bray_power = rep(NA, 34),
-               bray_power_adjusted = rep(NA, 34))
+bdiv <- tibble(nutrient = colnames(food)[c(-1, -40, -41)],
+               bray_p = rep(NA, 38), 
+               bray_power = rep(NA, 38),
+               bray_power_adjusted = rep(NA, 38))
 
 bray <- phyloseq::distance(ps, method = "bray")
 
@@ -82,7 +82,7 @@ posthoc_permanova_power <- function(physeq, factor_var, confounders = c("calorie
   return(power_estimate)
 }
 
-for (i in 1:34){
+for (i in 1:38){
   set.seed(1313)
   variable = bdiv$nutrient[i]
   
@@ -93,7 +93,7 @@ for (i in 1:34){
   
   bdiv$bray_power[i] <- posthoc_permanova_power(ps, variable, alpha = 0.05)
   set.seed(1313)
-  bdiv$bray_power_adjusted[i] <- posthoc_permanova_power(ps, variable, alpha = 0.05/34)
+  bdiv$bray_power_adjusted[i] <- posthoc_permanova_power(ps, variable, alpha = 0.05/38)
   
 }
 
@@ -222,7 +222,7 @@ sam <- data.frame(ps@sam_data)
 #   mutate(calories_group = ifelse(calories <= median(sam$calories), "low", "high"), 
 #          meat_portions_group = ifelse(meat_portions <= median(sam$meat_portions), "low", "high"))
 
-food <- sam[,c(119:149, 79, 81:83)]
+food <- sam[,c(119:149, 210:213, 79, 81:83)]
 food$sex <- sam$sex
 food$age <- sam$Age
 
@@ -239,7 +239,7 @@ posthoc_permanova_power_dist <- function(
     dist_mat,
     metadata,
     factor_var,
-    confounders = c("calories_group", "sex", "age"),
+    confounders = c("calories", "sex", "age"),
     n_perm = 999,
     n_sim = 1000,
     alpha = 0.05
@@ -306,8 +306,7 @@ posthoc_permanova_power_dist <- function(
   
   for (i in seq_len(n_sim)) {
     
-    sim_df <- metadata
-    sim_df[[factor_var]] <- sample(sim_df[[factor_var]])
+    sim_df <- metadata[sample(nrow(metadata), replace = T), ]
     
     sim_res <- vegan::adonis2(
       dist_mat ~ .,
@@ -343,7 +342,7 @@ posthoc_permanova_power_dist <- function(
 
 # PERMANOVA for each metadata variable
 bdiv <- tibble(
-  variable = colnames(food)[c(-1, -36, -37)],
+  variable = colnames(food)[c(-1, -40, -41)],
   bray_p = NA_real_, 
   bray_power = NA_real_, 
   bray_power_adjusted = NA_real_
@@ -360,8 +359,8 @@ for (i in seq_along(bdiv$variable)) {
   permanova_bray <- vegan::adonis2(bray_formula, data = food, by = "margin")
   bdiv$bray_p[i] <- permanova_bray$`Pr(>F)`[4]
   
-  # bdiv$bray_power[i] <- posthoc_permanova_power_dist(bray, food, variable)$power
-  # bdiv$bray_power_adjusted[i] <- posthoc_permanova_power_dist(bray, food, variable, alpha = 0.05/38)$power
+  bdiv$bray_power[i] <- posthoc_permanova_power_dist(bray, food, variable)$power
+  bdiv$bray_power_adjusted[i] <- posthoc_permanova_power_dist(bray, food, variable, alpha = 0.05/38)$power
   
 }
 
@@ -370,6 +369,8 @@ bdiv <- bdiv %>%
   mutate(
     adjusted_bray = p.adjust(bray_p, method = "BH")
   )
+
+write_csv(bdiv, 'metabolome_bdiv.csv')
 
 bdiv[, 2:4] <- round(bdiv[,2:4], 3)
 
