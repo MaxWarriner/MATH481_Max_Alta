@@ -350,7 +350,7 @@ metabolite_differential_abundance <- function(data = sam, metabolite_data = meta
   
   for (i in 1:length(colnames(metabolite_data))){
     
-    model_formula <- paste("log(", colnames(metabolite_data)[i], " + 1) ~ ", variable, sep = "")
+    model_formula <- paste("log(", colnames(metabolite_data)[i], " + 1) ~ ", variable, "+ Age + sex", sep = "")
     
     lm_mod <- lm(model_formula, data = data.frame(data))
     

@@ -439,11 +439,28 @@ range_dat <- tibble(health_outcome = rep(c("Abdominal Pain", "Bloating", "Diarrh
                                       0.8380, 0.7037, 0.8009, 0.8333, 
                                       0.8194, 0.7593, 0.6898, 0.8333))
 
+range_dat$sd <- c(0.07858202, 0.03461895, 0.03401934, 0.04660389, 
+                  0.08648937, 0.04764787, 0.03762679, 0.05579165, 
+                  0.07145591, 0.01523336, 0.03575361, 0.02445106, 
+                  0.07666897, 0.01400913, 0.02459523, 0.01372159)
+
+range_dat$AUC_mean <- c(0.7764558, 0.5475851, 0.5525569, 0.8075282, 
+                        0.763889, 0.5673613, 0.55, 0.8187499, 
+                        0.8399726, 0.659684, 0.7949863, 0.8739699, 
+                        0.7885804, 0.6612654, 0.5493827, 0.8749999)
+
+range_dat$AUC_sd <- c(0.1199973, 0.05447977, 0.01137844, 0.04156686, 
+            0.1314244, 0.02607008, 0.04201999, 0.04811933, 
+            0.1140992, 0.0399907, 0.01347624, 0.01309763, 
+            0.1280465, 0.07013834, 0.07918128, 0.02271545)
+
+View(cbind(range_dat[, 1:2], round(range_dat[,3:8], 2)))
+
 range_dat$health_outcome = factor(range_dat$health_outcome, levels = c("Abdominal Pain", "Bloating", "Diarrhea", "Loss of Appetite")) 
 range_dat$model = factor(range_dat$model, levels = c("Microbiome", "Metabolome", "Dietary", "Combined"))
                     
 range_plot_diarrhea <- ggplot(data = range_dat |> filter(health_outcome == "Diarrhea"), aes(x = health_outcome, color = model)) + 
-  geom_errorbar(aes(ymin = low_accuracy, ymax = high_accuracy), 
+  geom_errorbar(aes(ymin = mean_accuracy - sd, ymax = mean_accuracy + sd), 
                 position = position_dodge(width = 0.25), 
                 width = 0.1,
                 linewidth = 1) + 
@@ -472,7 +489,7 @@ range_plot_diarrhea <- ggplot(data = range_dat |> filter(health_outcome == "Diar
 
 range_plot_other <- ggplot(data = range_dat |> filter(health_outcome != "Diarrhea"), 
                            aes(x = health_outcome, color = model, group = model)) + 
-  geom_errorbar(aes(ymin = low_accuracy, ymax = high_accuracy, y = mean_accuracy), 
+  geom_errorbar(aes(ymin = mean_accuracy - sd, ymax = mean_accuracy + sd), 
                 position = position_dodge2(width = 0.5, padding = 0.5), 
                 width = 0.5,
                 linewidth = 1) + 
