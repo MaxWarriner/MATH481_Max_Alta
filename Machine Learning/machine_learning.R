@@ -11,7 +11,7 @@ library(MicrobiotaProcess)
 library(vegan)
 library(dplyr)
 library(ALDEx2)
-library(microbiomeMarker)
+#library(microbiomeMarker)
 library(ggsci)
 library(ggpubr)
 library(parallel)
@@ -19,12 +19,42 @@ library(doParallel)
 library(pROC)
 
 ps <- read_rds('microbiome.RDS')
-metab <- read_csv('metabolites_transposed.csv')
-tax <- tax_table(ps)
+metab <- read_csv('metabolites_transposed.csv') |>
+  column_to_rownames('...1')
+tax <- ps@tax_table
 
 colnames(tax) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
 
 tax_table(ps) <- tax
+
+fam_tab <- get_tax_matrix(ps, "Family", "F__", min_prevalence = 0.05)
+gen_tab <- get_tax_matrix(ps, "Genus", "G__",  min_prevalence = 0.05)
+all_feat_tab <- rbind(fam_tab, gen_tab)
+all_feat_tab[all_feat_tab == 0] <- 1e-6
+
+
+micro <- data.frame(t(all_feat_tab))
+
+common_rows <- intersect(rownames(micro), rownames(metab))
+
+micro <- micro[common_rows,]
+
+
+food <- data.frame(ps@sam_data)[, c(119:149, 210:214)]
+food <- food[common_rows, ]
+
+metab_filtered <- metab[common_rows,]
+
+health <- data.frame(ps@sam_data)[, c(79, 81:83)]
+health <- health[common_rows,]
+
+combined <- cbind(micro, food, metab_filtered)
+
+write_csv(micro, file = 'microbiome_features.csv')
+write_csv(metab_filtered, file = 'metab_features.csv')
+write_csv(food, file = 'diet_features.csv')
+write_csv(combined, file = 'combined_features.csv')
+write_csv(health, file = 'health_features.csv')
 
 #log transform and scale metabolites
 metab <- metab |>
@@ -64,19 +94,19 @@ sample_data(ps) <- cbind(health, metab, nutr, sam[,1:2]) # all together
 
 
 #Function to get workable matrix for microbiome data
-# get_tax_matrix <- function(ps, taxlevel, prefix, min_prevalence) {
-#   ps_tax <- tax_glom(ps, taxlevel)
-#   otumat <- as.data.frame(otu_table(ps_tax))
-#   if (!taxa_are_rows(ps_tax)) otumat <- t(otumat)
-#   taxmat <- as.data.frame(tax_table(ps_tax))
-#   tax_names <- taxmat[[taxlevel]]
-#   tax_names[is.na(tax_names) | tax_names == ""] <- "Unassigned"
-#   rownames(otumat) <- paste0(prefix, make.unique(tax_names))
-#   present_counts <- rowSums(otumat > 0)
-#   keep <- present_counts >= (min_prevalence * ncol(otumat))
-#   otumat <- otumat[keep, , drop = FALSE]
-#   return(otumat)
-# }
+get_tax_matrix <- function(ps, taxlevel, prefix, min_prevalence) {
+  ps_tax <- tax_glom(ps, taxlevel)
+  otumat <- as.data.frame(otu_table(ps_tax))
+  if (!taxa_are_rows(ps_tax)) otumat <- t(otumat)
+  taxmat <- as.data.frame(ps_tax@tax_table)
+  tax_names <- taxmat[[taxlevel]]
+  tax_names[is.na(tax_names) | tax_names == ""] <- "Unassigned"
+  rownames(otumat) <- paste0(prefix, make.unique(tax_names))
+  present_counts <- rowSums(otumat > 0)
+  keep <- present_counts >= (min_prevalence * ncol(otumat))
+  otumat <- otumat[keep, , drop = FALSE]
+  return(otumat)
+}
 # 
 # fam_tab <- get_tax_matrix(ps, "Family", "F__", min_prevalence = 0.05)
 # gen_tab <- get_tax_matrix(ps, "Genus", "G__",  min_prevalence = 0.05)
