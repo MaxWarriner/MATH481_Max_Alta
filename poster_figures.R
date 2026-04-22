@@ -539,3 +539,126 @@ ggsave(plot = other_combined, filename = "combined_ml.png", width = 20, height =
 
 
 
+
+
+
+
+
+
+
+
+# Second attempt with new data
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Machine Learning")
+
+results <- read_csv('results_2.csv') |>
+  filter(model != 'Dummy')
+
+results$dataset = factor(results$dataset, levels = c("microbiome", "metabolome", "diet", "combined"))
+results$model = factor(results$model, levels = c("LogReg-L2", "LightGBM", "LateFusion"))
+
+cleaned <- tibble(measure = c(rep("Accuracy", 9), rep("AUC", 9)), 
+                  mean = c(results$bal_acc_mean, results$roc_auc_mean), 
+                  std = c(results$bal_acc_std, results$roc_auc_std), 
+                  data = rep(results$dataset, 2), 
+                  model = rep(results$model, 2))
+
+
+range_plot <- ggplot(data = cleaned , aes(x = model, color = data)) + 
+  geom_errorbar(aes(ymin = mean - std, ymax = mean + std), 
+                position = position_dodge(width = 0.4), 
+                width = 0.1,
+                linewidth = 1) + 
+  geom_point(aes(x = model, y = mean), 
+             position = position_dodge(width = 0.4), 
+             size = 3) + 
+  facet_wrap(vars(measure)) + 
+  theme_classic() + 
+  ylab("") +
+  xlab('') + 
+  labs(color = "Model Features") +
+  theme(
+    plot.title = element_text(size = 32, hjust = 0.5, face = "plain"),
+    axis.title = element_text(size = 28),
+    axis.text.x = element_text(size = 26),
+    axis.text.y  = element_text(size = 26),
+    legend.title = element_text(size = 28),
+    legend.text  = element_text(size = 26, margin = margin(t = 10)), 
+    legend.spacing.y = unit(1, "in"), 
+    strip.text.x = element_text(size = 28)) + 
+  scale_y_continuous(
+    limits = c(0.25, 1),
+    breaks = c(0.5, 0.75, 1),
+    minor_breaks = NULL,
+    expand = c(0, 0)
+  )
+
+
+
+
+
+range_plot_diarrhea <- ggplot(data = results , aes(x = model, color = dataset)) + 
+  geom_errorbar(aes(ymin = bal_acc_mean - bal_acc_std, ymax = bal_acc_mean + bal_acc_std), 
+                position = position_dodge(width = 0.4), 
+                width = 0.1,
+                linewidth = 1) + 
+  geom_point(aes(x = model, y = bal_acc_mean), 
+             position = position_dodge(width = 0.4), 
+             size = 3) + 
+  theme_classic() + 
+  ylab("") +
+  xlab('') + 
+  ggtitle("(A) Balanced Accuracy") + 
+  labs(color = "Model Features") +
+  theme(
+    plot.title = element_text(size = 32, hjust = 0.5, face = "plain"),
+    axis.title = element_text(size = 28),
+    axis.text.x = element_text(size = 26),
+    axis.text.y  = element_text(size = 26),
+    legend.title = element_text(size = 28),
+    legend.text  = element_text(size = 26, margin = margin(t = 10)), 
+    legend.spacing.y = unit(1, "in")) + 
+  scale_y_continuous(
+    limits = c(0.25, 1),
+    breaks = c(0.5, 0.75, 1),
+    minor_breaks = NULL,
+    expand = c(0, 0)
+  )
+
+
+range_plot_diarrhea_auc <- ggplot(data = results , aes(x = model, color = dataset)) + 
+  geom_errorbar(aes(ymin = roc_auc_mean - roc_auc_std, ymax = roc_auc_mean + roc_auc_std), 
+                position = position_dodge(width = 0.5), 
+                width = 0.1,
+                linewidth = 1) + 
+  geom_point(aes(x = model, y = roc_auc_mean), 
+             position = position_dodge(width = 0.5), 
+             size = 3) + 
+  theme_classic() + 
+  ylab("") +
+  xlab('') + 
+  ggtitle("(B) Area Under Curve") + 
+  labs(color = "Model Features") +
+  theme(
+    plot.title = element_text(size = 32, hjust = 0.5, face = "plain"),
+    axis.title = element_text(size = 28),
+    axis.text.x = element_text(size = 26),
+    axis.text.y  = element_text(size = 26),
+    legend.title = element_text(size = 28),
+    legend.text  = element_text(size = 26, margin = margin(t = 10)), 
+    legend.spacing.y = unit(1, "in")) + 
+  scale_y_continuous(
+    limits = c(0.25, 1),
+    breaks = c(0.5, 0.75, 1),
+    minor_breaks = NULL,
+    expand = c(0, 0)
+  )
+
+new_combined <- (range_plot_diarrhea + range_plot_diarrhea_auc) + 
+  plot_layout(guides = "collect") &
+  theme(legend.position = "right")
+
+
+setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures")
+ggsave(plot = range_plot, filename = "ml_accuracy_2.png", width = 18, height = 8, dpi = 600)
+

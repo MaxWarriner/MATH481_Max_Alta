@@ -251,7 +251,7 @@ zinc_plot <- ggplot() +
   labs(
     x = paste('zinc', " (mg/week)", sep = ""),
     y = "Chao1 diversity",
-    title ='(A) Zinc'
+    title ='(A) Zinc: Microbiome'
   ) +
   theme_bw() + 
   theme(
@@ -262,7 +262,7 @@ zinc_plot <- ggplot() +
     legend.text  = element_text(size = 26)
   ) + 
   annotate("text", x = Inf, y = Inf, label = "p = 0.003, q = 0.063",
-           hjust = 1.01, vjust = 8, size = 12, fontface = "plain") + 
+           hjust = 1.2, vjust = 15.75, size = 12, fontface = "plain") + 
   scale_y_continuous(breaks=c(1500, 2500, 3500))
 
 
@@ -304,7 +304,7 @@ iron_plot <- ggplot() +
   labs(
     x = paste('iron', " (mg/week)", sep = ""),
     y = "Chao1 diversity",
-    title = '(B) Iron'
+    title = '(B) Iron: Microbiome'
   ) +
   theme_bw() + 
   theme(
@@ -315,13 +315,9 @@ iron_plot <- ggplot() +
     legend.text  = element_text(size = 26)
   ) + 
   annotate("text", x = Inf, y = Inf, label = "p = 0.002, q = 0.063",
-           hjust = 1.01, vjust = 8, size = 12, fontface = "plain") + 
+           hjust = 1.2, vjust = 15.75, size = 12, fontface = "plain") + 
   scale_y_continuous(breaks=c(1500, 2500, 3500))
 
-library(patchwork)
-alpha_diversity <- (zinc_plot + iron_plot) &
-  theme(plot.margin = margin(0.25, 0.25, 0.25, 0.25, 
-                             unit = "in"))
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures")
 ggsave(alpha_diversity, filename = 'alpha_diversity_plot.png', dpi = 600, width = 15.5, height = 5.25)
@@ -453,7 +449,7 @@ injera_plot <- ggplot() +
   labs(
     x = paste('Injera', " (portions/week)", sep = ""),
     y = "Shannon diversity",
-    title =''
+    title ='(C) Injera: Metabolome'
   ) +
   theme_bw() + 
   theme(
@@ -464,14 +460,19 @@ injera_plot <- ggplot() +
     legend.text  = element_text(size = 26)
   ) + 
   annotate("text", x = Inf, y = Inf, label = "p = 0.001, q = 0.032",
-           hjust = 1, vjust = 10.5, size = 12, fontface = "plain") + 
+           hjust = 1.2, vjust = 15.75, size = 12, fontface = "plain") + 
   scale_y_continuous(breaks=c(4.2, 4.4, 4.6)) & 
   theme(plot.margin = margin(0.25, 0.25, 0.25, 0.25, 
                              unit = "in"))
 
 
+
+library(patchwork)
+
+alpha_diversity_combined <- zinc_plot + iron_plot + injera_plot
+
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures")
-ggsave(injera_plot, filename = "injera_metabolome_diversity.png", dpi = 600, width = 9, height = 5.5)
+ggsave(alpha_diversity_combined, filename = "alpha_div_combined.png", dpi = 1200, width = 24, height = 7.5)
 
 
 calculate_sem <- function(x) {

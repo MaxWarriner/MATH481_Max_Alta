@@ -56,6 +56,11 @@ write_csv(food, file = 'diet_features.csv')
 write_csv(combined, file = 'combined_features.csv')
 write_csv(health, file = 'health_features.csv')
 
+health <- read.csv('health_features.csv')
+metab <- read.csv('metab_features.csv')
+combined <- cbind(metab, health)
+boxplot(combined$Diisopropyl.phosphate ~ combined$diarrhea)
+
 #log transform and scale metabolites
 metab <- metab |>
   mutate(across(where(is.numeric), ~ scale(log1p(.))[,1]))
