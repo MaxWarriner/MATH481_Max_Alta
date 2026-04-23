@@ -99,152 +99,152 @@ library(patchwork)
 library(emmeans)
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures/Alpha Diversity/Microbiome")
-for(i in c(sigs, 31:34)){
-  
-  variable = alpha_cors$nutrient[i]
-
-  shannon_mod <- lm(as.formula(paste("Shannon ~ ", variable, " + calories + sex + age", sep = "")), data = data.frame(food))
-
-  
-  var_seq <- seq(
-    min(food[[variable]], na.rm = TRUE),
-    max(food[[variable]], na.rm = TRUE),
-    length.out = 100
-  )
-  
-  at_list <- list(
-    calories = mean(food$calories, na.rm = TRUE),
-    age = mean(food$age, na.rm = TRUE)
-  )
-  
-  # add the variable sequence using the string name
-  at_list[[variable]] <- var_seq
-  
-  pred <- emmeans(
-    shannon_mod,
-    specs = as.formula(paste("~", variable)),
-    at = at_list,
-    weights = "proportional"
-  )
-  
-  pred_df <- as.data.frame(pred)
-  
-  
-  shannon_plot <- ggplot() +
-    geom_point(data = data.frame(food), aes(x = !!sym(variable), y = Shannon), alpha = 0.4) +
-    geom_line(
-      data = pred_df,
-      aes(x = !!sym(variable), y = emmean),
-      linewidth = 1.2
-    ) +
-    labs(
-      x = paste(variable, " (mg/week)", sep = ""),
-      y = "Shannon diversity",
-      title = paste(variable, "vs. Shannon diversity"),
-      subtitle = "Adjusted for calories and age; averaged over sex"
-    ) +
-    theme_bw() + 
-    theme(
-      axis.title = element_text(size = 14),
-      axis.text  = element_text(size = 12),
-      plot.title = element_text(size = 16, face = "bold"),
-      plot.subtitle = element_text(size = 13),
-      legend.text = element_text(size = 12),
-      legend.title = element_text(size = 13)
-    )
-  
-  
-  chao1_mod <- lm(as.formula(paste("Chao1 ~ ", variable, " + calories + sex + age", sep = "")), data = data.frame(food))
-  
-  
-  var_seq <- seq(
-    min(food[[variable]], na.rm = TRUE),
-    max(food[[variable]], na.rm = TRUE),
-    length.out = 100
-  )
-  
-  at_list <- list(
-    calories = mean(food$calories, na.rm = TRUE),
-    age = mean(food$age, na.rm = TRUE)
-  )
-  
-  # add the variable sequence using the string name
-  at_list[[variable]] <- var_seq
-  
-  pred <- emmeans(
-    chao1_mod,
-    specs = as.formula(paste("~", variable)),
-    at = at_list,
-    weights = "proportional"
-  )
-  
-  pred_df <- as.data.frame(pred)
-  
-  
-chao1_plot <- ggplot() +
-    geom_point(data = data.frame(food), aes(x = !!sym(variable), y = Chao1), alpha = 0.4) +
-    geom_line(
-      data = pred_df,
-      aes(x = !!sym(variable), y = emmean),
-      linewidth = 1.2
-    ) +
-    labs(
-      x = paste(variable, " (mg/week)", sep = ""),
-      y = "Chao1 diversity",
-      title = paste(variable, "vs. Chao1 diversity"),
-      subtitle = "Adjusted for calories and age; averaged over sex"
-    ) +
-    theme_bw() + 
-  theme(
-    axis.title = element_text(size = 28),
-    axis.text  = element_text(size = 26),
-    plot.title = element_text(size = 0, face = "bold"),
-    plot.subtitle = element_text(size = 0),
-    legend.text = element_text(size = 12),
-    legend.title = element_text(size = 13)
-  )
-  
-
-  
-  
-  ggsave(shannon_plot, filename = paste(variable, "_shannon_alpha_diversity.png", sep = ""), width = 8, height = 4, dpi = 800)
-  ggsave(chao1_plot, filename = paste(variable, "_chao1_alpha_diversity.png", sep = ""), width = 8, height = 4, dpi = 800)
-  
-}
+# for(i in c(sigs, 31:34)){
+#   
+#   variable = alpha_cors$nutrient[i]
+# 
+#   shannon_mod <- lm(as.formula(paste("Shannon ~ ", variable, " + calories + sex + age", sep = "")), data = data.frame(food))
+# 
+#   
+#   var_seq <- seq(
+#     min(food[[variable]], na.rm = TRUE),
+#     max(food[[variable]], na.rm = TRUE),
+#     length.out = 100
+#   )
+#   
+#   at_list <- list(
+#     calories = mean(food$calories, na.rm = TRUE),
+#     age = mean(food$age, na.rm = TRUE)
+#   )
+#   
+#   # add the variable sequence using the string name
+#   at_list[[variable]] <- var_seq
+#   
+#   pred <- emmeans(
+#     shannon_mod,
+#     specs = as.formula(paste("~", variable)),
+#     at = at_list,
+#     weights = "proportional"
+#   )
+#   
+#   pred_df <- as.data.frame(pred)
+#   
+#   
+#   shannon_plot <- ggplot() +
+#     geom_point(data = data.frame(food), aes(x = !!sym(variable), y = Shannon), alpha = 0.4) +
+#     geom_line(
+#       data = pred_df,
+#       aes(x = !!sym(variable), y = emmean),
+#       linewidth = 1.2
+#     ) +
+#     labs(
+#       x = paste(variable, " (mg/week)", sep = ""),
+#       y = "Shannon diversity",
+#       title = paste(variable, "vs. Shannon diversity"),
+#       subtitle = "Adjusted for calories and age; averaged over sex"
+#     ) +
+#     theme_bw() + 
+#     theme(
+#       axis.title = element_text(size = 14),
+#       axis.text  = element_text(size = 12),
+#       plot.title = element_text(size = 16, face = "bold"),
+#       plot.subtitle = element_text(size = 13),
+#       legend.text = element_text(size = 12),
+#       legend.title = element_text(size = 13)
+#     )
+#   
+#   
+#   chao1_mod <- lm(as.formula(paste("Chao1 ~ ", variable, " + calories + sex + age", sep = "")), data = data.frame(food))
+#   
+#   
+#   var_seq <- seq(
+#     min(food[[variable]], na.rm = TRUE),
+#     max(food[[variable]], na.rm = TRUE),
+#     length.out = 100
+#   )
+#   
+#   at_list <- list(
+#     calories = mean(food$calories, na.rm = TRUE),
+#     age = mean(food$age, na.rm = TRUE)
+#   )
+#   
+#   # add the variable sequence using the string name
+#   at_list[[variable]] <- var_seq
+#   
+#   pred <- emmeans(
+#     chao1_mod,
+#     specs = as.formula(paste("~", variable)),
+#     at = at_list,
+#     weights = "proportional"
+#   )
+#   
+#   pred_df <- as.data.frame(pred)
+#   
+#   
+# chao1_plot <- ggplot() +
+#     geom_point(data = data.frame(food), aes(x = !!sym(variable), y = Chao1), alpha = 0.4) +
+#     geom_line(
+#       data = pred_df,
+#       aes(x = !!sym(variable), y = emmean),
+#       linewidth = 1.2
+#     ) +
+#     labs(
+#       x = paste(variable, " (mg/week)", sep = ""),
+#       y = "Chao1 diversity",
+#       title = paste(variable, "vs. Chao1 diversity"),
+#       subtitle = "Adjusted for calories and age; averaged over sex"
+#     ) +
+#     theme_bw() + 
+#   theme(
+#     axis.title = element_text(size = 28),
+#     axis.text  = element_text(size = 26),
+#     plot.title = element_text(size = 0, face = "bold"),
+#     plot.subtitle = element_text(size = 0),
+#     legend.text = element_text(size = 12),
+#     legend.title = element_text(size = 13)
+#   )
+#   
+# 
+#   
+#   
+#   ggsave(shannon_plot, filename = paste(variable, "_shannon_alpha_diversity.png", sep = ""), width = 8, height = 4, dpi = 800)
+#   ggsave(chao1_plot, filename = paste(variable, "_chao1_alpha_diversity.png", sep = ""), width = 8, height = 4, dpi = 800)
+#   
+# }
 
 #Combined figure for paper
 
 zinc_mod <- lm(as.formula(paste("Chao1 ~ ", 'zinc', " + calories + sex + age", sep = "")), data = data.frame(food))
 
 
-var_seq <- seq(
+var_seq_zinc <- seq(
   min(food[["zinc"]], na.rm = TRUE),
   max(food[["zinc"]], na.rm = TRUE),
   length.out = 100
 )
 
-at_list <- list(
+at_list_zinc <- list(
   calories = mean(food$calories, na.rm = TRUE),
   age = mean(food$age, na.rm = TRUE)
 )
 
 # add the variable sequence using the string name
-at_list[['zinc']] <- var_seq
+at_list_zinc[['zinc']] <- var_seq_zinc
 
 library(emmeans)
-pred <- emmeans(
+pred_zinc <- emmeans(
   zinc_mod,
   specs = as.formula(paste("~", 'zinc')),
-  at = at_list,
+  at = at_list_zinc,
   weights = "proportional"
 )
 
-pred_df <- as.data.frame(pred)
+pred_df_zinc <- as.data.frame(pred_zinc)
 
 zinc_plot <- ggplot() +
   geom_point(data = data.frame(food), aes(x = zinc, y = Chao1), alpha = 0.4) +
   geom_line(
-    data = pred_df,
+    data = pred_df_zinc,
     aes(x = zinc, y = emmean),
     linewidth = 1.2
   ) +
@@ -262,7 +262,7 @@ zinc_plot <- ggplot() +
     legend.text  = element_text(size = 26)
   ) + 
   annotate("text", x = Inf, y = Inf, label = "p = 0.003, q = 0.063",
-           hjust = 1.2, vjust = 15.75, size = 12, fontface = "plain") + 
+           hjust = 1.4, vjust = 9.25, size = 12, fontface = "plain") + 
   scale_y_continuous(breaks=c(1500, 2500, 3500))
 
 
@@ -271,33 +271,33 @@ zinc_plot <- ggplot() +
 iron_mod <- lm(as.formula(paste("Chao1 ~ ", 'iron', " + calories + sex + age", sep = "")), data = data.frame(food))
 
 
-var_seq <- seq(
+var_seq_iron <- seq(
   min(food[["iron"]], na.rm = TRUE),
   max(food[["iron"]], na.rm = TRUE),
   length.out = 100
 )
 
-at_list <- list(
+at_list_iron <- list(
   calories = mean(food$calories, na.rm = TRUE),
   age = mean(food$age, na.rm = TRUE)
 )
 
 # add the variable sequence using the string name
-at_list[['iron']] <- var_seq
+at_list_iron[['iron']] <- var_seq_iron
 
-pred <- emmeans(
+pred_iron <- emmeans(
   iron_mod,
   specs = as.formula(paste("~", 'iron')),
-  at = at_list,
+  at = at_list_iron,
   weights = "proportional"
 )
 
-pred_df <- as.data.frame(pred)
+pred_df_iron <- as.data.frame(pred_iron)
 
 iron_plot <- ggplot() +
   geom_point(data = data.frame(food), aes(x = iron, y = Chao1), alpha = 0.4) +
   geom_line(
-    data = pred_df,
+    data = pred_df_iron,
     aes(x = iron, y = emmean),
     linewidth = 1.2
   ) +
@@ -315,12 +315,9 @@ iron_plot <- ggplot() +
     legend.text  = element_text(size = 26)
   ) + 
   annotate("text", x = Inf, y = Inf, label = "p = 0.002, q = 0.063",
-           hjust = 1.2, vjust = 15.75, size = 12, fontface = "plain") + 
+           hjust = 1.4, vjust = 9.25, size = 12, fontface = "plain") + 
   scale_y_continuous(breaks=c(1500, 2500, 3500))
 
-
-setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures")
-ggsave(alpha_diversity, filename = 'alpha_diversity_plot.png', dpi = 600, width = 15.5, height = 5.25)
 
 
 # Metabolite Diversity
@@ -415,34 +412,34 @@ sigs <- which(alpha_cors$nutrient %in% sig_cors)
 injera_mod <- lm(as.formula(paste("shannon ~ ", 'injera_sum', " + calories + sex + age", sep = "")), data = data.frame(food))
 
 
-var_seq <- seq(
+var_seq_injera <- seq(
   min(food[["injera_sum"]], na.rm = TRUE),
   max(food[["injera_sum"]], na.rm = TRUE),
   length.out = 100
 )
 
-at_list <- list(
+at_list_injera <- list(
   calories = mean(food$calories, na.rm = TRUE),
   age = mean(food$age, na.rm = TRUE)
 )
 
 # add the variable sequence using the string name
-at_list[['injera_sum']] <- var_seq
+at_list_injera[['injera_sum']] <- var_seq_injera
 
 library(emmeans)
-pred <- emmeans(
+pred_injera <- emmeans(
   injera_mod,
   specs = as.formula(paste("~", 'injera_sum')),
-  at = at_list,
+  at = at_list_injera,
   weights = "proportional"
 )
 
-pred_df <- as.data.frame(pred)
+pred_df_injera <- as.data.frame(pred_injera)
 
 injera_plot <- ggplot() +
   geom_point(data = data.frame(food), aes(x = injera_sum, y = shannon), alpha = 0.4) +
   geom_line(
-    data = pred_df,
+    data = pred_df_injera,
     aes(x = injera_sum, y = emmean),
     linewidth = 1.2
   ) +
@@ -460,7 +457,7 @@ injera_plot <- ggplot() +
     legend.text  = element_text(size = 26)
   ) + 
   annotate("text", x = Inf, y = Inf, label = "p = 0.001, q = 0.032",
-           hjust = 1.2, vjust = 15.75, size = 12, fontface = "plain") + 
+           hjust = 1.4, vjust = 9.25, size = 12, fontface = "plain") + 
   scale_y_continuous(breaks=c(4.2, 4.4, 4.6)) & 
   theme(plot.margin = margin(0.25, 0.25, 0.25, 0.25, 
                              unit = "in"))
@@ -469,20 +466,18 @@ injera_plot <- ggplot() +
 
 library(patchwork)
 
-alpha_diversity_combined <- zinc_plot + iron_plot + injera_plot
+alpha_diversity_combined <- (zinc_plot) / (iron_plot) / (injera_plot) &
+  theme(plot.margin = margin(0.25, 0.25, 0.25, 0.25, 
+                             unit = "in"))
 
 setwd("C:/Users/12697/Documents/MATH481_Max_Alta/Figures")
-ggsave(alpha_diversity_combined, filename = "alpha_div_combined.png", dpi = 1200, width = 24, height = 7.5)
+ggsave(alpha_diversity_combined, filename = "alpha_div_combined.png", dpi = 800, width = 10, height = 16)
 
 
-calculate_sem <- function(x) {
-  # Remove NA values if present
-  x <- na.omit(x) 
-  sd_val <- sd(x) # Calculate the standard deviation
-  n_val <- length(x) # Get the sample size
-  sem <- sd_val / sqrt(n_val) # Calculate SEM
-  return(sem)
+sam <- sam[common_samples,]
+
+x <- function(x){
+  cat('Mean = ', round(mean(x), 1), ", SD = ", round(sd(x), 1))
 }
-
 
 
