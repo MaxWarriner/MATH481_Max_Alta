@@ -1,4 +1,4 @@
-Data and Scripts for the project: Dietary Intake Influences GI Health Outcomes via the GutMicrobiome and Metabolome in Ethiopian Schoolchildren by Max Warriner & Alta McQuillen
+Data and Scripts for the project: Dietary Intake Influences Childhood Diarrhea Via the Gut Microbiome and Metabolome in Ethiopian Schoolchildren. by Max Warriner & Alta McQuillen
 
 Data files:
 - lily_ps: Raw phyloseq object from Professor Taye
@@ -12,6 +12,12 @@ Data files:
 - Metabolomics: Raw trimmed metabolomics file with rows as metabolites and columns as samples
 - Metabolomics_original: Original file from Professor Taye so untrimmed
 - clr_mat: found in the machine learning folder. Center log transformed genus abundance microbiome matrix used as input in the XGBoost models
+- microbiome_features: microbiome features for machine learning script
+- metab_features: metabolomics features for machine learning script
+- diet_features: dietary features for machine learning script
+- health_feature: binary health features for machine learning script
+- combined_features: combined features for machine learning script
+- results_2: results for the 2nd attempt at machine learning 
 
 Scripts:
 
@@ -23,7 +29,8 @@ Data Processing:
 - metabolite_cleaning: annoying metabolite annotation cleaning
 
 Machine Learning: 
-- machine_learning: Main machine learning script containing XGboost functions, ROC Curves, Heatmaps, Feature Importance, etc.
+(outdated refers to the previous attempt at XGBoost models)
+- machine_learning_classifiers: python notebook that contains the script for all the machine learning results
 
 Standard Microbiome Analysis:
 - alpha_diversity: Microbiome and metabolite alpha diversity regression analysis with plot making functions
