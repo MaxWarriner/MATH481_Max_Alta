@@ -1,4 +1,4 @@
-Data and Scripts for the project: Dietary Intake Influences GI Health Outcomes via the GutMicrobiome and Metabolome in Ethiopian Schoolchildren by Max Warriner & Alta McQuillen
+Data and Scripts for the project: Dietary Intake Influences Childhood Diarrhea Via the Gut Microbiome and Metabolome in Ethiopian Schoolchildren. by Max Warriner & Alta McQuillen
 
 Data files:
 - lily_ps: Raw phyloseq object from Professor Taye
